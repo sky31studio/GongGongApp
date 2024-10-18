@@ -1,69 +1,15 @@
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {StyleSheet, Text, View} from "react-native";
 import ClassBox from "./classBox";
-import Table from "./table";
-import Course from "./course";
 import TimeTableConfig from "../../config/TimeTableConfig";
-import Resources from "../../basic/Resources";
+import {useAppSelector} from "../../app/hooks.ts";
+import {selectTable} from "../../app/slice/tableSlice.ts";
 
 const weekTime = ['01-01', '01-02', '01-03', '01-04', '01-05', '01-06', '01-07'];
 
 const weekdayCNName = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
-async function fetchData(dealRes: (response: any) => void) {
-    // TODO: 后续会修改url
-    fetch('http://192.168.1.105:8000/courses')
-        .then(res => res.json())
-        .then(dealRes)
-        .catch(error => {
-            console.log(error);
-        })
-}
-
-/**
- * 将接口返回的数据转换为Course对象数组
- * @param data 接口数据
- * @return Course[]
- */
-function dealTable(data: any[]): Course[] {
-    const courses: Course[] = [];
-
-    data.forEach((course, index) => {
-        const model = new Course(course.name, course.teacher, course.classroom, {
-            periodStart: course.start_time,
-            periodDuration: course.duration,
-            day: course.day,
-            weekInfo: convertToWeekInfo(course.weeks),
-        })
-
-        courses.push(model);
-    })
-
-    return courses;
-}
-
-/**
- * 转换表示周次区间的字符串为标记有起始和终止的数组
- * @param str 表示周次区间的字符串
- */
-function convertToWeekInfo(str: string): {weekStart:number, weekEnd:number}[] {
-    const weekInterval = str.split(',');
-    const res: {weekStart:number, weekEnd:number}[] = [];
-
-    weekInterval.forEach((interval) => {
-        const tmp = interval.split('-');
-
-        res.push({
-            weekStart: parseInt(tmp[0]),
-            weekEnd: parseInt(tmp[1])
-        })
-    })
-    return res;
-}
-
 export default function Schedule(): React.JSX.Element {
-    const [table, setTable] = useState(new Table());
-
     let timeInterval;
     timeInterval = TimeTableConfig.getTimeInterval(new Date());
     // 左侧时间表
@@ -103,18 +49,9 @@ export default function Schedule(): React.JSX.Element {
     );
     timeListWithGap = [monthItem,...timeListWithGap];
 
-    const [courses, setCourses] = useState<[string, Course[]][]>(table.getAllCourses());
-    // 更新课程列表
-    let updateCourses: (response: any) => void;
-    updateCourses = (response: any) => {
-        const tmp = dealTable(response);
-        table.initTable(tmp);
-        setCourses(table.getAllCourses());
-    }
+    const table = useAppSelector(selectTable);
 
-    useEffect(() => {
-        Resources.fetchClassData(updateCourses);
-    }, []);
+    const courses = table.getAllCoursesByWeek(6);
 
     const classList = () => {
         return courses.map((item, index) => {
@@ -127,10 +64,8 @@ export default function Schedule(): React.JSX.Element {
                 </View>
             );
 
-            const todayClassData = table.getClassList(2, index + 1);
-
             let flag = 1;
-            const classItemList = todayClassData.reduce((acc: React.JSX.Element[], item, index) => {
+            const classItemList = item.reduce((acc: React.JSX.Element[], item, index) => {
                 const space = 4 - (flag - 1) % 4;
                 if(space <= item.period) {
                     const view = (

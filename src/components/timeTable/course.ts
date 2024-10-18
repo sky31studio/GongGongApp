@@ -52,7 +52,7 @@ export default class Course {
      * 获取课程终止点的数组
      */
     public getPeriodEnd() {
-        return this.getPeriodStart() + this.placeInfo.periodDuration;
+        return this.getPeriodStart() + this.placeInfo.periodDuration - 1;
     }
     /**
      * 获取课程起始点的数组

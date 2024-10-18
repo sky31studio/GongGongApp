@@ -1,12 +1,14 @@
 import React, {createContext, useContext, useEffect, useState} from "react";
 import {Animated, Pressable, StyleSheet, Text, View} from "react-native";
 import {SvgXml} from "react-native-svg";
-import NotLoggedInComponent from "./notLoggedInComponent";
+import NotLoggedInComponent from "./course/notLoggedInComponent.tsx";
 import LinearGradient from "react-native-linear-gradient";
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
 import ClassComponent from "./course/classComponent";
+import {useAppDispatch} from "../../app/hooks.ts";
+import {fetchTableData} from "../../app/slice/tableSlice.ts";
 
-interface NavigationProps {
+export interface NavigationProps {
     navigation: {
         navigate: (name: string, params?: object) => void;
         goBack: () => void;
@@ -14,6 +16,11 @@ interface NavigationProps {
 }
 
 const HomePage = ({ navigation }: NavigationProps) => {
+    const dispatch = useAppDispatch();
+    useEffect(() => {
+        dispatch(fetchTableData());
+    }, [dispatch]);
+
     const functionBar = <FunctionBar navigation={navigation} />;
     const marinBoard = <MainBoard />;
 
@@ -141,8 +148,8 @@ const HomeContext = createContext<HomeContextType>({
 });
 
 let mainComponents = [
-    <NotLoggedInComponent />,
-    <ClassComponent />
+    () => <NotLoggedInComponent />,
+    () => <ClassComponent />
 ]
 
 const MainBoard = () => {
@@ -171,7 +178,7 @@ const MainBoard = () => {
             </HomeContext.Provider>
             <View style={styleSheet.mainWrapper}>
                 <View style={styleSheet.mainContainer}>
-                    {mainComponents[choice]}
+                    {mainComponents[choice]()}
                 </View>
             </View>
         </View>

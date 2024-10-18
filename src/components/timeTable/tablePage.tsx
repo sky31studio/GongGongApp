@@ -1,9 +1,20 @@
-import {Image, StyleSheet, Text, useColorScheme, View} from "react-native";
-import React from "react";
+import {Image, Pressable, StyleSheet, Text, useColorScheme, View} from "react-native";
+import React, {useEffect} from "react";
 import Schedule from "./schedule";
+import {NavigationProps} from "../home/homePage.tsx";
+import {useAppDispatch} from "../../app/hooks.ts";
+import {fetchTableData} from "../../app/slice/tableSlice.ts";
 
-export default function TablePage(): JSX.Element {
-    const theme = useColorScheme();
+export const TablePage = ({navigation}: NavigationProps) => {
+
+    const dispatch = useAppDispatch();
+    useEffect(() => {
+        dispatch(fetchTableData());
+    }, [dispatch]);
+
+    const handleGoBack = () => {
+        navigation.goBack();
+    }
 
     return (
         <View style={{
@@ -17,15 +28,18 @@ export default function TablePage(): JSX.Element {
                 flexDirection: 'column',
             }}>
                 <View style={styleSheet.guideBar}>
-                    <Image
-                        source={require('../../assets/png/leftArrow.png')}
-                        style={{
-                            width: 30,
-                            height: 30,
-                            position: 'absolute',
-                            left: 5,
-                            bottom: '40%',
-                        }}></Image>
+                    <Pressable onPress={handleGoBack}>
+                        <Image
+                            source={require('../../assets/png/leftArrow.png')}
+                            style={{
+                                width: 30,
+                                height: 30,
+                                position: 'absolute',
+                                left: 5,
+                                bottom: '40%',
+                            }}></Image>
+                    </Pressable>
+
                     <View style={styleSheet.weekBox}>
                         <View style={styleSheet.textBox}>
                             <Text style={{color: 'black', height: 20, lineHeight: 20, fontSize: 18, fontWeight: '600'}}>第5周</Text>

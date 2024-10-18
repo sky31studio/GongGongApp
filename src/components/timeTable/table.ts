@@ -1,4 +1,5 @@
 import Course from "./course";
+import {getTimeByPeriod} from "../../utils/tableUtils.ts";
 
 /**
  * 课程单元格
@@ -26,9 +27,13 @@ export default class Table {
     // key-weekDay, value-位于该weekDay的课程列表
     table: Record<string, Course[]> = {};
 
-    constructor() {
+    constructor(courses?: Course[]) {
         for(let i = 1; i <= 7; i++) {
             this.table[WeekDays[i]] = [];
+        }
+
+        if(courses) {
+            this.initTable(courses);
         }
     }
 
@@ -139,9 +144,47 @@ export default class Table {
     }
 
     /**
-     * 获取weekDay和其对应的课程列表
+     * 获取需要在classComponent中显示的课程列表
+     * @param week 周次
+     * @param weekDay 周几
      */
-    public getAllCourses() {
-        return Object.entries(this.table);
+    public getCoursesByWeekDay(week: number, weekDay: number) {
+        const res: any[] = [];
+        const list = this.table[WeekDays[weekDay]];
+
+        list.forEach((course, index) => {
+            const start = course.getWeekStart();
+            const end = course.getWeekEnd();
+            const periodStart = course.getPeriodStart();
+            const periodEnd = course.getPeriodEnd();
+
+            for(let i = 0; i < start.length; i++) {
+                if(start[i] <= week && end[i] >= week) {
+                    res.push({
+                        name: course.getName(),
+                        teacher: course.getTeacher(),
+                        classroom: course.getClassroom(),
+                        periodStart: periodStart,
+                        periodEnd: periodEnd,
+                        time: getTimeByPeriod(periodStart, periodEnd),
+                    });
+                }
+            }
+        })
+
+        return res;
+    }
+
+    /**
+     * 获取对应周次的课程列表
+     * @param week 周次
+     */
+    public getAllCoursesByWeek(week: number) {
+        const res: ClassObject[][] = [];
+        for(let i = 1; i < 7; i++) {
+            res.push(this.getClassList(week, i));
+        }
+
+        return res;
     }
 }
