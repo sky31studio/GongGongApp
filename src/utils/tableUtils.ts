@@ -45,5 +45,8 @@ export function convertToWeekInfo(str: string): {weekStart:number, weekEnd:numbe
 export function getTimeByPeriod(periodStart: number, periodEnd: number) {
     const timeInterval = TimeTableConfig.getTimeInterval(new Date());
 
-    return `${timeInterval[periodStart - 1].start}-${timeInterval[periodEnd - 1].end}`;
+    return {
+        start: timeInterval[periodStart - 1].start,
+        end: timeInterval[periodEnd - 1].end
+    };
 }

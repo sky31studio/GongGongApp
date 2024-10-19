@@ -7,6 +7,7 @@ import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
 import ClassComponent from "./course/classComponent";
 import {useAppDispatch} from "../../app/hooks.ts";
 import {fetchTableData} from "../../app/slice/tableSlice.ts";
+import AgendaComponent from "./agenda/agendaComponent.tsx";
 
 export interface NavigationProps {
     navigation: {
@@ -148,8 +149,8 @@ const HomeContext = createContext<HomeContextType>({
 });
 
 let mainComponents = [
-    () => <NotLoggedInComponent />,
-    () => <ClassComponent />
+    () => <ClassComponent />,
+    () => <AgendaComponent />
 ]
 
 const MainBoard = () => {
