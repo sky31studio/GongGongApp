@@ -1,9 +1,25 @@
 import React, {useEffect, useState} from "react";
-import {Animated, Keyboard, Pressable, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View} from "react-native";
+import {
+    Animated as Ani,
+    Keyboard,
+    Pressable, StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableWithoutFeedback,
+    View
+} from "react-native";
+import Animated, {Easing, runOnJS} from "react-native-reanimated";
 import {SvgXml} from "react-native-svg";
-import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
-import Resources from "../../basic/Resources.ts";
-import {getToken} from "../../storage.ts";
+import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
+import {
+    ReduceMotion,
+    useAnimatedStyle,
+    useSharedValue,
+    withDelay,
+    withSequence,
+    withTiming
+} from "react-native-reanimated";
 
 
 const svgXML = `
@@ -46,10 +62,77 @@ const showSvgXML = `
 </svg>
 `
 
-export default function LoginPage(): React.JSX.Element {
+const alertXML = `
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_25_16076)">
+<path d="M8.00004 14.6666C11.6819 14.6666 14.6667 11.6818 14.6667 7.99992C14.6667 4.31802 11.6819 1.33325 8.00004 1.33325C4.31814 1.33325 1.33337 4.31802 1.33337 7.99992C1.33337 11.6818 4.31814 14.6666 8.00004 14.6666Z" stroke="white" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8 5.33325V7.99992" stroke="white" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8 10.6667H8.00625" stroke="white" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<clipPath id="clip0_25_16076">
+<rect width="16" height="16" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+`
 
-    const inputSection = <InputSection/>
-    const buttonSection = <ButtonSection/>
+export default function LoginPage(): React.JSX.Element {
+    let handleUsername, handlePassword, handleLogin;
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [alertText, setAlertText] = useState('');
+    const [showAlert, setShowAlert] = useState(false);
+
+    const top = useSharedValue(-10);
+    const animatedAlert = useAnimatedStyle(() => ({
+        top: top.value
+    }));
+
+    const alertAnimation = () => {
+        top.value = withSequence(
+            withTiming(30, {
+                duration: 1000,
+                easing: Easing.inOut(Easing.quad),
+                reduceMotion: ReduceMotion.System,
+            }),
+            withDelay(5000, withTiming(-10, {
+                duration: 1000,
+                easing: Easing.inOut(Easing.quad),
+                reduceMotion: ReduceMotion.System,
+            }, () => runOnJS(setShowAlert)(false))), // runOnJS一定要的
+        )
+    }
+
+    handleUsername  = (data: string) => {
+        setUsername(data);
+    }
+    handlePassword = (data: string) => {
+        setPassword(data);
+    }
+    handleLogin = () => {
+        if(password === '') {
+            setAlertText('请输入密码');
+            setShowAlert(true);
+            alertAnimation();
+            console.log(111);
+        }
+
+        console.log(222);
+    }
+
+    const idInput = <MyInput initText="请输入你的学号" onSendDataToParent={handleUsername} />
+    const pwdInput = <MyInput initText="请输入教务系统密码" onSendDataToParent={handlePassword} visibleProp={true}/>
+
+    const alertModule = (
+        <Animated.View style={[styleSheet.alertContainer, animatedAlert]}>
+            <SvgXml xml={alertXML} width={16} height={16} />
+            <Text style={{color: FontColor.light, fontSize: FontSize.s}}>{alertText}</Text>
+        </Animated.View>
+    )
+
+
+    const buttonSection = <ButtonSection handleLogin={handleLogin} />
 
 
     const keyboardDismiss = () => {
@@ -57,19 +140,20 @@ export default function LoginPage(): React.JSX.Element {
     }
 
     useEffect(() => {
-        const handleFocus = () => {
-
-        }
     }, []);
 
     return (
         <TouchableWithoutFeedback onPress={keyboardDismiss}>
             <View style={styleSheet.loginContainer}>
+                {showAlert && alertModule}
                 <View style={styleSheet.logoWrapper}>
                     <SvgXml xml={svgXML} width="100%"/>
                 </View>
                 <View style={styleSheet.inputWrapper}>
-                    {inputSection}
+                    <View style={styleSheet.inputContainer}>
+                        {idInput}
+                        {pwdInput}
+                    </View>
                 </View>
                 <View style={styleSheet.buttonWrapper}>
                     {buttonSection}
@@ -79,19 +163,7 @@ export default function LoginPage(): React.JSX.Element {
     );
 }
 
-function InputSection(): React.JSX.Element {
-    const idInput = <MyInput initText="请输入你的学号"/>
-    const pwdInput = <MyInput initText="请输入教务系统密码" visibleProp={true}/>
-
-    return (
-        <View style={inputStyleSheet.inputContainer}>
-            {idInput}
-            {pwdInput}
-        </View>
-    );
-}
-
-const inputStyleSheet = StyleSheet.create({
+const styleSheet = StyleSheet.create({
     inputContainer: {
         width: '100%',
         display: 'flex',
@@ -99,6 +171,41 @@ const inputStyleSheet = StyleSheet.create({
         alignItems: 'center',
     },
 
+    loginContainer: {
+        width: '100%',
+        height: '100%',
+        paddingTop: '30%',
+    },
+
+    logoWrapper: {
+        width: '100%',
+        paddingHorizontal: 'auto',
+    },
+
+    inputWrapper: {
+        paddingTop: '10%',
+        width: '100%',
+    },
+
+    buttonWrapper: {
+        paddingTop: '15%',
+        width: '100%',
+        position: 'relative',
+    },
+
+    alertContainer: {
+        position: 'absolute',
+        width: '100%',
+        height: 30,
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: BackgroundColor.primary,
+    }
+});
+
+const inputStyleSheet = StyleSheet.create({
     inputBox: {
         width: '60%',
         height: 75,
@@ -131,13 +238,14 @@ const inputStyleSheet = StyleSheet.create({
 interface InputProps {
     initText: string,
     visibleProp?: boolean,
+    onSendDataToParent: any,
 }
 
-const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visibleProp = false}) => {
+const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visibleProp = false, onSendDataToParent}) => {
     const [text, setText] = useState('');
     const [focused, setFocused] = useState(false);
     const [visible, setVisible] = useState(!visibleProp);
-    const [changedColor] = useState(new Animated.Value(0));
+    const [changedColor] = useState(new Ani.Value(0));
 
     const backgroundColor = changedColor.interpolate({
         inputRange: [0, 1],
@@ -146,7 +254,7 @@ const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visiblePro
 
     const handleFocus = () => {
         if (text === '') {
-            Animated.timing(changedColor, {
+            Ani.timing(changedColor, {
                 toValue: 1,
                 duration: 300,
                 useNativeDriver: true,
@@ -158,7 +266,7 @@ const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visiblePro
 
     const handleBlur = () => {
         if (text === '') {
-            Animated.timing(changedColor, {
+            Ani.timing(changedColor, {
                 toValue: 0,
                 duration: 300,
                 useNativeDriver: true,
@@ -169,6 +277,7 @@ const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visiblePro
 
     const handleChange = (value: string) => {
         setText(value);
+        onSendDataToParent(value);
     }
 
     const shiftVisibility = () => {
@@ -184,14 +293,14 @@ const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visiblePro
     return (
         <View style={inputStyleSheet.inputBox}>
             {!focused && initTextView}
-            <Animated.View
+            <Ani.View
                 style={{
                     backgroundColor: backgroundColor,
                     height: '100%',
                     width: 3,
                     borderRadius: 5,
                 }}
-            ></Animated.View>
+            ></Ani.View>
             <TextInput secureTextEntry={!visible} onFocus={handleFocus} onBlur={handleBlur} onChangeText={handleChange}
                        style={inputStyleSheet.loginInput} value={text}/>
             {visibleProp &&
@@ -205,27 +314,7 @@ const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visiblePro
     );
 }
 
-enum Status {
-    IDLE = 0,
-    LOADING,
-    SUCCESS,
-    ERROR
-}
-
-const ButtonSection = () => {
-    const [status, setStatus] = useState(Status.IDLE);
-    const handleLogin = async () => {
-        setStatus(Status.LOADING);
-        await Resources.login();
-
-        if(getToken() === '') {
-            setStatus(Status.ERROR);
-        }
-        else {
-            setStatus(Status.SUCCESS);
-        }
-    }
-
+const ButtonSection = ({handleLogin}: {handleLogin: any}) => {
     return (
         <View style={buttonStyleSheet.buttonContainer}>
             <View style={{display: 'flex', flexDirection: 'row', marginVertical: 10}}>
@@ -234,10 +323,8 @@ const ButtonSection = () => {
                 <Text style={buttonStyleSheet.introText}>和</Text>
                 <Text style={[buttonStyleSheet.introText, buttonStyleSheet.infoText]}>隐私条款</Text>
             </View>
-            <Pressable onPress={handleLogin}>
-                <View style={buttonStyleSheet.loginButton}>
-                    <Text style={{color: '#fff', fontWeight: '600', fontSize: 15}}>登录</Text>
-                </View>
+            <Pressable style={buttonStyleSheet.loginButton} onPress={handleLogin}>
+                <Text style={{color: '#fff', fontWeight: '600', fontSize: 15}}>登录</Text>
             </Pressable>
         </View>
     )
@@ -271,27 +358,3 @@ const buttonStyleSheet = StyleSheet.create({
         justifyContent: 'center',
     }
 })
-
-const styleSheet = StyleSheet.create({
-    loginContainer: {
-        width: '100%',
-        height: '100%',
-        paddingTop: '30%',
-    },
-
-    logoWrapper: {
-        width: '100%',
-        paddingHorizontal: 'auto',
-    },
-
-    inputWrapper: {
-        paddingTop: '10%',
-        width: '100%',
-    },
-
-    buttonWrapper: {
-        paddingTop: '15%',
-        width: '100%',
-        position: 'relative',
-    },
-});

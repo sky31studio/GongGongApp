@@ -60,7 +60,7 @@ const ClassComponent = () => {
         let isDeprecated = 2;
 
         // 东八区 +8h
-        const currentHour = (lastTime.getHours() + 8) % 24;
+        const currentHour = lastTime.getHours() + 8;
         const currentMinute = lastTime.getMinutes();
         const current = currentHour * 60 + currentMinute;
 

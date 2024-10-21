@@ -23,12 +23,14 @@ class Resources {
 
     /**
      * 处理登录请求，将返回的token存入MMKV中
+     * @param username 用户名(学号)
+     * @param password 密码
      */
-    public static async login() {
+    public static async login(username: string, password: string) {
         try {
             const response = await axios.post(`${rootUrl}/login`, {
-                username: '202105650301',
-                password: '13586591252Xx',
+                username: username,
+                password: password,
             },{
                 headers: {
                     'Content-Type': 'application/json'
@@ -45,7 +47,7 @@ class Resources {
             console.log(error);
         }
     }
-    
+
 }
 
 export default Resources;
