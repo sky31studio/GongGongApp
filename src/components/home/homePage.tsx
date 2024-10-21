@@ -9,6 +9,9 @@ import {useAppDispatch} from "../../app/hooks.ts";
 import {fetchTableData} from "../../app/slice/tableSlice.ts";
 import AgendaComponent from "./agenda/agendaComponent.tsx";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
+import ClassList from "./course/classList.tsx";
+import {addOnValueChangedListener, getToken} from "../../storage.ts";
+import {AgendaList} from "./agenda/agendaList.tsx";
 
 export interface NavigationProps {
     navigation: {
@@ -149,21 +152,34 @@ const HomeContext = createContext<HomeContextType>({
     shiftChoice: (value: number) => {}
 });
 
-let mainComponents = [
-    () => <ClassComponent />,
-    () => <AgendaComponent />
-]
-
 const MainBoard = () => {
     const classTableButton = <ShiftButton id={0} text='课程表' initFocus={true} />;
     const countdownButton = <ShiftButton id={1} text='倒计时' />;
+
+    const [hasToken, setHasToken] = useState(getToken() !== '');
+
+    const mainComponents = [
+        () => <ClassList hasToken={hasToken} />,
+        () => <AgendaList hasToken={hasToken} />
+    ]
 
     const [choice, setChoice] = useState(0);
     const handleChoice = (value: number) => {
         setChoice(value);
     }
 
-    const HomeStack = createBottomTabNavigator();
+    useEffect(() => {
+        const listener = addOnValueChangedListener((changedKey) => {
+            if(changedKey === 'token') {
+                const newValue = getToken();
+                setHasToken(newValue !== '');
+            }
+        });
+
+        return () => {
+            listener.remove();
+        }
+    }, []);
 
     return (
         <View style={styleSheet.mainBoardContainer}>
@@ -179,9 +195,7 @@ const MainBoard = () => {
                 </View>
             </HomeContext.Provider>
             <View style={styleSheet.mainWrapper}>
-                <View style={styleSheet.mainContainer}>
-                    {mainComponents[choice]()}
-                </View>
+                {mainComponents[choice]()}
             </View>
         </View>
     );
@@ -354,7 +368,6 @@ const styleSheet = StyleSheet.create({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-
     },
 });
 

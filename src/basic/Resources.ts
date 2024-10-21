@@ -45,6 +45,7 @@ class Resources {
             console.log(error);
         }
     }
+    
 }
 
 export default Resources;

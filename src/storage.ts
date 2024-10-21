@@ -1,6 +1,6 @@
 import {MMKV} from "react-native-mmkv";
 
-const storage = new MMKV();
+export const storage = new MMKV();
 
 export const setToken = (sessionID: string) => {
     storage.set("sessionID", sessionID);
@@ -16,4 +16,8 @@ export const clearToken = () => {
 
 export const clearStorage = () => {
     storage.clearAll();
+}
+
+export const addOnValueChangedListener = (handler: (changedKey: any) => void) => {
+    return storage.addOnValueChangedListener(handler);
 }
