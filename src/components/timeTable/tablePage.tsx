@@ -4,6 +4,7 @@ import Schedule from "./schedule";
 import {NavigationProps} from "../home/homePage.tsx";
 import {useAppDispatch} from "../../app/hooks.ts";
 import {fetchTableData} from "../../app/slice/tableSlice.ts";
+import {BackgroundColor} from "../../config/globalStyleSheetConfig.ts";
 
 export const TablePage = ({navigation}: NavigationProps) => {
 
@@ -86,7 +87,7 @@ const styleSheet = StyleSheet.create({
         flexDirection: 'row',
         width: '100%',
         height: 100,
-        backgroundColor: '#ff6275',
+        backgroundColor: BackgroundColor.primary,
         position: 'relative',
     },
 

@@ -4,6 +4,7 @@ import React, {useEffect, useState} from "react";
 import {useAppSelector} from "../../../app/hooks.ts";
 import {selectTable} from "../../../app/slice/tableSlice.ts";
 import {SvgXml} from "react-native-svg";
+import {BackgroundColor, FontColor} from "../../../config/globalStyleSheetConfig.ts";
 
 
 const locationXml = `
@@ -175,7 +176,7 @@ const styleSheet = StyleSheet.create({
 
     weekDayText: {
         fontSize: 18,
-        color: '#FF6C87',
+        color: BackgroundColor.secondary,
         fontWeight: '900',
     },
 
@@ -192,7 +193,7 @@ const styleSheet = StyleSheet.create({
     weekText: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#A6A6A6',
+        color: FontColor.grey,
     },
 
     courseContainer: {
@@ -218,13 +219,13 @@ const styleSheet = StyleSheet.create({
     periodLine: {
         width: 1,
         height: 14,
-        backgroundColor: '#A6A6A6',
+        backgroundColor: FontColor.grey,
     },
 
     periodText: {
         fontSize: 16,
         fontWeight: '400',
-        color: '#A6A6A6',
+        color: FontColor.grey,
     },
 
     classInfoContainer: {
@@ -241,11 +242,11 @@ const styleSheet = StyleSheet.create({
     },
 
     notDeprecated: {
-        color: '#000',
+        color: FontColor.dark,
     },
 
     deprecated: {
-        color: '#A6A6A6',
+        color: FontColor.grey,
     },
 
     classroomContainer: {
@@ -259,7 +260,7 @@ const styleSheet = StyleSheet.create({
         lineHeight: 12,
         marginLeft: 4,
         fontSize: 9,
-        color: '#A6A6A6',
+        color: FontColor.grey,
     },
 
     timeInfoContainer: {
@@ -283,7 +284,7 @@ const styleSheet = StyleSheet.create({
 
     timeInfo: {
         fontSize: 12,
-        color: '#A6A6A6',
+        color: FontColor.grey,
         marginHorizontal: 2,
     },
 

@@ -8,6 +8,7 @@ import Animated, {
     withDelay,
     withTiming
 } from "react-native-reanimated";
+import {BackgroundColor, FontColor} from "../../../config/globalStyleSheetConfig.ts";
 
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -57,7 +58,7 @@ CircularProcess = ({done, todo}): React.JSX.Element => {
                   cx={50}
                   cy={50}
                   r={28}
-                  stroke="#FF6C87"
+                  stroke={BackgroundColor.secondary}
                   fill="transparent"
                   strokeWidth={8}
                   strokeDasharray={`${circumference} ${circumference}`}
@@ -89,7 +90,7 @@ const styleSheet = StyleSheet.create({
 
     processText: {
         width: '100%',
-        color: '#000',
+        color: FontColor.dark,
         textAlign: 'center',
         fontSize: 18,
         fontWeight: '600',

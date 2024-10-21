@@ -1,6 +1,9 @@
 import React, {useEffect, useState} from "react";
 import {Animated, Keyboard, Pressable, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View} from "react-native";
 import {SvgXml} from "react-native-svg";
+import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
+import Resources from "../../basic/Resources.ts";
+import {getToken} from "../../storage.ts";
 
 
 const svgXML = `
@@ -138,7 +141,7 @@ const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visiblePro
 
     const backgroundColor = changedColor.interpolate({
         inputRange: [0, 1],
-        outputRange: ['#b3b3b3', '#FF6275'],
+        outputRange: ['#b3b3b3', BackgroundColor.primary],
     })
 
     const handleFocus = () => {
@@ -202,7 +205,26 @@ const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visiblePro
     );
 }
 
+enum Status {
+    IDLE = 0,
+    LOADING,
+    SUCCESS,
+    ERROR
+}
+
 const ButtonSection = () => {
+    const [status, setStatus] = useState(Status.IDLE);
+    const handleLogin = async () => {
+        setStatus(Status.LOADING);
+        await Resources.login();
+
+        if(getToken() === '') {
+            setStatus(Status.ERROR);
+        }
+        else {
+            setStatus(Status.SUCCESS);
+        }
+    }
 
     return (
         <View style={buttonStyleSheet.buttonContainer}>
@@ -212,9 +234,11 @@ const ButtonSection = () => {
                 <Text style={buttonStyleSheet.introText}>和</Text>
                 <Text style={[buttonStyleSheet.introText, buttonStyleSheet.infoText]}>隐私条款</Text>
             </View>
-            <View style={buttonStyleSheet.loginButton}>
-                <Text style={{color: '#fff', fontWeight: '600', fontSize: 15}}>登录</Text>
-            </View>
+            <Pressable onPress={handleLogin}>
+                <View style={buttonStyleSheet.loginButton}>
+                    <Text style={{color: '#fff', fontWeight: '600', fontSize: 15}}>登录</Text>
+                </View>
+            </Pressable>
         </View>
     )
 }
@@ -242,7 +266,7 @@ const buttonStyleSheet = StyleSheet.create({
         width: '60%',
         height: 45,
         borderRadius: 25,
-        backgroundColor: '#FF6275',
+        backgroundColor: BackgroundColor.primary,
         alignItems: 'center',
         justifyContent: 'center',
     }

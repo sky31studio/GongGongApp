@@ -13,7 +13,6 @@ class TimeTableConfig {
 
         let timeInterval;
         if(month < 5 || month > 9) {
-            // TODO: 冬令时是什么时间表
             timeInterval = [
                 {
                     "start": "08:00",

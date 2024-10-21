@@ -1,7 +1,10 @@
-import {StyleSheet, Text, View} from "react-native";
+import {Pressable, StyleSheet, Text, View} from "react-native";
 import {createSlice} from "@reduxjs/toolkit";
-import React from "react";
+import React, {useState} from "react";
 import {SvgXml} from "react-native-svg";
+import {BackgroundColor} from "../../../config/globalStyleSheetConfig.ts";
+import Resources from "../../../basic/Resources.ts";
+import {getToken} from "../../../storage.ts";
 
 const addXml = `
 <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -10,15 +13,23 @@ const addXml = `
 </svg>
 `;
 
+
+
 const agendaComponent = () => {
+
+    const handleAddCountdown = async () => {
+    }
 
     return (
         <View style={ss.agendaContainer}>
             <View style={ss.functionContainer}>
-                <View style={ss.addContainer}>
-                    <SvgXml xml={addXml} width="10" height="10" />
-                    <Text style={ss.addText}>添加倒计时</Text>
-                </View>
+                <Pressable onPress={handleAddCountdown}>
+                    <View style={ss.addContainer}>
+                        <SvgXml xml={addXml} width="10" height="10" />
+                        <Text style={ss.addText}>添加倒计时</Text>
+                    </View>
+                </Pressable>
+
                 <View style={ss.chosenContainer}>
 
                 </View>
@@ -50,7 +61,7 @@ const ss = StyleSheet.create({
         height: 26,
         display: 'flex',
         flexDirection: 'row',
-        backgroundColor: '#FF6275',
+        backgroundColor: BackgroundColor.primary,
         borderRadius: 20,
         paddingHorizontal: 12,
         paddingVertical: 5,

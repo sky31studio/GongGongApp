@@ -8,6 +8,7 @@ import ClassComponent from "./course/classComponent";
 import {useAppDispatch} from "../../app/hooks.ts";
 import {fetchTableData} from "../../app/slice/tableSlice.ts";
 import AgendaComponent from "./agenda/agendaComponent.tsx";
+import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
 
 export interface NavigationProps {
     navigation: {
@@ -243,7 +244,7 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
                 <Text onLayout={handleLayout} numberOfLines={1} style={[styleSheet.shiftBoxText, {color: focused ? '#000' : '#999999'}]}>{text}</Text>
                 <Animated.View style={[styleSheet.initBox, {width: chunkWidth, opacity: opacity, transform: [{translateY: translateY}]}]}>
                     <LinearGradient
-                        colors={['#FF6275', '#FF9999']}
+                        colors={[BackgroundColor.primary, '#FF9999']}
                         style={{flex: 1, borderRadius: 3}}
                     ></LinearGradient>
                 </Animated.View>
@@ -265,7 +266,7 @@ const styleSheet = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'flex-end',
-        backgroundColor: '#FF6275',
+        backgroundColor: BackgroundColor.primary,
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
     },
@@ -279,7 +280,7 @@ const styleSheet = StyleSheet.create({
     },
 
     functionText: {
-       color: '#fff',
+       color: FontColor.light,
        fontSize: 13,
         fontWeight: '600',
         height: 25,
@@ -346,7 +347,7 @@ const styleSheet = StyleSheet.create({
         paddingHorizontal: 10,
     },
     mainContainer: {
-        backgroundColor: '#fff',
+        backgroundColor: BackgroundColor.mainLight,
         borderRadius: 20,
         width: '100%',
         height: '100%',

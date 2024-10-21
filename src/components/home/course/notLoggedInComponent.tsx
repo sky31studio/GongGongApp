@@ -1,6 +1,7 @@
 import React from "react";
 import {StyleSheet, Text, View} from "react-native";
 import {SvgXml} from "react-native-svg";
+import {FontColor} from "../../../config/globalStyleSheetConfig.ts";
 
 const notLoggedInXML = `
 <svg width="205" height="128" viewBox="0 0 205 128" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -178,7 +179,7 @@ const NotLoggedInComponent = () => {
                 <SvgXml xml={notLoggedInXML} width="100%" />
             </View>
             <View style={{display: 'flex', alignItems: 'center', paddingVertical: 20}}>
-                <Text style={{color: '#FF6275'}}>登录后才能查看课表哟~</Text>
+                <Text style={{color: FontColor.primary}}>登录后才能查看课表哟~</Text>
             </View>
         </View>
     );
