@@ -1,9 +1,11 @@
 import {configureStore} from "@reduxjs/toolkit";
 import tableReducer from "./slice/tableSlice.ts"
+import agendaReducer from "./slice/agendaSlice.ts"
 
 export const store = configureStore({
     reducer: {
-        table: tableReducer
+        table: tableReducer,
+        exam: agendaReducer,
     }
 });
 

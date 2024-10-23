@@ -5,6 +5,7 @@ import {addOnValueChangedListener, getToken} from "../../../storage.ts";
 import ClassComponent from "../course/classComponent.tsx";
 import NotLoggedInComponent from "../course/notLoggedInComponent.tsx";
 import AgendaComponent from "./agendaComponent.tsx";
+import NoAgendaComponent from "./noAgenda.tsx";
 
 
 export const AgendaList = ({hasToken}: {hasToken: boolean}) => {
@@ -12,7 +13,7 @@ export const AgendaList = ({hasToken}: {hasToken: boolean}) => {
     // TODO: NotLoggedInComponent for Agenda没有写
     return (
         <View style={ss.mainContainer}>
-            {hasToken ? <AgendaComponent /> : <NotLoggedInComponent />}
+            {hasToken ? <AgendaComponent/> : <NoAgendaComponent/>}
         </View>
     )
 }

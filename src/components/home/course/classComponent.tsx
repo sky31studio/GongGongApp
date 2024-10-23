@@ -4,55 +4,37 @@ import React, {useEffect, useState} from "react";
 import {useAppSelector} from "../../../app/hooks.ts";
 import {selectTable} from "../../../app/slice/tableSlice.ts";
 import {SvgXml} from "react-native-svg";
-import {BackgroundColor, FontColor} from "../../../config/globalStyleSheetConfig.ts";
-
-
-const locationXml = `
-<svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_324_3658)">
-<path d="M7 3.33337C7 5.66671 4 7.66671 4 7.66671C4 7.66671 1 5.66671 1 3.33337C1 2.53772 1.31607 1.77466 1.87868 1.21205C2.44129 0.649445 3.20435 0.333374 4 0.333374C4.79565 0.333374 5.55871 0.649445 6.12132 1.21205C6.68393 1.77466 7 2.53772 7 3.33337Z" stroke="#B7B7B7" stroke-width="0.666667" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M4 4.33337C4.55228 4.33337 5 3.88566 5 3.33337C5 2.78109 4.55228 2.33337 4 2.33337C3.44772 2.33337 3 2.78109 3 3.33337C3 3.88566 3.44772 4.33337 4 4.33337Z" stroke="#B7B7B7" stroke-width="0.666667" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<defs>
-<clipPath id="clip0_324_3658">
-<rect width="8" height="8" fill="white"/>
-</clipPath>
-</defs>
-</svg>
-`;
-
-const timeXml = `
-<svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_324_19674)">
-<path d="M4.00013 7.33329C5.84108 7.33329 7.33346 5.84091 7.33346 3.99996C7.33346 2.15901 5.84108 0.666626 4.00013 0.666626C2.15918 0.666626 0.666798 2.15901 0.666798 3.99996C0.666798 5.84091 2.15918 7.33329 4.00013 7.33329Z" stroke="#B7B7B7" stroke-width="0.67" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M4 2V4L5.33333 4.66667" stroke="#B7B7B7" stroke-width="0.67" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<defs>
-<clipPath id="clip0_324_19674">
-<rect width="8" height="8" fill="white"/>
-</clipPath>
-</defs>
-</svg>
-`
+import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
+import XMLResources from "../../../basic/XMLResources.ts";
+import {ENWeekDay} from "../../../utils/enum.ts";
 
 const tagText = ['已结束', '上课中', '即将上课', ''];
 const tagColor = ['#EEEEEE', '#8FB5FB', '#FFAA69', '#'];
-const tagFontColor = ['#A6A6A6', '#FFFFFF', '#FFFFFF', '#']
+const tagFontColor = ['#A6A6A6', '#FFFFFF', '#FFFFFF', '#'];
 
 const ClassComponent = () => {
     const table = useAppSelector(selectTable);
-    const courses = table.getCoursesByWeekDay(6, 1);
-
+    const [done, setDone] = useState(0);
     const  [lastTime, setLastTime] = useState(new Date());
+    const [weekDay, setWeekDay] = useState(lastTime.getDay());
+    const [month, setMonth] = useState(lastTime.getMonth() + 1);
+    const [day, setDay] = useState(lastTime.getDate());
+    // getCoursesByWeekDay是从1-7
+    const courses = table.getCoursesByWeekDay(8, weekDay === 0 ? 7 : weekDay);
+
     const intervalId = setInterval(() => {
         setLastTime(new Date());
     }, 8000);
 
     useEffect(() => {
+        setWeekDay(lastTime.getDay());
+        setMonth(lastTime.getMonth() + 1);
+        setDay(lastTime.getDate());
+
         return () => {
             clearInterval(intervalId);
         }
-    })
+    }, [lastTime])
 
     let classTimeline;
     classTimeline = courses.map((course, index) => {
@@ -78,6 +60,7 @@ const ClassComponent = () => {
             isDeprecated = 0;
         }
         else if(current < start) {
+            setDone(index + 1);
             isDeprecated = start - current > 30 ? 3 : 2;
         }
         else {
@@ -91,7 +74,7 @@ const ClassComponent = () => {
         )
 
         return (
-            <View style={styleSheet.courseContainer}>
+            <View style={styleSheet.courseContainer} key={index}>
                 <View style={styleSheet.periodContainer}>
                     <Text style={styleSheet.periodText}>{course.periodStart < 10 ? `0${course.periodStart}` : `${course.periodStart}`}</Text>
                     <View style={styleSheet.periodLine}></View>
@@ -100,7 +83,7 @@ const ClassComponent = () => {
                 <View style={styleSheet.classInfoContainer}>
                     <Text numberOfLines={1} ellipsizeMode="tail" style={[styleSheet.className, isDeprecated >= 1 ? styleSheet.notDeprecated : styleSheet.deprecated]}>{course.name}</Text>
                     <View style={styleSheet.classroomContainer}>
-                        <SvgXml xml={locationXml} width={9} height={9} />
+                        <SvgXml xml={XMLResources.location} width={9} height={9}/>
                         <Text style={styleSheet.classroom}>{course.classroom}</Text>
                     </View>
                 </View>
@@ -109,7 +92,7 @@ const ClassComponent = () => {
                         {isDeprecated !== 3 && tag}
                     </View>
                     <View style={styleSheet.timeContainer}>
-                        <SvgXml xml={timeXml} width={9} height={9} />
+                        <SvgXml xml={XMLResources.clock} width={9} height={9}/>
                         <Text style={styleSheet.timeInfo}>{course.time.start}</Text>
                         <View style={{width: 8, height: 1, backgroundColor: '#A6A6A6', marginHorizontal: 2}}></View>
                         <Text style={styleSheet.timeInfo}>{course.time.end}</Text>
@@ -119,23 +102,45 @@ const ClassComponent = () => {
         )
     })
 
+    // 今日无课
+    let noClass;
+    noClass = (
+        <View
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '100%',
+                marginTop: 20
+            }}
+        >
+            <SvgXml xml={XMLResources.noCourse} width={191} height={128}/>
+            <Text style={{
+                textAlign: 'center',
+                color: FontColor.grey,
+                marginVertical: 10
+            }}>今天没有课哟，去Eatest瞅瞅吧~</Text>
+        </View>
+    )
+
     return (
         <View style={styleSheet.classContainer}>
             <View style={styleSheet.statusContainer}>
                 <View style={styleSheet.circle}>
-                    <CircularProcess done={1} todo={4} />
+                    <CircularProcess done={done} todo={courses.length}/>
                 </View>
                 <View style={styleSheet.weekDay}>
-                    <Text style={styleSheet.weekDayText}>MON.</Text>
-                    <Text>今日共{4}节课</Text>
+                    <Text style={styleSheet.weekDayText}>{ENWeekDay[weekDay]}</Text>
+                    <Text>今日共{courses.length}节课</Text>
                 </View>
                 <View style={styleSheet.date}>
-                    <Text>2024/10/17</Text>
+                    <Text>{lastTime.getFullYear()}/{month < 10 ? `0${month}` : month}/{day < 10 ? `0${day}` : day}</Text>
                     <Text style={styleSheet.weekText}>第十七周</Text>
                 </View>
             </View>
             <View style={styleSheet.timelineContainer}>
-                {classTimeline}
+                {courses.length !== 0 ? classTimeline : noClass}
             </View>
         </View>
     );
@@ -237,7 +242,7 @@ const styleSheet = StyleSheet.create({
 
     className: {
         maxWidth: 140,
-        fontSize: 14,
+        fontSize: FontSize.m,
         fontWeight: '600',
     },
 

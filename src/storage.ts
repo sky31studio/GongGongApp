@@ -7,7 +7,7 @@ export const setToken = (sessionID: string) => {
 }
 
 export const getToken = () => {
-    return storage.getString("sessionID");
+    return storage.getString("sessionID") || '';
 }
 
 export const clearToken = () => {

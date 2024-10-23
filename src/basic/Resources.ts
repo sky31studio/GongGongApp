@@ -1,7 +1,8 @@
 import axios from "axios";
 import {getToken, setToken} from "../storage.ts";
+import {hostUrl} from "../config/UrlConfig.ts";
 
-const rootUrl = 'http://175.178.63.53:8000';
+const rootUrl = hostUrl;
 
 class Resources {
     /**
@@ -9,15 +10,15 @@ class Resources {
      */
     public static async fetchClassData() {
         try {
-            const response = await axios.get('rootUrl/courses', {
-                params: {
-                    token: getToken()
+            const response = await axios(`${rootUrl}/courses`, {
+                headers: {
+                    'token': getToken()
                 }
-            });
+            })
 
-            return await response.data;
+            return response.data;
         } catch(error) {
-            console.log(error);
+            console.log(`请求失败: ${error}`);
         }
     }
 
@@ -43,6 +44,22 @@ class Resources {
                 setToken(response.data['session_id']);
             }
 
+            return code;
+
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    public static async getExam() {
+        try {
+            const response = await axios.get(`${rootUrl}/exams`, {
+                headers: {
+                    'token': getToken()
+                }
+            });
+
+            return response.data;
         } catch(error) {
             console.log(error);
         }

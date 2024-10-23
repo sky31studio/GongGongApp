@@ -7,8 +7,6 @@ import {createNativeStackNavigator} from "@react-navigation/native-stack";
 import {NavigationContainer} from "@react-navigation/native";
 import {Provider} from "react-redux";
 import {store} from "./src/app/store.ts";
-import {useAppDispatch} from "./src/app/hooks.ts";
-import {fetchTableData} from "./src/app/slice/tableSlice.ts";
 import {TablePage} from "./src/components/timeTable/tablePage.tsx";
 import LoginPage from "./src/components/login/loginPage.tsx";
 
