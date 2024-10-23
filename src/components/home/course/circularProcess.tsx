@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {memo, useEffect} from "react";
 import {StyleSheet, Text, View} from "react-native";
 import Svg, {Circle} from "react-native-svg";
 import Animated, {
@@ -19,7 +19,7 @@ interface ProcessProps {
 }
 
 let CircularProcess: React.ComponentType<ProcessProps>;
-CircularProcess = ({done, todo}): React.JSX.Element => {
+CircularProcess = memo(({done, todo}): React.JSX.Element => {
     const innerRadius = 28;
     const circumference = 2 * Math.PI * innerRadius;
     const completion = done / todo;
@@ -72,7 +72,7 @@ CircularProcess = ({done, todo}): React.JSX.Element => {
           </View>
       </View>
     );
-}
+});
 
 const styleSheet = StyleSheet.create({
     circularProcessContainer: {

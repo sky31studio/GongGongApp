@@ -1,11 +1,10 @@
-import React, {useEffect} from "react";
+import React, {memo} from "react";
 import {StyleSheet, View} from "react-native";
 import {BackgroundColor} from "../../../config/globalStyleSheetConfig.ts";
-import {addOnValueChangedListener, getToken} from "../../../storage.ts";
 import ClassComponent from "./classComponent.tsx";
 import NotLoggedInComponent from "./notLoggedInComponent.tsx";
 
-const ClassList = ({hasToken}: {hasToken: boolean}) => {
+const ClassList = memo(({hasToken}: {hasToken: boolean}) => {
 
     return (
         <View>
@@ -15,7 +14,7 @@ const ClassList = ({hasToken}: {hasToken: boolean}) => {
         </View>
     )
 
-}
+})
 
 const ss = StyleSheet.create({
     mainContainer: {

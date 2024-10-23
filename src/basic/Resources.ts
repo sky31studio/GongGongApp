@@ -29,6 +29,8 @@ class Resources {
      */
     public static async login(username: string, password: string) {
         try {
+            console.log(username);
+            console.log(password);
             const response = await axios.post(`${rootUrl}/login`, {
                 username: username,
                 password: password,

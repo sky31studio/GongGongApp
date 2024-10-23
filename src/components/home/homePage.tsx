@@ -1,17 +1,13 @@
 import React, {createContext, useContext, useEffect, useState} from "react";
 import {Animated, Pressable, StyleSheet, Text, View} from "react-native";
 import {SvgXml} from "react-native-svg";
-import NotLoggedInComponent from "./course/notLoggedInComponent.tsx";
 import LinearGradient from "react-native-linear-gradient";
-import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
-import ClassComponent from "./course/classComponent";
 import {useAppDispatch} from "../../app/hooks.ts";
 import {fetchTableData} from "../../app/slice/tableSlice.ts";
-import AgendaComponent from "./agenda/agendaComponent.tsx";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
-import ClassList from "./course/classList.tsx";
 import {addOnValueChangedListener, getToken} from "../../storage.ts";
 import {AgendaList} from "./agenda/agendaList.tsx";
+import ClassList from "./course/classList.tsx";
 
 export interface NavigationProps {
     navigation: {
@@ -24,18 +20,18 @@ const HomePage = ({ navigation }: NavigationProps) => {
     const dispatch = useAppDispatch();
     useEffect(() => {
         dispatch(fetchTableData());
-    }, [dispatch]);
+    }, []);
 
-    const functionBar = <FunctionBar navigation={navigation} />;
-    const marinBoard = <MainBoard />;
+    const functionBar = () => <FunctionBar navigation={navigation} />;
+    const marinBoard = () => <MainBoard />;
 
     return (
       <View style={styleSheet.homeContainer}>
           <View style={{width: '100%', height: '18%'}}>
-              {functionBar}
+              {functionBar()}
           </View>
         <View style={styleSheet.mainBoardWrapper}>
-            {marinBoard}
+            {marinBoard()}
         </View>
       </View>
     );
@@ -158,11 +154,6 @@ const MainBoard = () => {
 
     const [hasToken, setHasToken] = useState(getToken() !== '');
 
-    const mainComponents = [
-        () => <ClassList hasToken={hasToken} />,
-        () => <AgendaList hasToken={hasToken} />
-    ]
-
     const [choice, setChoice] = useState(0);
     const handleChoice = (value: number) => {
         setChoice(value);
@@ -195,7 +186,7 @@ const MainBoard = () => {
                 </View>
             </HomeContext.Provider>
             <View style={styleSheet.mainWrapper}>
-                {mainComponents[choice]()}
+                {choice === 0 ? <ClassList hasToken={hasToken} /> : <AgendaList hasToken={hasToken} />}
             </View>
         </View>
     );
@@ -209,8 +200,6 @@ interface ButtonProps {
 
 const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus = false}): React.JSX.Element => {
     const {choice, shiftChoice}: HomeContextType = useContext(HomeContext);
-
-    const [chunkWidth, setChunkWidth] = useState(0);
     const [focused, setFocused] = useState(initFocus);
     const [focusAnimate] = useState(new Animated.Value(focused ? 1 : 0));
 
@@ -223,13 +212,6 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
         inputRange: [0, 1],
         outputRange: [10, 0],
     })
-
-    // TODO: 并没有正确获取到Text的宽度
-    const handleLayout = (event: any) => {
-        const { width } = event.nativeEvent.layout;
-        console.log(width);
-        setChunkWidth(width);
-    }
 
     const handleClick = () => {
         Animated.timing(focusAnimate, {
@@ -255,8 +237,8 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
     return (
         <Pressable onPress={handleClick} >
             <View style={styleSheet.shiftBox}>
-                <Text onLayout={handleLayout} numberOfLines={1} style={[styleSheet.shiftBoxText, {color: focused ? '#000' : '#999999'}]}>{text}</Text>
-                <Animated.View style={[styleSheet.initBox, {width: chunkWidth, opacity: opacity, transform: [{translateY: translateY}]}]}>
+                <Text numberOfLines={1} style={[styleSheet.shiftBoxText, {color: focused ? '#000' : '#999999'}]}>{text}</Text>
+                <Animated.View style={[styleSheet.initBox, {opacity: opacity, transform: [{translateY: translateY}]}]}>
                     <LinearGradient
                         colors={[BackgroundColor.primary, '#FF9999']}
                         style={{flex: 1, borderRadius: 3}}
@@ -350,7 +332,7 @@ const styleSheet = StyleSheet.create({
         zIndex: 10,
     },
     initBox: {
-        width: undefined,
+        width: 50,
         height: 5,
         position: 'absolute',
         bottom: 3,

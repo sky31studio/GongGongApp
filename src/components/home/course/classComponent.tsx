@@ -1,6 +1,6 @@
 import {StyleSheet, Text, View} from "react-native";
 import CircularProcess from "./circularProcess";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {useAppSelector} from "../../../app/hooks.ts";
 import {selectTable} from "../../../app/slice/tableSlice.ts";
 import {SvgXml} from "react-native-svg";
@@ -16,25 +16,13 @@ const ClassComponent = () => {
     const table = useAppSelector(selectTable);
     const [done, setDone] = useState(0);
     const  [lastTime, setLastTime] = useState(new Date());
-    const [weekDay, setWeekDay] = useState(lastTime.getDay());
-    const [month, setMonth] = useState(lastTime.getMonth() + 1);
-    const [day, setDay] = useState(lastTime.getDate());
+    const weekDay = useMemo(() => lastTime.getDay(), [lastTime]);
+    const month = lastTime.getMonth() + 1;
+    const day = lastTime.getDate();
     // getCoursesByWeekDay是从1-7
-    const courses = table.getCoursesByWeekDay(8, weekDay === 0 ? 7 : weekDay);
-
-    const intervalId = setInterval(() => {
-        setLastTime(new Date());
-    }, 8000);
-
-    useEffect(() => {
-        setWeekDay(lastTime.getDay());
-        setMonth(lastTime.getMonth() + 1);
-        setDay(lastTime.getDate());
-
-        return () => {
-            clearInterval(intervalId);
-        }
-    }, [lastTime])
+    const courses = useMemo(() => {
+        return table.getCoursesByWeekDay(8, weekDay === 0 ? 7 : weekDay);
+    }, [weekDay]);
 
     let classTimeline;
     classTimeline = courses.map((course, index) => {
@@ -123,6 +111,16 @@ const ClassComponent = () => {
             }}>今天没有课哟，去Eatest瞅瞅吧~</Text>
         </View>
     )
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            setLastTime(new Date());
+        }, 10000);
+
+        return () => {
+            clearInterval(intervalId);
+        }
+    }, []);
 
     return (
         <View style={styleSheet.classContainer}>

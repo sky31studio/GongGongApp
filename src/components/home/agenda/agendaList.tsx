@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {memo, useEffect} from "react";
 import {StyleSheet, View} from "react-native";
 import {BackgroundColor} from "../../../config/globalStyleSheetConfig.ts";
 import {addOnValueChangedListener, getToken} from "../../../storage.ts";
@@ -8,7 +8,7 @@ import AgendaComponent from "./agendaComponent.tsx";
 import NoAgendaComponent from "./noAgenda.tsx";
 
 
-export const AgendaList = ({hasToken}: {hasToken: boolean}) => {
+export const AgendaList = memo(({hasToken}: {hasToken: boolean}) => {
 
     // TODO: NotLoggedInComponent for Agenda没有写
     return (
@@ -16,7 +16,7 @@ export const AgendaList = ({hasToken}: {hasToken: boolean}) => {
             {hasToken ? <AgendaComponent/> : <NoAgendaComponent/>}
         </View>
     )
-}
+})
 
 const ss = StyleSheet.create({
     mainContainer: {

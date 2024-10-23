@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import sha256 from 'crypto-js/sha256'
 
 /**
  * type数组内是否存在置顶type
@@ -16,7 +16,7 @@ export const containPinToTop = (types: number[]) => {
 export const generateID = (name: string, time: Date) => {
     const input = time.toString() + ':' + name;
 
-    return crypto.createHash('sha256').update(input).digest('hex');
+    return sha256(input).toString();
 }
 
 export const dealExam = (data: any[]) => {
