@@ -3,11 +3,11 @@ import {Animated, Pressable, StyleSheet, Text, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import LinearGradient from "react-native-linear-gradient";
 import {useAppDispatch} from "../../app/hooks.ts";
-import {fetchTableData} from "../../app/slice/tableSlice.ts";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
 import {addOnValueChangedListener, getToken} from "../../storage.ts";
 import {AgendaList} from "./agenda/agendaList.tsx";
 import ClassList from "./course/classList.tsx";
+import {fetchTable} from "../../app/slice/scheduleSlice.ts";
 
 export interface NavigationProps {
     navigation: {
@@ -19,7 +19,7 @@ export interface NavigationProps {
 const HomePage = ({ navigation }: NavigationProps) => {
     const dispatch = useAppDispatch();
     useEffect(() => {
-        dispatch(fetchTableData());
+        dispatch(fetchTable());
     }, []);
 
     const functionBar = () => <FunctionBar navigation={navigation} />;

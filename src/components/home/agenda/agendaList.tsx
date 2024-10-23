@@ -1,9 +1,6 @@
 import React, {memo, useEffect} from "react";
 import {StyleSheet, View} from "react-native";
 import {BackgroundColor} from "../../../config/globalStyleSheetConfig.ts";
-import {addOnValueChangedListener, getToken} from "../../../storage.ts";
-import ClassComponent from "../course/classComponent.tsx";
-import NotLoggedInComponent from "../course/notLoggedInComponent.tsx";
 import AgendaComponent from "./agendaComponent.tsx";
 import NoAgendaComponent from "./noAgenda.tsx";
 

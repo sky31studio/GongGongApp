@@ -3,14 +3,14 @@ import React, {useEffect} from "react";
 import Schedule from "./schedule";
 import {NavigationProps} from "../home/homePage.tsx";
 import {useAppDispatch} from "../../app/hooks.ts";
-import {fetchTableData} from "../../app/slice/tableSlice.ts";
 import {BackgroundColor} from "../../config/globalStyleSheetConfig.ts";
+import {fetchTable} from "../../app/slice/scheduleSlice.ts";
 
 export const TablePage = ({navigation}: NavigationProps) => {
 
     const dispatch = useAppDispatch();
     useEffect(() => {
-        dispatch(fetchTableData());
+        dispatch(fetchTable());
     }, [dispatch]);
 
     const handleGoBack = () => {

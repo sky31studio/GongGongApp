@@ -12,7 +12,7 @@ export interface Agenda {
     id: string,
     name: string,
     text?: string,
-    time: Date,
+    time: number[],
     location: string,
     types: number[],
 }
@@ -20,7 +20,7 @@ export interface Agenda {
 const agendaSlice = createSlice({
     name: 'exam',
     initialState: {
-        examList: [{id: '123', name: 'Test', time: new Date(2024, 10, 12, 12, 0), location: '逸夫楼412', types: [0]}],
+        examList: [{id: '123', name: 'Test', time: [2024, 10, 12, 12, 0], location: '逸夫楼412', types: [0]}],
         selfList: [],
     },
     reducers: {
@@ -81,7 +81,7 @@ const compare = (a: Agenda, b: Agenda) => {
         return 1;
     }
 
-    return at.getTime() - bt.getTime();
+    return at[0] - bt[0] || at[1] - bt[1] || at[2] - bt[2] || at[3] - bt[3] || at[4] - bt[4];
 }
 
 export const selectExamList = (state: RootState) => state.exam.examList;

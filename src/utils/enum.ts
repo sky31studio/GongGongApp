@@ -28,3 +28,13 @@ export enum AgendaType {
     "考试" = 0,
     "置顶" = 1,
 }
+
+export enum ScheduleWeekDay {
+    Monday = 1,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday,
+    Sunday,
+}

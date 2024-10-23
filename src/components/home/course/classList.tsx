@@ -2,14 +2,14 @@ import React, {memo} from "react";
 import {StyleSheet, View} from "react-native";
 import {BackgroundColor} from "../../../config/globalStyleSheetConfig.ts";
 import ClassComponent from "./classComponent.tsx";
-import NotLoggedInComponent from "./notLoggedInComponent.tsx";
+import NotLoginComponent from "./notLoginComponent.tsx";
 
 const ClassList = memo(({hasToken}: {hasToken: boolean}) => {
 
     return (
         <View>
             <View style={ss.mainContainer}>
-                {hasToken ? <ClassComponent /> : <NotLoggedInComponent />}
+                {hasToken ? <ClassComponent /> : <NotLoginComponent />}
             </View>
         </View>
     )

@@ -1,84 +1,48 @@
 import {TimePlace} from "../../models/timePlace";
 
-/**
- * 课程类
- */
-export default class Course {
-    public name: string;
-    public teacher: string;
-    public classroom: string;
-    public placeInfo: TimePlace;
+export default interface Course {
+    name: string;
+    teacher: string;
+    classroom: string;
+    placeInfo: TimePlace;
+}
 
-    constructor(name: string, teacher: string, classroom: string, placeInfo: TimePlace) {
-        this.name = name;
-        this.teacher = teacher;
-        this.classroom = classroom;
-        this.placeInfo = placeInfo;
+export const getWeekString = (course: Course): string => {
+    const start: number[] = getWeekStart(course);
+    const end: number[] = getWeekEnd(course);
+    let res: string = '';
+
+    for(let i = 0; i < start.length; i++) {
+        res += start[i] + '-' + end[i] + ',';
     }
 
-    public getPlace(): TimePlace {
-        return this.placeInfo;
-    }
+    return res.slice(0, -1);
+}
 
-    public getWeekString(): string {
-        const start: number[] = this.getWeekStart();
-        const end: number[] = this.getWeekEnd();
-        let res: string = '';
+export const getWeekEnd = (course: Course): number[] => {
+    return course.placeInfo.weekInfo.map((item) => {
+        return item.weekEnd;
+    })
+}
 
-        for(let i = 0; i < start.length; i++) {
-            res += start[i] + '-' + end[i] + ',';
-        }
+export const getWeekStart = (course: Course): number[] => {
+    return course.placeInfo.weekInfo.map((item) => {
+        return item.weekStart;
+    })
+}
 
-        return res.slice(0, -1);
-    }
+export const getPeriodEnd = (course: Course) => {
+    return getPeriodStart(course) + course.placeInfo.periodDuration - 1;
+}
 
-    /**
-     * 获取周次终止点的数组
-     */
-    public getWeekEnd(): number[] {
-        return this.placeInfo.weekInfo.map((item) => {
-            return item.weekEnd;
-        })
-    }
-    /**
-     * 获取周次起始点的数组
-     */
-    public getWeekStart(): number[] {
-        return this.placeInfo.weekInfo.map((item) => {
-            return item.weekStart;
-        })
-    }
-    /**
-     * 获取课程终止点的数组
-     */
-    public getPeriodEnd() {
-        return this.getPeriodStart() + this.placeInfo.periodDuration - 1;
-    }
-    /**
-     * 获取课程起始点的数组
-     */
-    public getPeriodStart() {
-        return this.placeInfo.periodStart;
-    }
+export const getPeriodStart = (course: Course): number => {
+    return course.placeInfo.periodStart;
+}
 
-    public getName(): string {
-        return this.name;
-    }
+export const getPeriodDuration = (course: Course): number => {
+    return course.placeInfo.periodDuration;
+}
 
-    public getTeacher(): string {
-        return this.teacher;
-    }
-
-    public getClassroom(): string {
-        return this.classroom;
-    }
-
-    public getPeriodDuration(): number {
-        return this.placeInfo.periodDuration;
-    }
-
-    public getDay(): string {
-        return this.placeInfo.day;
-    }
-
+export const getWeekDay = (course: Course) => {
+    return course.placeInfo.day;
 }

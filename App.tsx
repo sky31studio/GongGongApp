@@ -9,17 +9,12 @@ import {Provider} from "react-redux";
 import {store} from "./src/app/store.ts";
 import {TablePage} from "./src/components/timeTable/tablePage.tsx";
 import LoginPage from "./src/components/login/loginPage.tsx";
-import {getToken} from "./src/storage.ts";
 
 const { height: screenHeight } = Dimensions.get('window');
 
 function App(): React.JSX.Element {
-    const [initialRoute, setInitialRoute] = useState("LoginPage");
     const isDarkMode = useColorScheme() === 'dark';
 
-    // if(getToken() !== '') {
-    //     setInitialRoute("HomePage");
-    // }
 
     const backgroundStyle = {
         backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
@@ -27,20 +22,18 @@ function App(): React.JSX.Element {
     const Stack = createNativeStackNavigator();
 
     return (
-        <StrictMode>
-            <NavigationContainer>
-                <Provider store={store}>
-                    <SafeAreaView style={[backgroundStyle, styles.fullScreen]}>
-                        <StatusBar translucent backgroundColor="#ff6275" />
-                        <Stack.Navigator initialRouteName="HomePage" screenOptions={{headerShown: false}}>
-                            <Stack.Screen name="LoginPage" component={LoginPage} />
-                            <Stack.Screen name="HomePage" component={HomePage} />
-                            <Stack.Screen name="TablePage" component={TablePage} />
-                        </Stack.Navigator>
-                    </SafeAreaView>
-                </Provider>
-            </NavigationContainer>
-        </StrictMode>
+        <NavigationContainer>
+            <Provider store={store}>
+                <SafeAreaView style={[backgroundStyle, styles.fullScreen]}>
+                    <StatusBar translucent backgroundColor="#ff6275" />
+                    <Stack.Navigator initialRouteName="LoginPage" screenOptions={{headerShown: false}}>
+                        <Stack.Screen name="LoginPage" component={LoginPage} />
+                        <Stack.Screen name="HomePage" component={HomePage} />
+                        <Stack.Screen name="TablePage" component={TablePage} />
+                    </Stack.Navigator>
+                </SafeAreaView>
+            </Provider>
+        </NavigationContainer>
     );
 }
 

@@ -2,11 +2,12 @@ import {StyleSheet, Text, View} from "react-native";
 import CircularProcess from "./circularProcess";
 import React, {useEffect, useMemo, useState} from "react";
 import {useAppSelector} from "../../../app/hooks.ts";
-import {selectTable} from "../../../app/slice/tableSlice.ts";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {ENWeekDay} from "../../../utils/enum.ts";
+import {getCoursesByWeekAndWeekDay} from "../../../utils/tableUtils.ts";
+import {selectTable} from "../../../app/slice/scheduleSlice.ts";
 
 const tagText = ['已结束', '上课中', '即将上课', ''];
 const tagColor = ['#EEEEEE', '#8FB5FB', '#FFAA69', '#'];
@@ -20,9 +21,8 @@ const ClassComponent = () => {
     const month = lastTime.getMonth() + 1;
     const day = lastTime.getDate();
     // getCoursesByWeekDay是从1-7
-    const courses = useMemo(() => {
-        return table.getCoursesByWeekDay(8, weekDay === 0 ? 7 : weekDay);
-    }, [weekDay]);
+    const courses = getCoursesByWeekAndWeekDay(8, weekDay === 0 ? 7 : weekDay);
+
 
     let classTimeline;
     classTimeline = courses.map((course, index) => {
@@ -112,11 +112,11 @@ const ClassComponent = () => {
         </View>
     )
 
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            setLastTime(new Date());
-        }, 10000);
+    const intervalId = setInterval(() => {
+        setLastTime(new Date());
+    }, 10000);
 
+    useEffect(() => {
         return () => {
             clearInterval(intervalId);
         }
