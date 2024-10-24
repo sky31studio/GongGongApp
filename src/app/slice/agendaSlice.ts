@@ -1,4 +1,4 @@
-import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
+import {createAsyncThunk, createSelector, createSlice} from "@reduxjs/toolkit";
 import Resources from "../../basic/Resources.ts";
 import {RootState} from "../store.ts";
 import {generateID} from "../../utils/agendaUtils.ts";
@@ -20,7 +20,7 @@ export interface Agenda {
 const agendaSlice = createSlice({
     name: 'exam',
     initialState: {
-        examList: [{id: '123', name: 'Test', time: [2024, 10, 12, 12, 0], location: '逸夫楼412', types: [0]}],
+        examList: [{id: '123', name: 'Test', time: [2024, 10, 12, 12, 0, 4], location: '逸夫楼412', types: [0]}],
         selfList: [],
     },
     reducers: {
@@ -69,6 +69,7 @@ const agendaSlice = createSlice({
     },
 })
 
+// Agenda的比较函数，因为存在没有时间的Agenda，需要特殊判断
 const compare = (a: Agenda, b: Agenda) => {
     const at = a.time;
     const bt = b.time;
@@ -84,14 +85,31 @@ const compare = (a: Agenda, b: Agenda) => {
     return at[0] - bt[0] || at[1] - bt[1] || at[2] - bt[2] || at[3] - bt[3] || at[4] - bt[4];
 }
 
+// exam和self的selector
 export const selectExamList = (state: RootState) => state.exam.examList;
-export const selectAgendaList = (state: RootState) => {
-    const res = state.exam.examList.slice();
-    res.concat(state.exam.selfList);
-    res.sort(compare);
+export const selectSelfList = (state: RootState) => state.exam.selfList;
 
-    return res;
-}
+// 返回exam+self的总表(已排序)
+export const selectAgendaList = createSelector(
+    [selectExamList, selectSelfList],
+    (examList, selfList) => {
+        const res = examList.slice();
+        res.concat(selfList);
+        res.sort(compare);
+
+        return res;
+    }
+)
+// 返回exam列表(已排序)
+export const selectOnlyExamList = createSelector(
+    [selectExamList],
+    (examList) => {
+        const res = examList.slice();
+        res.sort(compare);
+
+        return res;
+    }
+)
 
 export default agendaSlice.reducer;
 

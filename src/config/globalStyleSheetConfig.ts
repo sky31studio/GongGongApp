@@ -19,9 +19,11 @@ export const FontColor = {
 }
 
 export const FontSize = {
+    xxs: 8,
     ss: 10,
     s: 12,
     m: 14,
     l: 16,
     ll: 18,
+    xxl: 20,
 }

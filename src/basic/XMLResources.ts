@@ -1,5 +1,13 @@
 export default class XMLResources {
 
+    // global
+    static backArrow = `
+    <svg width="10" height="18" viewBox="0 0 10 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M10.0001 16.4375L8.95459 17.5L1.28098 9.70137C0.898041 9.31219 0.898042 8.68781 1.28098 8.29863L8.95459 0.5L10.0001 1.5625L2.68179 9L10.0001 16.4375Z" fill="white"/>
+</svg>
+
+    `;
+
     // LoginPage
     static alert = `
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">

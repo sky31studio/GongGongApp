@@ -15,13 +15,39 @@ const tagFontColor = ['#A6A6A6', '#FFFFFF', '#FFFFFF', '#'];
 
 const ClassComponent = () => {
     const table = useAppSelector(selectTable);
-    const [done, setDone] = useState(0);
     const  [lastTime, setLastTime] = useState(new Date());
     const weekDay = useMemo(() => lastTime.getDay(), [lastTime]);
     const month = lastTime.getMonth() + 1;
     const day = lastTime.getDate();
-    // getCoursesByWeekDay是从1-7
-    const courses = getCoursesByWeekAndWeekDay(8, weekDay === 0 ? 7 : weekDay);
+
+    let courses: any[] = useMemo(() => getCoursesByWeekAndWeekDay(table, 8, weekDay === 0 ? 7 : weekDay), [table]);
+    let done = useMemo(() => {
+        for(let i = 0; i < courses.length; i++) {
+            // 东八区 +8h
+            const currentHour = lastTime.getHours() + 8;
+            const currentMinute = lastTime.getMinutes();
+            const current = currentHour * 60 + currentMinute;
+
+            let startTime = courses[i].time.start.split(':');
+            startTime[0] = parseInt(startTime[0]);
+            startTime[1] = parseInt(startTime[1]);
+            const start = startTime[0] * 60 + startTime[1];
+
+            let endTime = courses[i].time.end.split(':');
+            endTime[0] = parseInt(endTime[0]);
+            endTime[1] = parseInt(endTime[1]);
+            const end = endTime[0] * 60 + endTime[1];
+
+            if(current < start) {
+                return i;
+            }
+
+            if(current > start && current < end) {
+                return i;
+            }
+        }
+        return courses.length;
+    }, [lastTime]);
 
 
     let classTimeline;
@@ -48,7 +74,6 @@ const ClassComponent = () => {
             isDeprecated = 0;
         }
         else if(current < start) {
-            setDone(index + 1);
             isDeprecated = start - current > 30 ? 3 : 2;
         }
         else {
@@ -207,7 +232,7 @@ const styleSheet = StyleSheet.create({
         justifyContent: 'flex-start',
         paddingVertical: 7,
         paddingHorizontal: 25,
-        borderTopWidth: 1,
+        borderTopWidth: .8,
         borderTopColor: '#EEEEEE',
     },
 

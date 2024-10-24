@@ -69,12 +69,12 @@ export function getTimeByPeriod(periodStart: number, periodEnd: number) {
 
 /**
  * 获取需要在classComponent中显示的课程列表
+ * @param table 表格数据
  * @param week 周次
  * @param weekDay 周几
  * @return Course[] Course列表
  */
-export const getCoursesByWeekAndWeekDay = (week: number, weekDay: number) => {
-    const table = useAppSelector(selectTable);
+export const getCoursesByWeekAndWeekDay = (table: Record<string, Course[]>, week: number, weekDay: number) => {
 
     const res: any[] = [];
     const list = table[ScheduleWeekDay[weekDay]];
@@ -104,12 +104,12 @@ export const getCoursesByWeekAndWeekDay = (week: number, weekDay: number) => {
 
 /**
  * 向Schedule组件提供某周某天的课程列表
+ * @param table 表格数据
  * @param weekNumber 周次
  * @param weekDay 周几
  * @return: classObject[]
  */
-export const getClassList = (weekNumber: number, weekDay: number): ClassObject[] => {
-    const table = useAppSelector(selectTable);
+export const getClassList = (table: Record<string, Course[]>, weekNumber: number, weekDay: number): ClassObject[] => {
     const list: ClassObject[] = [];
 
     let index = 1;
@@ -154,13 +154,14 @@ export const getClassList = (weekNumber: number, weekDay: number): ClassObject[]
 
 /**
  * 获取对应周次的课程列表
+ * @param table 表格数据
  * @param week 周次
  * @return ClassObject[][] 用于在Schedule渲染的列表
  */
-export const getAllCoursesByWeek = (week: number): ClassObject[][] => {
+export const getAllCoursesByWeek = (table: Record<string, Course[]>, week: number): ClassObject[][] => {
     const res: ClassObject[][] = [];
     for(let i = 1; i < 7; i++) {
-        res.push(getClassList(week, i));
+        res.push(getClassList(table, week, i));
     }
 
     return res;

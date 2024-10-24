@@ -114,16 +114,22 @@ const FunctionBar: React.ComponentType<NavigationProps> = ({ navigation }) => {
         navigation.navigate("TablePage");
     }
 
+    const toScorePage = () => {
+        navigation.navigate("ScorePage");
+    }
+
     return (
       <View style={styleSheet.functionBarContainer}>
         <View style={styleSheet.functionBox}>
             <SvgXml xml={emptyClassroomXML} width="100%" />
             <Text style={styleSheet.functionText}>空教室</Text>
         </View>
-          <View style={styleSheet.functionBox}>
-              <SvgXml xml={gradeXML} width="100%" />
-              <Text style={styleSheet.functionText}>查成绩</Text>
-          </View>
+          <Pressable onPress={toScorePage}>
+              <View style={styleSheet.functionBox}>
+                  <SvgXml xml={gradeXML} width="100%" />
+                  <Text style={styleSheet.functionText}>查成绩</Text>
+              </View>
+          </Pressable>
           <Pressable onPress={toTablePage}>
               <View style={styleSheet.functionBox}>
                   <SvgXml xml={classXML} width="100%" />

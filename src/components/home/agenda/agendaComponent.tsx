@@ -1,9 +1,9 @@
 import {Pressable, StyleSheet, Text, View} from "react-native";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
-import {Agenda, fetchExamData, selectAgendaList} from "../../../app/slice/agendaSlice.ts";
+import {Agenda, fetchExamData, selectAgendaList, selectExamList} from "../../../app/slice/agendaSlice.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {AgendaType, CNWeekDay} from "../../../utils/enum.ts";
 
@@ -34,6 +34,8 @@ const agendaComponent = () => {
         </View>
     )
 
+    const countdownList = <CountdownList onlyExam={onlyExam} />
+
     return (
         <View style={ss.agendaComponentContainer}>
             <View style={ss.functionContainer}>
@@ -51,6 +53,7 @@ const agendaComponent = () => {
                     </Pressable>
                 </View>
             </View>
+            {countdownList}
         </View>
     )
 }
@@ -58,8 +61,8 @@ const agendaComponent = () => {
 /**
  * Agenda列表部分
  */
-const CountdownList = () => {
-    const agendaList = useAppSelector(selectAgendaList);
+const CountdownList = ({onlyExam}: {onlyExam: boolean}): React.JSX.Element => {
+    const agendaList = onlyExam ? useAppSelector(selectExamList) : useAppSelector(selectAgendaList);
     const [lastTime, setLastTime] = useState(new Date());
     const intervalID = setInterval(() => {
         setLastTime(new Date());
@@ -71,14 +74,16 @@ const CountdownList = () => {
         }
     })
 
-    const renderList = agendaList.map((agenda: Agenda, index) => {
+    let renderList;
+    renderList = agendaList.map((agenda: Agenda, index) => {
         const time = agenda.time;
-        const year = time.getFullYear();
-        const month = time.getMonth() + 1;
-        const day = time.getDate();
-        const weekDay = time.getDay();
+        const year = time[0];
+        const month = time[1] + 1;
+        const day = time[2];
+        const weekDay = time[5];
         // 只对天进行判断，不判断一天内是否过期
-        const [countdown, setCountdown] = useState(Math.floor((agenda.time.getTime() - lastTime.getTime()) / (1000 * 3600 * 24)));
+        let date = new Date(year, month - 1, day);
+        const countdown = Math.floor((date.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
 
         // 说明该Agenda已经过期
         if (countdown < 0) return;
@@ -90,7 +95,7 @@ const CountdownList = () => {
         const typeList = agenda.types.map((type, index) => {
             return (
                 <View style={ss.agendaTagContainer}>
-                    <Text>{AgendaType[type]}</Text>
+                    <Text style={{fontSize: FontSize.ss, color: FontColor.light, lineHeight: 15}}>{AgendaType[type]}</Text>
                 </View>
             )
         })
@@ -105,8 +110,8 @@ const CountdownList = () => {
                 <View style={ss.agendaLocationAndTimeContainer}>
                     <SvgXml xml={XMLResources.clock} width={9} height={9}/>
                     <Text style={[ss.agendaInfoText]}>{timeStr}</Text>
-                    <Text style={[ss.agendaInfoText]}></Text>
-                    <View style={{width: 1, height: 8, backgroundColor: FontColor.grey}}>{CNWeekDay[weekDay]}</View>
+                    <Text style={[ss.agendaInfoText]}>{CNWeekDay[weekDay]}</Text>
+                    <View style={{width: .5, height: 12, backgroundColor: FontColor.grey, marginHorizontal: 5}}></View>
                     <SvgXml xml={XMLResources.location} width={9} height={9}/>
                     <Text style={[ss.agendaInfoText]}>{agenda.location}</Text>
                 </View>
@@ -125,8 +130,20 @@ const CountdownList = () => {
         )
     })
 
-    return renderList;
+    return (
+        <View style={ss.countdownListContainer}>
+            {renderList}
+        </View>
+    );
+}
 
+const addBoard = () => {
+
+    return (
+        <View>
+            
+        </View>
+    )
 }
 
 const ss = StyleSheet.create({
@@ -146,6 +163,13 @@ const ss = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 10,
         paddingHorizontal: 10,
+    },
+
+    countdownListContainer: {
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
     },
 
     addContainer: {
@@ -175,10 +199,15 @@ const ss = StyleSheet.create({
 
     agendaContainer: {
         width: '100%',
+        height: 125,
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
+        borderTopWidth: .8,
+        borderTopColor: '#EEEEEE',
+        paddingVertical: 10,
+        paddingHorizontal: 25,
     },
 
     agendaNameContainer: {
@@ -187,8 +216,8 @@ const ss = StyleSheet.create({
     },
 
     agendaName: {
-        color: FontColor.grey,
-        fontSize: FontSize.m,
+        color: FontColor.dark,
+        fontSize: FontSize.ll,
     },
 
     agendaLocationAndTimeContainer: {
@@ -199,19 +228,23 @@ const ss = StyleSheet.create({
 
     countdownContainer: {
         position: 'absolute',
-        top: 0,
+        top: 10,
         right: 0,
         display: 'flex',
         flexDirection: 'row',
+        alignItems: 'center',
     },
 
     agendaTagContainer: {
         display: 'flex',
         alignItems: 'center',
-        borderRadius: 5,
+        height: 18,
+        borderRadius: 14,
         borderBottomLeftRadius: 0,
         backgroundColor: BackgroundColor.tertiary,
-        marginLeft: 5,
+        marginLeft: 10,
+        paddingVertical: 2,
+        paddingHorizontal: 8,
     },
 
     agendaText: {
@@ -221,12 +254,14 @@ const ss = StyleSheet.create({
 
     agendaInfoText: {
         color: FontColor.greyLight,
-        fontSize: FontSize.s,
+        fontSize: FontSize.ss,
+        marginLeft: 3,
+        lineHeight: 16,
     },
 
     countdownText: {
         color: FontColor.dark,
-        fontSize: FontSize.l,
+        fontSize: FontSize.ss,
         verticalAlign: 'bottom',
     },
 
@@ -234,6 +269,7 @@ const ss = StyleSheet.create({
         color: BackgroundColor.primary,
         fontSize: FontSize.ll,
         verticalAlign: 'bottom',
+        marginHorizontal: 3,
     }
 })
 

@@ -1,8 +1,10 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {StyleSheet, Text, View} from "react-native";
 import ClassBox from "./classBox";
 import TimeTableConfig from "../../config/TimeTableConfig";
 import {getAllCoursesByWeek} from "../../utils/tableUtils.ts";
+import {useAppSelector} from "../../app/hooks.ts";
+import {selectTable} from "../../app/slice/scheduleSlice.ts";
 
 const weekTime = ['01-01', '01-02', '01-03', '01-04', '01-05', '01-06', '01-07'];
 
@@ -48,7 +50,8 @@ export default function Schedule(): React.JSX.Element {
     );
     timeListWithGap = [monthItem,...timeListWithGap];
 
-    const courses = getAllCoursesByWeek(6);
+    const table = useAppSelector(selectTable);
+    const courses = useMemo(() => getAllCoursesByWeek(table, 6), [table]);
 
     const classList = () => {
         return courses.map((item, index) => {

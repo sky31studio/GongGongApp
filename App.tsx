@@ -1,4 +1,4 @@
-import React, {StrictMode, useState} from 'react';
+import React, {StrictMode, useEffect, useState} from 'react';
 import {Dimensions, SafeAreaView, StatusBar, StyleSheet, useColorScheme,} from 'react-native';
 
 import {Colors,} from 'react-native/Libraries/NewAppScreen';
@@ -9,12 +9,21 @@ import {Provider} from "react-redux";
 import {store} from "./src/app/store.ts";
 import {TablePage} from "./src/components/timeTable/tablePage.tsx";
 import LoginPage from "./src/components/login/loginPage.tsx";
+import {getToken} from "./src/storage.ts";
+import ScorePage from "./src/components/score/ScorePage.tsx";
 
 const { height: screenHeight } = Dimensions.get('window');
 
 function App(): React.JSX.Element {
+    const [initialRouter, setInitialRouter] = useState('LoginPage');
     const isDarkMode = useColorScheme() === 'dark';
 
+    // DANGER: 一定要把这段逻辑放在useEffect中，防止重复渲染
+    useEffect(() => {
+        if(getToken() !== '') {
+            setInitialRouter('HomePage');
+        }
+    }, []);
 
     const backgroundStyle = {
         backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
@@ -30,6 +39,7 @@ function App(): React.JSX.Element {
                         <Stack.Screen name="LoginPage" component={LoginPage} />
                         <Stack.Screen name="HomePage" component={HomePage} />
                         <Stack.Screen name="TablePage" component={TablePage} />
+                        <Stack.Screen name="ScorePage" component={ScorePage} />
                     </Stack.Navigator>
                 </SafeAreaView>
             </Provider>

@@ -57,8 +57,8 @@ const scheduleSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchTable.fulfilled, (state, action) => {
-                cleanTable();
-                addSchedules(action.payload);
+                scheduleSlice.caseReducers.cleanTable(state, {payload: action.payload, type: 'schedule/cleanTable'});
+                scheduleSlice.caseReducers.addSchedules(state, {payload: action.payload, type: 'schedule/addSchedules'});
             })
     }
 })
