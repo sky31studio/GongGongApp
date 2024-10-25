@@ -4,9 +4,9 @@ export const BackgroundColor = {
     secondary: '#FF6C87',
     tertiary: '#FFAA69',
     iconPrimary: '#8FB5FB',
-    iconPrimaryBackground: 'rgba(143,181,251,0.3)',
+    iconPrimaryBackground: '#dee9fe',
     iconSecondary: '#FE2741',
-    iconSecondaryBackground: 'rgba(254,39,65,0.3)',
+    iconSecondaryBackground: '#ffbfc6',
     mainLight: '#fff',
 }
 
@@ -15,6 +15,7 @@ export const FontColor = {
     light: '#fff',
     grey: '#A6A6A6',
     greyLight: '#A7A7A7',
+    darkLight: '#3A3A3A',
     dark: '#000',
 }
 

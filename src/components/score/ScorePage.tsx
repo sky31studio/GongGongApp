@@ -1,19 +1,35 @@
-import {Pressable, StyleSheet, Text, View} from "react-native";
+import {Animated, Pressable, StyleSheet, Text, View} from "react-native";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {NavigationProps} from "../home/homePage.tsx";
+import Resources from "../../basic/Resources.ts";
+import {dealScore, SingleScoreList} from "../../utils/scoreUtils.ts";
+import SingleScore from "./SingleScore.tsx";
+import ScrollView = Animated.ScrollView;
 
 
 const ScorePage = ({navigation}: NavigationProps) => {
+    const [scoreList, setScoreList] = useState<SingleScoreList[]>([]);
+
+    useEffect(() => {
+        Resources.getScore().then((data) => {
+            setScoreList(dealScore(data));
+        })
+    }, []);
+
+    const renderList = scoreList.map((singleScore, index) => {
+        return (
+            <SingleScore key={index} scoreList={singleScore} term={singleScore.term}/>
+        )
+    })
 
     const handleBack = () => {
         navigation.navigate('HomePage');
     }
-
     return (
-        <View>
+        <View style={{height: '100%'}}>
             <View style={ss.titleBar}>
                 <Pressable onPress={handleBack} style={ss.backButton}>
                     <SvgXml xml={XMLResources.backArrow} width={10} height={18} />
@@ -28,6 +44,9 @@ const ScorePage = ({navigation}: NavigationProps) => {
                     <ScoreBox score={'4'} text={'年级排名'} />
                     <ScoreBox score={'86.92'} text={'平均成绩'} />
                 </View>
+                <ScrollView style={ss.scoreListContainer}>
+                    {renderList}
+                </ScrollView>
             </View>
         </View>
     )
@@ -76,6 +95,7 @@ const ss = StyleSheet.create({
 
     mainContainer: {
         width: '100%',
+        flex: 1,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -98,6 +118,13 @@ const ss = StyleSheet.create({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+    },
+
+    scoreListContainer: {
+        width: '86%',
+        marginTop: 15,
+        display: 'flex',
+        flexDirection: 'column',
     }
 })
 

@@ -16,7 +16,7 @@ class Resources {
                 }
             })
 
-            return response.data;
+            return response.data.data;
         } catch(error) {
             console.log(`请求失败: ${error}`);
         }
@@ -29,8 +29,6 @@ class Resources {
      */
     public static async login(username: string, password: string) {
         try {
-            console.log(username);
-            console.log(password);
             const response = await axios.post(`${rootUrl}/login`, {
                 username: username,
                 password: password,
@@ -43,7 +41,7 @@ class Resources {
             // response状态码
             const code = response.status;
             if(code === 200) {
-                setToken(response.data['session_id']);
+                setToken(response.data.data['session_id']);
             }
 
             return code;
@@ -61,8 +59,23 @@ class Resources {
                 }
             });
 
-            return response.data;
+            return response.data.data;
         } catch(error) {
+            console.log(error);
+        }
+    }
+
+    public static async getScore() {
+        try {
+            const response = await axios.get(`${rootUrl}/scores`, {
+                headers: {
+                    'token': getToken()
+                }
+            })
+
+            return response.data.data.scores;
+
+        } catch (error) {
             console.log(error);
         }
     }

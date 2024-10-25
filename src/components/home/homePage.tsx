@@ -8,6 +8,7 @@ import {addOnValueChangedListener, getToken} from "../../storage.ts";
 import {AgendaList} from "./agenda/agendaList.tsx";
 import ClassList from "./course/classList.tsx";
 import {fetchTable} from "../../app/slice/scheduleSlice.ts";
+import {fetchExamData} from "../../app/slice/agendaSlice.ts";
 
 export interface NavigationProps {
     navigation: {
@@ -18,8 +19,11 @@ export interface NavigationProps {
 
 const HomePage = ({ navigation }: NavigationProps) => {
     const dispatch = useAppDispatch();
+
+    // 登录成功，一次性请求全部数据
     useEffect(() => {
         dispatch(fetchTable());
+        dispatch(fetchExamData());
     }, []);
 
     const functionBar = () => <FunctionBar navigation={navigation} />;

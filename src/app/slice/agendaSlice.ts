@@ -1,31 +1,42 @@
 import {createAsyncThunk, createSelector, createSlice} from "@reduxjs/toolkit";
 import Resources from "../../basic/Resources.ts";
 import {RootState} from "../store.ts";
-import {generateID} from "../../utils/agendaUtils.ts";
+import {dealExams, generateID} from "../../utils/agendaUtils.ts";
 
 export const fetchExamData = createAsyncThunk('exam/fetchExamData', async () => {
     const data = await Resources.getExam();
-    return data;
+    return dealExams(data);
 })
 
 export interface Agenda {
     id: string,
     name: string,
-    text?: string,
-    time: number[],
+    text: string,
+    startTime: number[],
+    endTime: number[],
     location: string,
     types: number[],
 }
 
+/**
+ * 内部分为考试和自定义两类
+ */
+interface InitialState {
+    examList: Agenda[],
+    selfList: Agenda[],
+}
+
+const initialState: InitialState = {
+    examList: [],
+    selfList: [],
+}
+
 const agendaSlice = createSlice({
     name: 'exam',
-    initialState: {
-        examList: [{id: '123', name: 'Test', time: [2024, 10, 12, 12, 0, 4], location: '逸夫楼412', types: [0]}],
-        selfList: [],
-    },
+    initialState,
     reducers: {
-        addExam: (state, action) => {
-            const id = generateID(action.payload.name, action.payload.time);
+        addExam: (state, action: { payload: Agenda, type: any }) => {
+            const id = action.payload.id;
             // 检查该项是否已经存在
             for (let exam of state.examList) {
                 if (exam.id === id) {
@@ -33,7 +44,7 @@ const agendaSlice = createSlice({
                 }
             }
 
-            state.examList.push({id: id, ...action.payload});
+            state.examList.push(action.payload);
             state.examList.sort(compare);
         },
 
@@ -59,20 +70,23 @@ const agendaSlice = createSlice({
             // @ts-ignore
             state.selfList.push({id: id, ...action.payload});
             state.selfList.sort(compare);
-        }
+        },
     },
     extraReducers: (builder) => {
         builder
             .addCase(fetchExamData.fulfilled, (state, action) => {
-
+                for (let exam of action.payload) {
+                    agendaSlice.caseReducers.addExam(state, {payload: exam, type: 'exam/addExam'});
+                }
             })
     },
 })
 
+// TODO: 判断置顶条件，修改空时间判断
 // Agenda的比较函数，因为存在没有时间的Agenda，需要特殊判断
 const compare = (a: Agenda, b: Agenda) => {
-    const at = a.time;
-    const bt = b.time;
+    const at = a.startTime;
+    const bt = b.startTime;
 
     if (at === undefined) {
         return -1;

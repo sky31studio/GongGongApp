@@ -1,20 +1,18 @@
 import {Pressable, StyleSheet, Text, View} from "react-native";
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
-import {Agenda, fetchExamData, selectAgendaList, selectExamList} from "../../../app/slice/agendaSlice.ts";
+import {Agenda, selectAgendaList, selectExamList} from "../../../app/slice/agendaSlice.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {AgendaType, CNWeekDay} from "../../../utils/enum.ts";
+import {Directions, Gesture, GestureDetector, GestureHandlerRootView} from "react-native-gesture-handler";
+import {useSharedValue} from "react-native-reanimated";
 
 const agendaComponent = () => {
     const useDispatch = useAppDispatch();
     // 是否只展示exam
     const [onlyExam, setOnlyExam] = useState<boolean>(false);
-
-    useEffect(() => {
-        useDispatch(fetchExamData());
-    }, []);
 
     const handleOnlyExam = () => {
         setOnlyExam(!onlyExam);
@@ -63,6 +61,7 @@ const agendaComponent = () => {
  */
 const CountdownList = ({onlyExam}: {onlyExam: boolean}): React.JSX.Element => {
     const agendaList = onlyExam ? useAppSelector(selectExamList) : useAppSelector(selectAgendaList);
+
     const [lastTime, setLastTime] = useState(new Date());
     const intervalID = setInterval(() => {
         setLastTime(new Date());
@@ -76,9 +75,9 @@ const CountdownList = ({onlyExam}: {onlyExam: boolean}): React.JSX.Element => {
 
     let renderList;
     renderList = agendaList.map((agenda: Agenda, index) => {
-        const time = agenda.time;
+        const time = agenda.startTime;
         const year = time[0];
-        const month = time[1] + 1;
+        const month = time[1];
         const day = time[2];
         const weekDay = time[5];
         // 只对天进行判断，不判断一天内是否过期
@@ -100,40 +99,63 @@ const CountdownList = ({onlyExam}: {onlyExam: boolean}): React.JSX.Element => {
             )
         })
 
+        // TODO: 手势处理
+        const translateY = useSharedValue(0);
+        const startTranslateY = useSharedValue(0);
+
+        const fling = Gesture.Fling()
+            .direction(Directions.LEFT)
+            .numberOfPointers(1)
+            .shouldCancelWhenOutside(false)
+            .onBegin((event) => {
+                startTranslateY.value = event.y;
+            })
+
         return (
-            <View style={ss.agendaContainer}>
-                <View style={ss.agendaNameContainer}>
-                    <Text numberOfLines={1} ellipsizeMode="tail" style={ss.agendaName}>{agenda.name}</Text>
-                    {agenda.types.length && typeList}
-                </View>
-                {agenda.text && <Text style={[ss.agendaText]}>{agenda.text}</Text>}
-                <View style={ss.agendaLocationAndTimeContainer}>
-                    <SvgXml xml={XMLResources.clock} width={9} height={9}/>
-                    <Text style={[ss.agendaInfoText]}>{timeStr}</Text>
-                    <Text style={[ss.agendaInfoText]}>{CNWeekDay[weekDay]}</Text>
-                    <View style={{width: .5, height: 12, backgroundColor: FontColor.grey, marginHorizontal: 5}}></View>
-                    <SvgXml xml={XMLResources.location} width={9} height={9}/>
-                    <Text style={[ss.agendaInfoText]}>{agenda.location}</Text>
-                </View>
-                <View style={ss.countdownContainer}>
-                    <Text style={ss.countdownText}>还剩</Text>
-                    <Text style={ss.countdownDayText}>{countdown}</Text>
-                    <Text style={ss.countdownText}>天</Text>
-                </View>
-                <Pressable>
+            <GestureDetector gesture={fling} key={agenda.id}>
+                <View style={ss.agendaContainer}>
+                    <View style={ss.agendaNameContainer}>
+                        <Text numberOfLines={1} ellipsizeMode="tail" style={ss.agendaName}>{agenda.name}</Text>
+                        {agenda.types.length && typeList}
+                    </View>
+                    {agenda.text !== '' && <Text style={[ss.agendaText]}>{agenda.text}</Text>}
+                    <View style={ss.agendaLocationAndTimeContainer}>
+                        <SvgXml xml={XMLResources.clock} width={9} height={9}/>
+                        <Text style={[ss.agendaInfoText]}>{timeStr}</Text>
+                        <Text style={[ss.agendaInfoText]}>{CNWeekDay[weekDay]}</Text>
+                        <View style={{
+                            width: .5,
+                            height: 12,
+                            backgroundColor: FontColor.grey,
+                            marginHorizontal: 5
+                        }}></View>
+                        <SvgXml xml={XMLResources.location} width={9} height={9}/>
+                        <Text style={[ss.agendaInfoText]}>{agenda.location}</Text>
+                    </View>
+                    <View style={ss.countdownContainer}>
+                        <Text style={ss.countdownText}>还剩</Text>
+                        <Text style={ss.countdownDayText}>{countdown}</Text>
+                        <Text style={ss.countdownText}>天</Text>
+                    </View>
+                    <Pressable
+                        style={[ss.agendaButton, {backgroundColor: BackgroundColor.iconPrimaryBackground, right: -60}]}>
 
-                </Pressable>
-                <Pressable>
+                    </Pressable>
+                    <Pressable style={[ss.agendaButton, {
+                        backgroundColor: BackgroundColor.iconSecondaryBackground,
+                        right: -30
+                    }]}>
 
-                </Pressable>
-            </View>
+                    </Pressable>
+                </View>
+            </GestureDetector>
         )
     })
 
     return (
-        <View style={ss.countdownListContainer}>
+        <GestureHandlerRootView style={ss.countdownListContainer}>
             {renderList}
-        </View>
+        </GestureHandlerRootView>
     );
 }
 
@@ -199,7 +221,7 @@ const ss = StyleSheet.create({
 
     agendaContainer: {
         width: '100%',
-        height: 125,
+        height: 75,
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
@@ -208,6 +230,7 @@ const ss = StyleSheet.create({
         borderTopColor: '#EEEEEE',
         paddingVertical: 10,
         paddingHorizontal: 25,
+        // overflow: "hidden",
     },
 
     agendaNameContainer: {
@@ -224,6 +247,9 @@ const ss = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
+        position: 'absolute',
+        bottom: 10,
+        left: 25,
     },
 
     countdownContainer: {
@@ -270,6 +296,16 @@ const ss = StyleSheet.create({
         fontSize: FontSize.ll,
         verticalAlign: 'bottom',
         marginHorizontal: 3,
+    },
+
+    agendaButton: {
+        position: 'absolute',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 95,
+        width: 30,
+        top: 0,
     }
 })
 

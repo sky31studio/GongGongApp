@@ -26,7 +26,8 @@ export enum ENWeekDay {
  */
 export enum AgendaType {
     "考试" = 0,
-    "置顶" = 1,
+    "考查",
+    "置顶",
 }
 
 export enum ScheduleWeekDay {
@@ -37,4 +38,15 @@ export enum ScheduleWeekDay {
     Friday,
     Saturday,
     Sunday,
+}
+
+export enum Term {
+    "大一上" = 1,
+    "大一下",
+    "大二上",
+    "大二下",
+    "大三上",
+    "大三下",
+    "大四上",
+    "大四下",
 }
