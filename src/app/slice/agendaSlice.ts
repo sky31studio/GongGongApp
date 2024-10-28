@@ -24,11 +24,13 @@ export interface Agenda {
 interface InitialState {
     examList: Agenda[],
     selfList: Agenda[],
+    showAddBoard: boolean,
 }
 
 const initialState: InitialState = {
     examList: [],
     selfList: [],
+    showAddBoard: false,
 }
 
 const agendaSlice = createSlice({
@@ -47,7 +49,6 @@ const agendaSlice = createSlice({
             state.examList.push(action.payload);
             state.examList.sort(compare);
         },
-
         removeExam: (state, action) => {
             for (let exam of state.examList) {
                 if (exam.id === action.payload) {
@@ -70,6 +71,14 @@ const agendaSlice = createSlice({
             // @ts-ignore
             state.selfList.push({id: id, ...action.payload});
             state.selfList.sort(compare);
+        },
+
+        showAddBoard:(state) => {
+            state.showAddBoard = true;
+        },
+
+        hideAddBoard:(state) => {
+            state.showAddBoard = false;
         },
     },
     extraReducers: (builder) => {
@@ -102,6 +111,7 @@ const compare = (a: Agenda, b: Agenda) => {
 // exam和self的selector
 export const selectExamList = (state: RootState) => state.exam.examList;
 export const selectSelfList = (state: RootState) => state.exam.selfList;
+export const selectShowAddBoard = (state: RootState) => state.exam.showAddBoard;
 
 // 返回exam+self的总表(已排序)
 export const selectAgendaList = createSelector(
@@ -125,6 +135,7 @@ export const selectOnlyExamList = createSelector(
     }
 )
 
+export const { showAddBoard, hideAddBoard } = agendaSlice.actions;
 export default agendaSlice.reducer;
 
 

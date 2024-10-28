@@ -11,6 +11,7 @@ import {TablePage} from "./src/components/timeTable/tablePage.tsx";
 import LoginPage from "./src/components/login/loginPage.tsx";
 import {getToken} from "./src/storage.ts";
 import ScorePage from "./src/components/score/ScorePage.tsx";
+import EmptyClassroomPage from "./src/components/emptyClassroom/EmptyClassroomPage.tsx";
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -40,6 +41,7 @@ function App(): React.JSX.Element {
                         <Stack.Screen name="HomePage" component={HomePage} />
                         <Stack.Screen name="TablePage" component={TablePage} />
                         <Stack.Screen name="ScorePage" component={ScorePage} />
+                        <Stack.Screen name="EmptyClassroomPage" component={EmptyClassroomPage} />
                     </Stack.Navigator>
                 </SafeAreaView>
             </Provider>

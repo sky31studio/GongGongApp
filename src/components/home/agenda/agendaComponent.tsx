@@ -1,25 +1,27 @@
-import {Pressable, StyleSheet, Text, View} from "react-native";
+import {Pressable, StyleSheet, Text, TextInput, View} from "react-native";
 import React, {useEffect, useState} from "react";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
-import {Agenda, selectAgendaList, selectExamList} from "../../../app/slice/agendaSlice.ts";
+import {Agenda, selectAgendaList, selectExamList, showAddBoard} from "../../../app/slice/agendaSlice.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {AgendaType, CNWeekDay} from "../../../utils/enum.ts";
-import {Directions, Gesture, GestureDetector, GestureHandlerRootView} from "react-native-gesture-handler";
-import {useSharedValue} from "react-native-reanimated";
+import {Gesture, GestureDetector, GestureHandlerRootView} from "react-native-gesture-handler";
+import Animated, {useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
 
 const agendaComponent = () => {
     const useDispatch = useAppDispatch();
     // 是否只展示exam
     const [onlyExam, setOnlyExam] = useState<boolean>(false);
+    const countdownList = <CountdownList onlyExam={onlyExam} />
 
     const handleOnlyExam = () => {
         setOnlyExam(!onlyExam);
         console.log(onlyExam);
     }
     // TODO: 添加倒计时
-    const handleAddCountdown = async () => {
+    const handleAddCountdown = () => {
+        useDispatch(showAddBoard());
     }
 
     // TODO: 没有添加
@@ -32,7 +34,7 @@ const agendaComponent = () => {
         </View>
     )
 
-    const countdownList = <CountdownList onlyExam={onlyExam} />
+
 
     return (
         <View style={ss.agendaComponentContainer}>
@@ -83,37 +85,88 @@ const CountdownList = ({onlyExam}: {onlyExam: boolean}): React.JSX.Element => {
         // 只对天进行判断，不判断一天内是否过期
         let date = new Date(year, month - 1, day);
         const countdown = Math.floor((date.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
-
         // 说明该Agenda已经过期
         if (countdown < 0) return;
 
-        // yyyy/mm/dd
-        const timeStr = `${year}/${month < 10 ? `0${month}` : month}/${day < 10 ? `0${day}` : day}`;
+        return <AgendaBox agenda={agenda} countdown={countdown} key={agenda.id} />
+    })
 
-        // 标签渲染
-        const typeList = agenda.types.map((type, index) => {
-            return (
-                <View style={ss.agendaTagContainer}>
-                    <Text style={{fontSize: FontSize.ss, color: FontColor.light, lineHeight: 15}}>{AgendaType[type]}</Text>
-                </View>
-            )
+    return (
+        <GestureHandlerRootView style={ss.countdownListContainer}>
+            {renderList}
+        </GestureHandlerRootView>
+    );
+}
+
+const AgendaBox = ({agenda, countdown}: {agenda: Agenda, countdown: number}) => {
+    const time = agenda.startTime;
+    const year = time[0];
+    const month = time[1];
+    const day = time[2];
+    const weekDay = time[5];
+
+    // yyyy/mm/dd
+    const timeStr = `${year}/${month < 10 ? `0${month}` : month}/${day < 10 ? `0${day}` : day}`;
+
+    // 标签渲染
+    const typeList = agenda.types.map((type, index) => {
+        return (
+            <View style={ss.agendaTagContainer}>
+                <Text style={{fontSize: FontSize.ss, color: FontColor.light, lineHeight: 15}}>{AgendaType[type]}</Text>
+            </View>
+        )
+    })
+
+    // TODO: 手势处理
+    const translateX = useSharedValue(0);
+    const startTranslateX = useSharedValue(0);
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{translateX: translateX.value}],
+        }
+    })
+
+    const pan = Gesture.Pan()
+        .shouldCancelWhenOutside(false)
+        .onBegin(() => {
+            startTranslateX.value = translateX.value;
+        })
+        .onUpdate((event) => {
+            translateX.value = startTranslateX.value + event.translationX;
+        })
+        .onEnd((event) => {
+            const velocityX = event.velocityX;
+            if(velocityX < 0) {
+                if(velocityX < -300 || translateX.value + event.translationX < -30) {
+                    translateX.value = withTiming(-60, {
+                        duration: 300,
+                    })
+                }
+                else {
+                    translateX.value = withTiming(0, {
+                        duration: 300,
+                    })
+                }
+            }
+            else {
+                if(velocityX > 300 || translateX.value + event.translationX > -30) {
+                    translateX.value = withTiming(0, {
+                        duration: 300,
+                    })
+                }
+                else {
+                    translateX.value = withTiming(-60, {
+                        duration: 300,
+                    })
+                }
+            }
         })
 
-        // TODO: 手势处理
-        const translateY = useSharedValue(0);
-        const startTranslateY = useSharedValue(0);
-
-        const fling = Gesture.Fling()
-            .direction(Directions.LEFT)
-            .numberOfPointers(1)
-            .shouldCancelWhenOutside(false)
-            .onBegin((event) => {
-                startTranslateY.value = event.y;
-            })
-
-        return (
-            <GestureDetector gesture={fling} key={agenda.id}>
-                <View style={ss.agendaContainer}>
+    return (
+        <GestureDetector gesture={pan}>
+            <View style={{width: '100%', overflow: 'hidden'}}>
+                <Animated.View style={[ss.agendaContainer, animatedStyle]}>
                     <View style={ss.agendaNameContainer}>
                         <Text numberOfLines={1} ellipsizeMode="tail" style={ss.agendaName}>{agenda.name}</Text>
                         {agenda.types.length && typeList}
@@ -138,33 +191,24 @@ const CountdownList = ({onlyExam}: {onlyExam: boolean}): React.JSX.Element => {
                         <Text style={ss.countdownText}>天</Text>
                     </View>
                     <Pressable
-                        style={[ss.agendaButton, {backgroundColor: BackgroundColor.iconPrimaryBackground, right: -60}]}>
+                        style={[ss.agendaButton, {
+                            backgroundColor: BackgroundColor.iconSecondaryBackground,
+                            right: -60
+                        }]}>
+                        <SvgXml xml={XMLResources.deleteAgenda} width={15} height={15} />
+                        <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconSecondary}]}>删除</Text>
 
                     </Pressable>
                     <Pressable style={[ss.agendaButton, {
-                        backgroundColor: BackgroundColor.iconSecondaryBackground,
+                        backgroundColor: BackgroundColor.iconPrimaryBackground,
                         right: -30
                     }]}>
-
+                        <SvgXml xml={XMLResources.pinToTop} width={15} height={15} />
+                        <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconPrimary}]}>{'置顶'}</Text>
                     </Pressable>
-                </View>
-            </GestureDetector>
-        )
-    })
-
-    return (
-        <GestureHandlerRootView style={ss.countdownListContainer}>
-            {renderList}
-        </GestureHandlerRootView>
-    );
-}
-
-const addBoard = () => {
-
-    return (
-        <View>
-            
-        </View>
+                </Animated.View>
+            </View>
+        </GestureDetector>
     )
 }
 
@@ -230,7 +274,6 @@ const ss = StyleSheet.create({
         borderTopColor: '#EEEEEE',
         paddingVertical: 10,
         paddingHorizontal: 25,
-        // overflow: "hidden",
     },
 
     agendaNameContainer: {
@@ -255,7 +298,7 @@ const ss = StyleSheet.create({
     countdownContainer: {
         position: 'absolute',
         top: 10,
-        right: 0,
+        right: 5,
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
@@ -303,10 +346,14 @@ const ss = StyleSheet.create({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        height: 95,
+        height: 75,
         width: 30,
         top: 0,
-    }
+    },
+
+    agendaButtonText: {
+        fontSize: FontSize.xxs,
+    },
 })
 
 export default agendaComponent;

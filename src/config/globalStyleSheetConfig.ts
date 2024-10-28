@@ -8,6 +8,7 @@ export const BackgroundColor = {
     iconSecondary: '#FE2741',
     iconSecondaryBackground: '#ffbfc6',
     mainLight: '#fff',
+    grey: '#FAFAFA'
 }
 
 export const FontColor = {
