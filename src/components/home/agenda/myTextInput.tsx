@@ -3,7 +3,13 @@ import {useRef, useState} from "react";
 import {FontSize} from "../../../config/globalStyleSheetConfig.ts";
 
 
-const MyTextInput = ({placeholder, sendData, multiline = false, height = 34, alignCenter = true}: {placeholder: string, sendData: any, multiline?: boolean, height?: number, alignCenter?: boolean}) => {
+const MyTextInput = ({placeholder, sendData, multiline = false, height = 34, alignCenter = true}: {
+    placeholder: string,
+    sendData: any,
+    multiline?: boolean,
+    height?: number,
+    alignCenter?: boolean
+}) => {
     const textInputRef = useRef<TextInput>(null);
     const [content, setContent] = useState<string>('');
     const [isEmpty, setIsEmpty] = useState<boolean>(true);
@@ -14,7 +20,7 @@ const MyTextInput = ({placeholder, sendData, multiline = false, height = 34, ali
     }
 
     const handleBlur = () => {
-        if(content === '') {
+        if (content === '') {
             setIsEmpty(true);
             return;
         }
@@ -31,13 +37,15 @@ const MyTextInput = ({placeholder, sendData, multiline = false, height = 34, ali
 
     return (
         <View style={[ss.myTextInputContainer, {height: height}]}>
-            { isEmpty && (
-                <Pressable style={{position: 'absolute', left: 5, height: '100%', width: '100%', zIndex: 20}} onPress={focusToTextInput}>
+            {isEmpty && (
+                <Pressable style={{position: 'absolute', left: 5, height: '100%', width: '100%', zIndex: 20}}
+                           onPress={focusToTextInput}>
                     <Text style={{position: 'absolute', lineHeight: 34, color: '#ffcad1'}}>{placeholder}</Text>
                 </Pressable>
             )}
             <View style={{position: 'absolute', height: '100%', width: '100%', backgroundColor: '#fff7f8'}}></View>
-            <TextInput textAlignVertical={alignCenter ? 'center' : 'top'} multiline={multiline} ref={textInputRef} style={ss.myTextInput} onChangeText={handleChange} onBlur={handleBlur} onFocus={handleFocus} />
+            <TextInput textAlignVertical={alignCenter ? 'center' : 'top'} multiline={multiline} ref={textInputRef}
+                       style={ss.myTextInput} onChangeText={handleChange} onBlur={handleBlur} onFocus={handleFocus}/>
         </View>
     )
 }

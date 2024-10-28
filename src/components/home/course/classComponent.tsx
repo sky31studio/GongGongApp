@@ -15,16 +15,16 @@ const tagFontColor = ['#A6A6A6', '#FFFFFF', '#FFFFFF', '#'];
 
 const ClassComponent = () => {
     const table = useAppSelector(selectTable);
-    const  [lastTime, setLastTime] = useState(new Date());
+    const [lastTime, setLastTime] = useState(new Date());
     const weekDay = useMemo(() => lastTime.getDay(), [lastTime]);
     const month = lastTime.getMonth() + 1;
     const day = lastTime.getDate();
 
     let courses: any[] = useMemo(() => getCoursesByWeekAndWeekDay(table, 8, weekDay === 0 ? 7 : weekDay), [table]);
     let done = useMemo(() => {
-        for(let i = 0; i < courses.length; i++) {
-            // 东八区 +8h
-            const currentHour = lastTime.getHours() + 8;
+        for (let i = 0; i < courses.length; i++) {
+
+            const currentHour = lastTime.getHours();
             const currentMinute = lastTime.getMinutes();
             const current = currentHour * 60 + currentMinute;
 
@@ -38,11 +38,11 @@ const ClassComponent = () => {
             endTime[1] = parseInt(endTime[1]);
             const end = endTime[0] * 60 + endTime[1];
 
-            if(current < start) {
+            if (current < start) {
                 return i;
             }
 
-            if(current > start && current < end) {
+            if (current > start && current < end) {
                 return i;
             }
         }
@@ -55,8 +55,7 @@ const ClassComponent = () => {
         // 课程状态标签 0--已结束 1--上课中 2--即将上课 3--未开始
         let isDeprecated = 2;
 
-        // 东八区 +8h
-        const currentHour = lastTime.getHours() + 8;
+        const currentHour = lastTime.getHours();
         const currentMinute = lastTime.getMinutes();
         const current = currentHour * 60 + currentMinute;
 
@@ -70,18 +69,22 @@ const ClassComponent = () => {
         endTime[1] = parseInt(endTime[1]);
         const end = endTime[0] * 60 + endTime[1];
 
-        if(current > end) {
+        if (current > end) {
             isDeprecated = 0;
-        }
-        else if(current < start) {
+        } else if (current < start) {
             isDeprecated = start - current > 30 ? 3 : 2;
-        }
-        else {
+        } else {
             isDeprecated = 1;
         }
 
         const tag = (
-            <View style={{display: 'flex', justifyContent: 'center', height: '100%', backgroundColor: tagColor[isDeprecated], borderRadius: 20}}>
+            <View style={{
+                display: 'flex',
+                justifyContent: 'center',
+                height: '100%',
+                backgroundColor: tagColor[isDeprecated],
+                borderRadius: 20
+            }}>
                 <Text style={[styleSheet.tagText, {color: tagFontColor[isDeprecated]}]}>{tagText[isDeprecated]}</Text>
             </View>
         )
@@ -89,12 +92,15 @@ const ClassComponent = () => {
         return (
             <View style={styleSheet.courseContainer} key={index}>
                 <View style={styleSheet.periodContainer}>
-                    <Text style={styleSheet.periodText}>{course.periodStart < 10 ? `0${course.periodStart}` : `${course.periodStart}`}</Text>
+                    <Text
+                        style={styleSheet.periodText}>{course.periodStart < 10 ? `0${course.periodStart}` : `${course.periodStart}`}</Text>
                     <View style={styleSheet.periodLine}></View>
-                    <Text style={styleSheet.periodText}>{course.periodEnd < 10 ? `0${course.periodEnd}` : `${course.periodEnd}`}</Text>
+                    <Text
+                        style={styleSheet.periodText}>{course.periodEnd < 10 ? `0${course.periodEnd}` : `${course.periodEnd}`}</Text>
                 </View>
                 <View style={styleSheet.classInfoContainer}>
-                    <Text numberOfLines={1} ellipsizeMode="tail" style={[styleSheet.className, isDeprecated >= 1 ? styleSheet.notDeprecated : styleSheet.deprecated]}>{course.name}</Text>
+                    <Text numberOfLines={1} ellipsizeMode="tail"
+                          style={[styleSheet.className, isDeprecated >= 1 ? styleSheet.notDeprecated : styleSheet.deprecated]}>{course.name}</Text>
                     <View style={styleSheet.classroomContainer}>
                         <SvgXml xml={XMLResources.location} width={9} height={9}/>
                         <Text style={styleSheet.classroom}>{course.classroom}</Text>
@@ -137,6 +143,8 @@ const ClassComponent = () => {
         </View>
     )
 
+    const circleProcess = useMemo(() => <CircularProcess done={done} todo={courses.length}/>, [done, courses]);
+
     const intervalId = setInterval(() => {
         setLastTime(new Date());
     }, 10000);
@@ -151,7 +159,7 @@ const ClassComponent = () => {
         <View style={styleSheet.classContainer}>
             <View style={styleSheet.statusContainer}>
                 <View style={styleSheet.circle}>
-                    <CircularProcess done={done} todo={courses.length}/>
+                    {circleProcess}
                 </View>
                 <View style={styleSheet.weekDay}>
                     <Text style={styleSheet.weekDayText}>{ENWeekDay[weekDay]}</Text>

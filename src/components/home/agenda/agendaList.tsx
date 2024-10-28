@@ -1,11 +1,11 @@
-import React, {memo, useEffect} from "react";
+import React, {memo} from "react";
 import {StyleSheet, View} from "react-native";
 import {BackgroundColor} from "../../../config/globalStyleSheetConfig.ts";
 import AgendaComponent from "./agendaComponent.tsx";
 import NoAgendaComponent from "./noAgenda.tsx";
 
 
-export const AgendaList = memo(({hasToken}: {hasToken: boolean}) => {
+export const AgendaList = memo(({hasToken}: { hasToken: boolean }) => {
 
     // TODO: NotLoggedInComponent for Agenda没有写
     return (

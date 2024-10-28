@@ -1,7 +1,4 @@
-
 import TimeTableConfig from "../config/TimeTableConfig.ts";
-import {useAppSelector} from "../app/hooks.ts";
-import {selectTable} from "../app/slice/scheduleSlice.ts";
 import {ScheduleWeekDay} from "./enum.ts";
 import Course, {
     getPeriodDuration,
@@ -43,9 +40,9 @@ export function dealTable(data: any[]): Course[] {
  * 转换表示周次区间的字符串为标记有起始和终止的数组
  * @param str 表示周次区间的字符串
  */
-export function convertToWeekInfo(str: string): {weekStart:number, weekEnd:number}[] {
+export function convertToWeekInfo(str: string): { weekStart: number, weekEnd: number }[] {
     const weekInterval = str.split(',');
-    const res: {weekStart:number, weekEnd:number}[] = [];
+    const res: { weekStart: number, weekEnd: number }[] = [];
 
     weekInterval.forEach((interval) => {
         const tmp = interval.split('-');
@@ -85,8 +82,8 @@ export const getCoursesByWeekAndWeekDay = (table: Record<string, Course[]>, week
         const periodStart = getPeriodStart(course);
         const periodEnd = getPeriodEnd(course);
 
-        for(let i = 0; i < start.length; i++) {
-            if(start[i] <= week && end[i] >= week) {
+        for (let i = 0; i < start.length; i++) {
+            if (start[i] <= week && end[i] >= week) {
                 res.push({
                     name: course.name,
                     teacher: course.teacher,
@@ -113,13 +110,13 @@ export const getClassList = (table: Record<string, Course[]>, weekNumber: number
     const list: ClassObject[] = [];
 
     let index = 1;
-    for(const course of table[ScheduleWeekDay[weekDay]]) {
+    for (const course of table[ScheduleWeekDay[weekDay]]) {
         const start = getWeekStart(course);
         const end = getWeekEnd(course);
-        for(let i = 0; i < start.length; i++) {
-            if(start[i] <= weekNumber && end[i] >= weekNumber) {
+        for (let i = 0; i < start.length; i++) {
+            if (start[i] <= weekNumber && end[i] >= weekNumber) {
                 const periodStart = getPeriodStart(course);
-                if(periodStart > index) {
+                if (periodStart > index) {
                     list.push({
                         period: periodStart - index,
                         isEmpty: true,
@@ -143,7 +140,7 @@ export const getClassList = (table: Record<string, Course[]>, weekNumber: number
     }
 
     // 判断最后一节为空的情况
-    if(index <= 11) {
+    if (index <= 11) {
         list.push({
             period: 11 - index + 1,
             isEmpty: true,
@@ -160,7 +157,7 @@ export const getClassList = (table: Record<string, Course[]>, weekNumber: number
  */
 export const getAllCoursesByWeek = (table: Record<string, Course[]>, week: number): ClassObject[][] => {
     const res: ClassObject[][] = [];
-    for(let i = 1; i < 7; i++) {
+    for (let i = 1; i < 7; i++) {
         res.push(getClassList(table, week, i));
     }
 

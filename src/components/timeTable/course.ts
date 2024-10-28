@@ -12,7 +12,7 @@ export const getWeekString = (course: Course): string => {
     const end: number[] = getWeekEnd(course);
     let res: string = '';
 
-    for(let i = 0; i < start.length; i++) {
+    for (let i = 0; i < start.length; i++) {
         res += start[i] + '-' + end[i] + ',';
     }
 

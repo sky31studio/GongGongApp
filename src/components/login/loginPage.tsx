@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import {
     Animated as Ani,
     Keyboard,
@@ -57,14 +57,14 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
         )
     }
 
-    handleUsername  = (data: string) => {
+    handleUsername = (data: string) => {
         setUsername(data);
     }
     handlePassword = (data: string) => {
         setPassword(data);
     }
     handleLogin = async () => {
-        if(password === '') {
+        if (password === '') {
             setAlertText('请输入密码');
             setShowAlert(true);
             alertAnimation();
@@ -80,7 +80,7 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
         }
     }
 
-    const idInput = <MyInput initText="请输入你的学号" onSendDataToParent={handleUsername} />
+    const idInput = <MyInput initText="请输入你的学号" onSendDataToParent={handleUsername}/>
     const pwdInput = <MyInput initText="请输入教务系统密码" onSendDataToParent={handlePassword} visibleProp={true}/>
 
     // 屏幕上方alert块
@@ -91,7 +91,7 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
         </Animated.View>
     )
 
-    const buttonSection = <ButtonSection handleLogin={handleLogin} />
+    const buttonSection = <ButtonSection handleLogin={handleLogin}/>
 
     const keyboardDismiss = () => {
         Keyboard.dismiss();
@@ -269,7 +269,7 @@ const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visiblePro
     );
 }
 
-const ButtonSection = ({handleLogin}: {handleLogin: any}) => {
+const ButtonSection = ({handleLogin}: { handleLogin: any }) => {
     return (
         <View style={buttonStyleSheet.buttonContainer}>
             <View style={{display: 'flex', flexDirection: 'row', marginVertical: 10}}>

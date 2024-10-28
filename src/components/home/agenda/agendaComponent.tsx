@@ -1,19 +1,29 @@
-import {Pressable, StyleSheet, Text, TextInput, View} from "react-native";
+import {Modal, Pressable, StyleSheet, Text, View} from "react-native";
 import React, {useEffect, useState} from "react";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
-import {Agenda, selectAgendaList, selectExamList, showAddBoard} from "../../../app/slice/agendaSlice.ts";
+import {
+    Agenda,
+    selectAgendaList,
+    selectExamLength,
+    selectExamList,
+    selectShowAddBoard,
+    showAddBoard
+} from "../../../app/slice/agendaSlice.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {AgendaType, CNWeekDay} from "../../../utils/enum.ts";
 import {Gesture, GestureDetector, GestureHandlerRootView} from "react-native-gesture-handler";
 import Animated, {useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
+import AddBoard from "./addBoard.tsx";
+import {convertDateToString} from "../../../utils/agendaUtils.ts";
 
 const agendaComponent = () => {
     const useDispatch = useAppDispatch();
+    const addBoardVisibility = useAppSelector(selectShowAddBoard);
     // 是否只展示exam
     const [onlyExam, setOnlyExam] = useState<boolean>(false);
-    const countdownList = <CountdownList onlyExam={onlyExam} />
+    const countdownList = <CountdownList onlyExam={onlyExam}/>
 
     const handleOnlyExam = () => {
         setOnlyExam(!onlyExam);
@@ -23,18 +33,6 @@ const agendaComponent = () => {
     const handleAddCountdown = () => {
         useDispatch(showAddBoard());
     }
-
-    // TODO: 没有添加
-    // 没有考试展示
-    const noExam = (
-        <View>
-            <SvgXml xml={XMLResources.noAgendaOnlyExams} width={193} height={127}/>
-            <Text
-                style={{width: '100%', textAlign: 'center', color: FontColor.grey}}>没有考试的日子也要好好学习哦~</Text>
-        </View>
-    )
-
-
 
     return (
         <View style={ss.agendaComponentContainer}>
@@ -54,6 +52,9 @@ const agendaComponent = () => {
                 </View>
             </View>
             {countdownList}
+            <Modal transparent={true} visible={addBoardVisibility}>
+                <AddBoard/>
+            </Modal>
         </View>
     )
 }
@@ -61,8 +62,9 @@ const agendaComponent = () => {
 /**
  * Agenda列表部分
  */
-const CountdownList = ({onlyExam}: {onlyExam: boolean}): React.JSX.Element => {
+const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => {
     const agendaList = onlyExam ? useAppSelector(selectExamList) : useAppSelector(selectAgendaList);
+    const agendaListLength = useAppSelector(selectExamLength);
 
     const [lastTime, setLastTime] = useState(new Date());
     const intervalID = setInterval(() => {
@@ -77,36 +79,52 @@ const CountdownList = ({onlyExam}: {onlyExam: boolean}): React.JSX.Element => {
 
     let renderList;
     renderList = agendaList.map((agenda: Agenda, index) => {
-        const time = agenda.startTime;
-        const year = time[0];
-        const month = time[1];
-        const day = time[2];
-        const weekDay = time[5];
-        // 只对天进行判断，不判断一天内是否过期
-        let date = new Date(year, month - 1, day);
-        const countdown = Math.floor((date.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
+        let startDate = new Date(agenda.startTime);
+        let endDate = new Date(agenda.endTime);
+
+
+        const countdown = Math.floor((endDate.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
         // 说明该Agenda已经过期
         if (countdown < 0) return;
 
-        return <AgendaBox agenda={agenda} countdown={countdown} key={agenda.id} />
+        return <AgendaBox agenda={agenda} countdown={countdown} key={agenda.id}/>
     })
+
+    // 没有考试展示
+    const noExam = (
+        <View style={{marginTop: 20}}>
+            <SvgXml xml={XMLResources.noAgendaOnlyExams} width={193} height={127}/>
+            <Text
+                style={{
+                    width: '100%',
+                    textAlign: 'center',
+                    color: FontColor.grey,
+                    marginTop: 20
+                }}>没有考试的日子也要好好学习哦~</Text>
+        </View>
+    )
 
     return (
         <GestureHandlerRootView style={ss.countdownListContainer}>
-            {renderList}
+            {agendaListLength === 0 && onlyExam ? noExam : renderList}
         </GestureHandlerRootView>
     );
 }
 
-const AgendaBox = ({agenda, countdown}: {agenda: Agenda, countdown: number}) => {
-    const time = agenda.startTime;
-    const year = time[0];
-    const month = time[1];
-    const day = time[2];
-    const weekDay = time[5];
-
-    // yyyy/mm/dd
-    const timeStr = `${year}/${month < 10 ? `0${month}` : month}/${day < 10 ? `0${day}` : day}`;
+const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) => {
+    // yyyy/mm/dd mm:ss-mm:ss
+    let timeStr;
+    let weekDay;
+    let location = agenda.location === '' ? '无地点' : agenda.location;
+    if (agenda.startTime === '') {
+        timeStr = '无时间';
+        weekDay = '';
+    } else {
+        const startTime = new Date(agenda.startTime);
+        const endTime = new Date(agenda.endTime);
+        weekDay = CNWeekDay[startTime.getDay()];
+        timeStr = convertDateToString(startTime, endTime);
+    }
 
     // 标签渲染
     const typeList = agenda.types.map((type, index) => {
@@ -117,7 +135,6 @@ const AgendaBox = ({agenda, countdown}: {agenda: Agenda, countdown: number}) => 
         )
     })
 
-    // TODO: 手势处理
     const translateX = useSharedValue(0);
     const startTranslateX = useSharedValue(0);
 
@@ -137,25 +154,22 @@ const AgendaBox = ({agenda, countdown}: {agenda: Agenda, countdown: number}) => 
         })
         .onEnd((event) => {
             const velocityX = event.velocityX;
-            if(velocityX < 0) {
-                if(velocityX < -300 || translateX.value + event.translationX < -30) {
+            if (velocityX < 0) {
+                if (velocityX < -300 || translateX.value + event.translationX < -30) {
                     translateX.value = withTiming(-60, {
                         duration: 300,
                     })
-                }
-                else {
+                } else {
                     translateX.value = withTiming(0, {
                         duration: 300,
                     })
                 }
-            }
-            else {
-                if(velocityX > 300 || translateX.value + event.translationX > -30) {
+            } else {
+                if (velocityX > 300 || translateX.value + event.translationX > -30) {
                     translateX.value = withTiming(0, {
                         duration: 300,
                     })
-                }
-                else {
+                } else {
                     translateX.value = withTiming(-60, {
                         duration: 300,
                     })
@@ -175,7 +189,7 @@ const AgendaBox = ({agenda, countdown}: {agenda: Agenda, countdown: number}) => 
                     <View style={ss.agendaLocationAndTimeContainer}>
                         <SvgXml xml={XMLResources.clock} width={9} height={9}/>
                         <Text style={[ss.agendaInfoText]}>{timeStr}</Text>
-                        <Text style={[ss.agendaInfoText]}>{CNWeekDay[weekDay]}</Text>
+                        <Text style={[ss.agendaInfoText]}>{weekDay}</Text>
                         <View style={{
                             width: .5,
                             height: 12,
@@ -183,19 +197,21 @@ const AgendaBox = ({agenda, countdown}: {agenda: Agenda, countdown: number}) => 
                             marginHorizontal: 5
                         }}></View>
                         <SvgXml xml={XMLResources.location} width={9} height={9}/>
-                        <Text style={[ss.agendaInfoText]}>{agenda.location}</Text>
+                        <Text style={[ss.agendaInfoText]}>{location}</Text>
                     </View>
-                    <View style={ss.countdownContainer}>
-                        <Text style={ss.countdownText}>还剩</Text>
-                        <Text style={ss.countdownDayText}>{countdown}</Text>
-                        <Text style={ss.countdownText}>天</Text>
-                    </View>
+                    {agenda.startTime !== '' && (
+                        <View style={ss.countdownContainer}>
+                            <Text style={ss.countdownText}>还剩</Text>
+                            <Text style={ss.countdownDayText}>{countdown}</Text>
+                            <Text style={ss.countdownText}>天</Text>
+                        </View>
+                    )}
                     <Pressable
                         style={[ss.agendaButton, {
                             backgroundColor: BackgroundColor.iconSecondaryBackground,
                             right: -60
                         }]}>
-                        <SvgXml xml={XMLResources.deleteAgenda} width={15} height={15} />
+                        <SvgXml xml={XMLResources.deleteAgenda} width={15} height={15}/>
                         <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconSecondary}]}>删除</Text>
 
                     </Pressable>
@@ -203,7 +219,7 @@ const AgendaBox = ({agenda, countdown}: {agenda: Agenda, countdown: number}) => 
                         backgroundColor: BackgroundColor.iconPrimaryBackground,
                         right: -30
                     }]}>
-                        <SvgXml xml={XMLResources.pinToTop} width={15} height={15} />
+                        <SvgXml xml={XMLResources.pinToTop} width={15} height={15}/>
                         <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconPrimary}]}>{'置顶'}</Text>
                     </Pressable>
                 </Animated.View>
@@ -283,7 +299,8 @@ const ss = StyleSheet.create({
 
     agendaName: {
         color: FontColor.dark,
-        fontSize: FontSize.ll,
+        fontSize: FontSize.l,
+        fontWeight: '600',
     },
 
     agendaLocationAndTimeContainer: {

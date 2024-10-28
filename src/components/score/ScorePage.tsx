@@ -12,10 +12,22 @@ import ScrollView = Animated.ScrollView;
 
 const ScorePage = ({navigation}: NavigationProps) => {
     const [scoreList, setScoreList] = useState<SingleScoreList[]>([]);
+    const [averageScore, setAverageScore] = useState<string>('');
+    const [gpa, setGpa] = useState<string>('');
+    const [classRank, setClassRank] = useState<number>(0);
+    const [majorRank, setMajorRank] = useState<number>(0);
+
 
     useEffect(() => {
         Resources.getScore().then((data) => {
             setScoreList(dealScore(data));
+        })
+
+        Resources.getRank().then((data) => {
+            setAverageScore(data.average_score);
+            setGpa(data.gpa);
+            setClassRank(data.class_rank);
+            setMajorRank(data.major_rank);
         })
     }, []);
 
@@ -32,17 +44,17 @@ const ScorePage = ({navigation}: NavigationProps) => {
         <View style={{height: '100%'}}>
             <View style={ss.titleBar}>
                 <Pressable onPress={handleBack} style={ss.backButton}>
-                    <SvgXml xml={XMLResources.backArrow} width={10} height={18} />
+                    <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
                 </Pressable>
 
                 <Text style={ss.titleText}>查成绩</Text>
             </View>
             <View style={ss.mainContainer}>
                 <View style={ss.totalContainer}>
-                    <ScoreBox score={'3.703'} text={'平均绩点'} />
-                    <ScoreBox score={'1'} text={'班级排名'} />
-                    <ScoreBox score={'4'} text={'年级排名'} />
-                    <ScoreBox score={'86.92'} text={'平均成绩'} />
+                    <ScoreBox score={gpa} text={'平均绩点'}/>
+                    <ScoreBox score={classRank.toString()} text={'班级排名'}/>
+                    <ScoreBox score={majorRank.toString()} text={'年级排名'}/>
+                    <ScoreBox score={averageScore} text={'平均成绩'}/>
                 </View>
                 <ScrollView style={ss.scoreListContainer}>
                     {renderList}
@@ -52,7 +64,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
     )
 }
 
-const ScoreBox = ({score, text}: {score: string, text: string}) => {
+const ScoreBox = ({score, text}: { score: string, text: string }) => {
 
     return (
         <View style={ss.scoreBoxContainer}>

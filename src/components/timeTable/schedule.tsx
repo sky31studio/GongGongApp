@@ -18,10 +18,9 @@ export default function Schedule(): React.JSX.Element {
         let ss;
 
         // 防止上边界和gapItem重合
-        if(index % 4 === 0) {
+        if (index % 4 === 0) {
             ss = {...styleSheet.timeItem, "borderTopWidth": 0};
-        }
-        else {
+        } else {
             ss = styleSheet.timeItem;
         }
 
@@ -34,7 +33,7 @@ export default function Schedule(): React.JSX.Element {
         );
 
         if (index % 4 === 3) {
-            acc.push(view, <View style={styleSheet.timeGap} />);
+            acc.push(view, <View style={styleSheet.timeGap}/>);
         } else {
             acc.push(view);
         }
@@ -48,7 +47,7 @@ export default function Schedule(): React.JSX.Element {
             <Text style={styleSheet.monthText}>1月</Text>
         </View>
     );
-    timeListWithGap = [monthItem,...timeListWithGap];
+    timeListWithGap = [monthItem, ...timeListWithGap];
 
     const table = useAppSelector(selectTable);
     const courses = useMemo(() => getAllCoursesByWeek(table, 6), [table]);
@@ -67,11 +66,11 @@ export default function Schedule(): React.JSX.Element {
             let flag = 1;
             const classItemList = item.reduce((acc: React.JSX.Element[], item, index) => {
                 const space = 4 - (flag - 1) % 4;
-                if(space <= item.period) {
+                if (space <= item.period) {
                     const view = (
                         <View key={index} style={{...styleSheet.classItem, flex: space}}>
                             <View style={{width: '100%', height: '100%', padding: 3}}>
-                                {item.isEmpty ? '' : <ClassBox course={item} />}
+                                {item.isEmpty ? '' : <ClassBox course={item}/>}
                             </View>
                         </View>
                     );
@@ -79,38 +78,38 @@ export default function Schedule(): React.JSX.Element {
                     acc.push(view);
 
                     let remainPeriod = item.period - space;
-                    while(remainPeriod >= 4) {
+                    while (remainPeriod >= 4) {
                         const secView = (
                             <View style={{...styleSheet.classItem, flex: 4}}>
                                 <View style={{width: '100%', height: '100%', padding: 3}}>
-                                    {item.isEmpty ? '' : <ClassBox course={item} />}
+                                    {item.isEmpty ? '' : <ClassBox course={item}/>}
                                 </View>
                             </View>
                         );
 
-                        acc.push(<View style={styleSheet.classGap} />, secView);
+                        acc.push(<View style={styleSheet.classGap}/>, secView);
                         remainPeriod -= 4;
                     }
 
-                    if(remainPeriod !== 0) {
+                    if (remainPeriod !== 0) {
                         const secView = (
                             <View style={{...styleSheet.classItem, flex: remainPeriod}}>
                                 <View style={{width: '100%', height: '100%', padding: 3}}>
-                                    {item.isEmpty ? '' : <ClassBox course={item} />}
+                                    {item.isEmpty ? '' : <ClassBox course={item}/>}
                                 </View>
                             </View>
                         );
 
-                        acc.push(<View style={styleSheet.classGap} />, secView);
+                        acc.push(<View style={styleSheet.classGap}/>, secView);
                     } else {
-                        acc.push(<View style={styleSheet.classGap} />);
+                        acc.push(<View style={styleSheet.classGap}/>);
                     }
 
                 } else {
                     const view = (
                         <View style={{...styleSheet.classItem, flex: item.period}}>
                             <View style={{width: '100%', height: '100%', padding: 3}}>
-                                {item.isEmpty ? '' : <ClassBox course={item} />}
+                                {item.isEmpty ? '' : <ClassBox course={item}/>}
                             </View>
 
                         </View>
@@ -144,15 +143,15 @@ export default function Schedule(): React.JSX.Element {
 }
 
 const styleSheet = StyleSheet.create({
-   scheduleContainer: {
-       width: '100%',
-       flex: 1,
-       display: 'flex',
-       flexDirection: 'row'
-   },
+    scheduleContainer: {
+        width: '100%',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'row'
+    },
 
     timeContainer: {
-       width: 33,
+        width: 33,
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: '#eee',
@@ -177,7 +176,7 @@ const styleSheet = StyleSheet.create({
     },
 
     monthItem: {
-       width: '100%',
+        width: '100%',
         flex: 1,
         backgroundColor: '#fff',
         display: 'flex',
@@ -195,7 +194,7 @@ const styleSheet = StyleSheet.create({
     },
 
     timeItem: {
-       flex: 1,
+        flex: 1,
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -206,14 +205,14 @@ const styleSheet = StyleSheet.create({
     },
 
     timeGap: {
-       height: 7,
+        height: 7,
         width: '100%',
         backgroundColor: '#eee',
     },
 
     weekdayContainer: {
-       backgroundColor: '#fafafa',
-       flex: 1,
+        backgroundColor: '#fafafa',
+        flex: 1,
         display: 'flex',
         flexDirection: 'column',
     },
@@ -226,14 +225,14 @@ const styleSheet = StyleSheet.create({
 
     weekdayItem: {
         flex: 1,
-       margin: 5,
-       display: 'flex',
+        margin: 5,
+        display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
     },
 
     wItemBoldText: {
-       width: '100%',
+        width: '100%',
         fontWeight: 'bold',
         fontSize: 13,
         color: '#000',

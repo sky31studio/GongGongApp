@@ -12,8 +12,8 @@ export interface Agenda {
     id: string,
     name: string,
     text: string,
-    startTime: number[],
-    endTime: number[],
+    startTime: string,
+    endTime: string,
     location: string,
     types: number[],
 }
@@ -47,7 +47,6 @@ const agendaSlice = createSlice({
             }
 
             state.examList.push(action.payload);
-            state.examList.sort(compare);
         },
         removeExam: (state, action) => {
             for (let exam of state.examList) {
@@ -59,7 +58,7 @@ const agendaSlice = createSlice({
         },
 
         addSelfExam: (state, action) => {
-            const id = generateID(action.payload.name, action.payload.time);
+            const id = generateID(action.payload.name, action.payload.startTime, action.payload.endTime);
             // 检查该项是否已经存在
             for (let exam of state.selfList) {
                 // @ts-ignore
@@ -70,14 +69,13 @@ const agendaSlice = createSlice({
 
             // @ts-ignore
             state.selfList.push({id: id, ...action.payload});
-            state.selfList.sort(compare);
         },
 
-        showAddBoard:(state) => {
+        showAddBoard: (state) => {
             state.showAddBoard = true;
         },
 
-        hideAddBoard:(state) => {
+        hideAddBoard: (state) => {
             state.showAddBoard = false;
         },
     },
@@ -91,23 +89,6 @@ const agendaSlice = createSlice({
     },
 })
 
-// TODO: 判断置顶条件，修改空时间判断
-// Agenda的比较函数，因为存在没有时间的Agenda，需要特殊判断
-const compare = (a: Agenda, b: Agenda) => {
-    const at = a.startTime;
-    const bt = b.startTime;
-
-    if (at === undefined) {
-        return -1;
-    }
-
-    if (bt === undefined) {
-        return 1;
-    }
-
-    return at[0] - bt[0] || at[1] - bt[1] || at[2] - bt[2] || at[3] - bt[3] || at[4] - bt[4];
-}
-
 // exam和self的selector
 export const selectExamList = (state: RootState) => state.exam.examList;
 export const selectSelfList = (state: RootState) => state.exam.selfList;
@@ -119,23 +100,14 @@ export const selectAgendaList = createSelector(
     (examList, selfList) => {
         const res = examList.slice();
         res.concat(selfList);
-        res.sort(compare);
 
         return res;
     }
-)
-// 返回exam列表(已排序)
-export const selectOnlyExamList = createSelector(
-    [selectExamList],
-    (examList) => {
-        const res = examList.slice();
-        res.sort(compare);
+);
 
-        return res;
-    }
-)
+export const selectExamLength = (state: RootState) => state.exam.examList.length;
 
-export const { showAddBoard, hideAddBoard } = agendaSlice.actions;
+export const {showAddBoard, hideAddBoard} = agendaSlice.actions;
 export default agendaSlice.reducer;
 
 

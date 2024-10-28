@@ -1,4 +1,4 @@
-import React, {memo, useEffect} from "react";
+import React, {useEffect} from "react";
 import {StyleSheet, Text, View} from "react-native";
 import Svg, {Circle} from "react-native-svg";
 import Animated, {
@@ -19,7 +19,7 @@ interface ProcessProps {
 }
 
 let CircularProcess: React.ComponentType<ProcessProps>;
-CircularProcess = memo(({done, todo}): React.JSX.Element => {
+CircularProcess = ({done, todo}): React.JSX.Element => {
     const innerRadius = 28;
     const circumference = 2 * Math.PI * innerRadius;
     const completion = done / todo;
@@ -43,36 +43,36 @@ CircularProcess = memo(({done, todo}): React.JSX.Element => {
     }, [])
 
     return (
-      <View style={styleSheet.circularProcessContainer}>
-          <Svg width="100%" height="100%" viewBox="0 0 100 100">
-              <Circle
-                  cx={50}
-                  cy={50}
-                  r={28}
-                  stroke="#F6F6F6"
-                  fill="none"
-                  strokeWidth={8}
-              />
-              <AnimatedCircle
-                  animatedProps={animatedProps}
-                  cx={50}
-                  cy={50}
-                  r={28}
-                  stroke={BackgroundColor.secondary}
-                  fill="transparent"
-                  strokeWidth={8}
-                  strokeDasharray={`${circumference} ${circumference}`}
-                  strokeDashoffset={circumference}
-                  strokeLinecap="round"
-                  transform="rotate(-90, 50, 50)"
-              />
-          </Svg>
-          <View style={styleSheet.processTextContainer}>
-              <Text style={styleSheet.processText}>{todo}</Text>
-          </View>
-      </View>
+        <View style={styleSheet.circularProcessContainer}>
+            <Svg width="100%" height="100%" viewBox="0 0 100 100">
+                <Circle
+                    cx={50}
+                    cy={50}
+                    r={28}
+                    stroke="#F6F6F6"
+                    fill="none"
+                    strokeWidth={8}
+                />
+                <AnimatedCircle
+                    animatedProps={animatedProps}
+                    cx={50}
+                    cy={50}
+                    r={28}
+                    stroke={BackgroundColor.secondary}
+                    fill="transparent"
+                    strokeWidth={8}
+                    strokeDasharray={`${circumference} ${circumference}`}
+                    strokeDashoffset={circumference}
+                    strokeLinecap="round"
+                    transform="rotate(-90, 50, 50)"
+                />
+            </Svg>
+            <View style={styleSheet.processTextContainer}>
+                <Text style={styleSheet.processText}>{todo}</Text>
+            </View>
+        </View>
     );
-});
+};
 
 const styleSheet = StyleSheet.create({
     circularProcessContainer: {

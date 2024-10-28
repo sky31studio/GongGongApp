@@ -17,7 +17,7 @@ class Resources {
             })
 
             return response.data.data;
-        } catch(error) {
+        } catch (error) {
             console.log(`请求失败: ${error}`);
         }
     }
@@ -32,7 +32,7 @@ class Resources {
             const response = await axios.post(`${rootUrl}/login`, {
                 username: username,
                 password: password,
-            },{
+            }, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -40,7 +40,7 @@ class Resources {
 
             // response状态码
             const code = response.status;
-            if(code === 200) {
+            if (code === 200) {
                 setToken(response.data.data['session_id']);
             }
 
@@ -59,8 +59,8 @@ class Resources {
                 }
             });
 
-            return response.data.data;
-        } catch(error) {
+            return response.data.data.exams;
+        } catch (error) {
             console.log(error);
         }
     }
@@ -74,6 +74,36 @@ class Resources {
             })
 
             return response.data.data.scores;
+
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    public static async getRank() {
+        try {
+            const response = await axios.get(`${rootUrl}/rank`, {
+                headers: {
+                    'token': getToken()
+                }
+            })
+
+            return response.data.data;
+
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    public static async getFirstDate() {
+        try {
+            const response = await axios.get(`${rootUrl}/rank`, {
+                headers: {
+                    'token': getToken()
+                }
+            })
+
+            return response.data.data;
 
         } catch (error) {
             console.log(error);

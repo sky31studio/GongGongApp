@@ -2,15 +2,14 @@ import React, {createContext, useContext, useEffect, useState} from "react";
 import {Animated, Pressable, StyleSheet, Text, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import LinearGradient from "react-native-linear-gradient";
-import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
+import {useAppDispatch} from "../../app/hooks.ts";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
 import {addOnValueChangedListener, getToken} from "../../storage.ts";
 import {AgendaList} from "./agenda/agendaList.tsx";
 import ClassList from "./course/classList.tsx";
 import {fetchTable} from "../../app/slice/scheduleSlice.ts";
-import {fetchExamData, selectShowAddBoard} from "../../app/slice/agendaSlice.ts";
+import {fetchExamData} from "../../app/slice/agendaSlice.ts";
 import XMLResources from "../../basic/XMLResources.ts";
-import AddBoard from "./agenda/addBoard.tsx";
 
 export interface NavigationProps {
     navigation: {
@@ -19,9 +18,8 @@ export interface NavigationProps {
     };
 }
 
-const HomePage = ({ navigation }: NavigationProps) => {
+const HomePage = ({navigation}: NavigationProps) => {
     const dispatch = useAppDispatch();
-    const showAddBoard = useAppSelector(selectShowAddBoard);
 
     // 登录成功，一次性请求全部数据
     useEffect(() => {
@@ -29,25 +27,21 @@ const HomePage = ({ navigation }: NavigationProps) => {
         dispatch(fetchExamData());
     }, []);
 
-    const functionBar = () => <FunctionBar navigation={navigation} />;
-    const marinBoard = () => <MainBoard />;
-// TODO: 有原生支持的更好的呼出方法(AddBoard)
+    const functionBar = () => <FunctionBar navigation={navigation}/>;
+    const marinBoard = () => <MainBoard/>;
     return (
-      <View style={styleSheet.homeContainer}>
-          <View style={{width: '100%', height: '18%'}}>
-              {functionBar()}
-          </View>
-          <View style={styleSheet.mainBoardWrapper}>
-              {marinBoard()}
-          </View>
-          <View style={{width: '100%', height: '100%', position: 'absolute'}}>
-              {showAddBoard && <AddBoard />}
-          </View>
-      </View>
+        <View style={styleSheet.homeContainer}>
+            <View style={{width: '100%', height: '18%'}}>
+                {functionBar()}
+            </View>
+            <View style={styleSheet.mainBoardWrapper}>
+                {marinBoard()}
+            </View>
+        </View>
     );
 }
 
-const FunctionBar: React.ComponentType<NavigationProps> = ({ navigation }) => {
+const FunctionBar: React.ComponentType<NavigationProps> = ({navigation}) => {
     const toEmptyClassroomPage = () => {
         navigation.navigate("EmptyClassroomPage");
     }
@@ -64,24 +58,24 @@ const FunctionBar: React.ComponentType<NavigationProps> = ({ navigation }) => {
         <View style={styleSheet.functionBarContainer}>
             <Pressable onPress={toEmptyClassroomPage}>
                 <View style={styleSheet.functionBox}>
-                    <SvgXml xml={XMLResources.emptyClassroomIcon} width="100%" />
+                    <SvgXml xml={XMLResources.emptyClassroomIcon} width="100%"/>
                     <Text style={styleSheet.functionText}>空教室</Text>
                 </View>
             </Pressable>
             <Pressable onPress={toScorePage}>
                 <View style={styleSheet.functionBox}>
-                    <SvgXml xml={XMLResources.scoreIcon} width="100%" />
+                    <SvgXml xml={XMLResources.scoreIcon} width="100%"/>
                     <Text style={styleSheet.functionText}>查成绩</Text>
                 </View>
             </Pressable>
             <Pressable onPress={toTablePage}>
                 <View style={styleSheet.functionBox}>
-                    <SvgXml xml={XMLResources.courseIcon} width="100%" />
+                    <SvgXml xml={XMLResources.courseIcon} width="100%"/>
                     <Text style={styleSheet.functionText}>课程表</Text>
                 </View>
             </Pressable>
             <View style={styleSheet.functionBox}>
-                <SvgXml xml={XMLResources.emptyScoreIcon} width="100%" />
+                <SvgXml xml={XMLResources.emptyScoreIcon} width="100%"/>
                 <Text style={styleSheet.functionText}>多人空课</Text>
             </View>
         </View>
@@ -95,12 +89,13 @@ interface HomeContextType {
 
 const HomeContext = createContext<HomeContextType>({
     choice: 0,
-    shiftChoice: (value: number) => {}
+    shiftChoice: (value: number) => {
+    }
 });
 
 const MainBoard = () => {
-    const classTableButton = <ShiftButton id={0} text='课程表' initFocus={true} />;
-    const countdownButton = <ShiftButton id={1} text='倒计时' />;
+    const classTableButton = <ShiftButton id={0} text='课程表' initFocus={true}/>;
+    const countdownButton = <ShiftButton id={1} text='倒计时'/>;
 
     const [hasToken, setHasToken] = useState(getToken() !== '');
     const [choice, setChoice] = useState(0);
@@ -111,7 +106,7 @@ const MainBoard = () => {
 
     useEffect(() => {
         const listener = addOnValueChangedListener((changedKey) => {
-            if(changedKey === 'token') {
+            if (changedKey === 'token') {
                 const newValue = getToken();
                 setHasToken(newValue !== '');
             }
@@ -136,7 +131,7 @@ const MainBoard = () => {
                 </View>
             </HomeContext.Provider>
             <View style={styleSheet.mainWrapper}>
-                {choice === 0 ? <ClassList hasToken={hasToken} /> : <AgendaList hasToken={hasToken} />}
+                {choice === 0 ? <ClassList hasToken={hasToken}/> : <AgendaList hasToken={hasToken}/>}
             </View>
         </View>
     );
@@ -154,8 +149,8 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
     const [focusAnimate] = useState(new Animated.Value(focused ? 1 : 0));
 
     const opacity = focusAnimate.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, 1]
+        inputRange: [0, 1],
+        outputRange: [0, 1]
     });
 
     const translateY = focusAnimate.interpolate({
@@ -174,7 +169,7 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
     }
 
     useEffect(() => {
-        if(choice !== id) {
+        if (choice !== id) {
             Animated.timing(focusAnimate, {
                 toValue: 0,
                 duration: 200,
@@ -185,9 +180,10 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
     }, [choice])
 
     return (
-        <Pressable onPress={handleClick} >
+        <Pressable onPress={handleClick}>
             <View style={styleSheet.shiftBox}>
-                <Text numberOfLines={1} style={[styleSheet.shiftBoxText, {color: focused ? '#000' : '#999999'}]}>{text}</Text>
+                <Text numberOfLines={1}
+                      style={[styleSheet.shiftBoxText, {color: focused ? '#000' : '#999999'}]}>{text}</Text>
                 <Animated.View style={[styleSheet.initBox, {opacity: opacity, transform: [{translateY: translateY}]}]}>
                     <LinearGradient
                         colors={[BackgroundColor.primary, '#FF9999']}
@@ -200,13 +196,13 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
 }
 
 const styleSheet = StyleSheet.create({
-   homeContainer: {
-       width: '100%',
-       flex: 1,
-   },
+    homeContainer: {
+        width: '100%',
+        flex: 1,
+    },
 
     functionBarContainer: {
-       width: '100%',
+        width: '100%',
         height: '100%',
         display: 'flex',
         flexDirection: 'row',
@@ -218,7 +214,7 @@ const styleSheet = StyleSheet.create({
     },
 
     functionBox: {
-       width: 55,
+        width: 55,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -226,8 +222,8 @@ const styleSheet = StyleSheet.create({
     },
 
     functionText: {
-       color: FontColor.light,
-       fontSize: 13,
+        color: FontColor.light,
+        fontSize: 13,
         fontWeight: '600',
         height: 25,
         lineHeight: 25,
@@ -236,14 +232,14 @@ const styleSheet = StyleSheet.create({
     },
 
     mainBoardWrapper: {
-       width: '100%',
+        width: '100%',
         paddingTop: 50,
         flex: 1,
     },
 
     mainBoardContainer: {
-       flex: 1,
-       width: '100%',
+        flex: 1,
+        width: '100%',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -251,11 +247,11 @@ const styleSheet = StyleSheet.create({
     },
 
     shiftButtonContainer: {
-       width: '60%',
+        width: '60%',
         height: 40,
         display: 'flex',
         flexDirection: 'row',
-        justifyContent:'center',
+        justifyContent: 'center',
         alignItems: 'center',
         paddingVertical: 8,
     },
@@ -268,14 +264,14 @@ const styleSheet = StyleSheet.create({
     },
 
     shiftBox: {
-       position: 'relative',
-       height: '100%',
+        position: 'relative',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
     },
 
     shiftBoxText: {
-       padding: 0,
+        padding: 0,
         width: 50,
         fontSize: 15,
         textAlign: 'center',

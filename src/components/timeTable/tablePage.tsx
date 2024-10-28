@@ -1,4 +1,4 @@
-import {Image, Pressable, StyleSheet, Text, useColorScheme, View} from "react-native";
+import {Image, Pressable, StyleSheet, Text, View} from "react-native";
 import React, {useEffect} from "react";
 import Schedule from "./schedule";
 import {NavigationProps} from "../home/homePage.tsx";
@@ -43,7 +43,13 @@ export const TablePage = ({navigation}: NavigationProps) => {
 
                     <View style={styleSheet.weekBox}>
                         <View style={styleSheet.textBox}>
-                            <Text style={{color: 'black', height: 20, lineHeight: 20, fontSize: 18, fontWeight: '600'}}>第5周</Text>
+                            <Text style={{
+                                color: 'black',
+                                height: 20,
+                                lineHeight: 20,
+                                fontSize: 18,
+                                fontWeight: '600'
+                            }}>第5周</Text>
                             <Text style={{color: 'black', fontSize: 12}}>本周</Text>
                             <Image
                                 source={require('../../assets/png/leftArrow.png')}

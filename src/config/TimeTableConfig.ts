@@ -1,8 +1,8 @@
-
 class TimeTableConfig {
     public static config = new TimeTableConfig();
 
-    constructor() {}
+    constructor() {
+    }
 
     /**
      * 判断给定日期是夏令时还是冬令时
@@ -12,7 +12,7 @@ class TimeTableConfig {
         const month = date.getMonth() + 1;
 
         let timeInterval;
-        if(month < 5 || month > 9) {
+        if (month < 5 || month > 9) {
             timeInterval = [
                 {
                     "start": "08:00",
@@ -59,8 +59,7 @@ class TimeTableConfig {
                     "end": "21:35"
                 },
             ]
-        }
-        else {
+        } else {
             timeInterval = [
                 {
                     "start": "08:00",

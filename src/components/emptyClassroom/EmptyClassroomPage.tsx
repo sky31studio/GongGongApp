@@ -6,18 +6,18 @@ import XMLResources from "../../basic/XMLResources.ts";
 import {NavigationProps} from "../home/homePage.tsx";
 
 const EmptyClassroomPage = ({navigation}: NavigationProps) => {
-    const functionField = () => <FunctionField />
+    const functionField = () => <FunctionField/>
 
 
     const handleBack = () => {
         navigation.navigate('HomePage');
     }
 
-    return(
+    return (
         <View style={{height: '100%', width: '100%', backgroundColor: BackgroundColor.primary}}>
             <View style={ss.titleBar}>
                 <Pressable onPress={handleBack} style={ss.backButton}>
-                    <SvgXml xml={XMLResources.backArrow} width={10} height={18} />
+                    <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
                 </Pressable>
                 <Text style={ss.titleText}>空教室</Text>
             </View>
@@ -35,23 +35,44 @@ const FunctionField = () => {
 
     return (
         <View style={ss.functionFieldContainer}>
-                <View style={ss.verticalContainer}>
-                    <Text style={ss.locationText}>逸夫楼</Text>
-                    <View style={ss.refreshButton}>
-                        <Text style={{color: FontColor.light, fontSize: FontSize.ss, transform: [{translateY: -1}]}}>重置</Text>
-                    </View>
+            <View style={ss.verticalContainer}>
+                <Text style={ss.locationText}>逸夫楼</Text>
+                <View style={ss.refreshButton}>
+                    <Text style={{
+                        color: FontColor.light,
+                        fontSize: FontSize.ss,
+                        transform: [{translateY: -1}]
+                    }}>重置</Text>
                 </View>
-                <View style={[ss.verticalContainer, {alignItems: 'flex-end'}]}>
-                    <View style={ss.shiftButton}>
-                        <View style={[{backgroundColor: BackgroundColor.primary, width: 46, height: '100%', borderRadius: 20, position: 'absolute', left: 0}]}></View>
-                        <Text style={ss.shiftButtonText}>今天</Text>
-                        <Text style={ss.shiftButtonText}>明天</Text>
-                    </View>
-                    <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
-                        <View style={{width: 10, height: 10, backgroundColor: BackgroundColor.iconPrimary, borderRadius: 5, marginHorizontal: 5}}></View>
-                        <Text style={{color: FontColor.grey, fontSize: FontSize.s, transform: [{translateY: -2}]}}>可用教室</Text>
-                    </View>
+            </View>
+            <View style={[ss.verticalContainer, {alignItems: 'flex-end'}]}>
+                <View style={ss.shiftButton}>
+                    <View style={[{
+                        backgroundColor: BackgroundColor.primary,
+                        width: 46,
+                        height: '100%',
+                        borderRadius: 20,
+                        position: 'absolute',
+                        left: 0
+                    }]}></View>
+                    <Text style={ss.shiftButtonText}>今天</Text>
+                    <Text style={ss.shiftButtonText}>明天</Text>
                 </View>
+                <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+                    <View style={{
+                        width: 10,
+                        height: 10,
+                        backgroundColor: BackgroundColor.iconPrimary,
+                        borderRadius: 5,
+                        marginHorizontal: 5
+                    }}></View>
+                    <Text style={{
+                        color: FontColor.grey,
+                        fontSize: FontSize.s,
+                        transform: [{translateY: -2}]
+                    }}>可用教室</Text>
+                </View>
+            </View>
         </View>
     )
 }

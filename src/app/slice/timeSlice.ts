@@ -8,7 +8,5 @@ const initState = {
 export const timeSlice = createSlice({
     name: 'lastTime',
     initialState: initState,
-    reducers: {
-
-    }
+    reducers: {}
 })

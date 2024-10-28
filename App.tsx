@@ -1,4 +1,4 @@
-import React, {StrictMode, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Dimensions, SafeAreaView, StatusBar, StyleSheet, useColorScheme,} from 'react-native';
 
 import {Colors,} from 'react-native/Libraries/NewAppScreen';
@@ -13,7 +13,7 @@ import {getToken} from "./src/storage.ts";
 import ScorePage from "./src/components/score/ScorePage.tsx";
 import EmptyClassroomPage from "./src/components/emptyClassroom/EmptyClassroomPage.tsx";
 
-const { height: screenHeight } = Dimensions.get('window');
+const {height: screenHeight} = Dimensions.get('window');
 
 function App(): React.JSX.Element {
     const [initialRouter, setInitialRouter] = useState('LoginPage');
@@ -21,7 +21,7 @@ function App(): React.JSX.Element {
 
     // DANGER: 一定要把这段逻辑放在useEffect中，防止重复渲染
     useEffect(() => {
-        if(getToken() !== '') {
+        if (getToken() !== '') {
             setInitialRouter('HomePage');
         }
     }, []);
@@ -35,13 +35,13 @@ function App(): React.JSX.Element {
         <NavigationContainer>
             <Provider store={store}>
                 <SafeAreaView style={[backgroundStyle, styles.fullScreen]}>
-                    <StatusBar translucent backgroundColor="#ff6275" />
-                    <Stack.Navigator initialRouteName="LoginPage" screenOptions={{headerShown: false}}>
-                        <Stack.Screen name="LoginPage" component={LoginPage} />
-                        <Stack.Screen name="HomePage" component={HomePage} />
-                        <Stack.Screen name="TablePage" component={TablePage} />
-                        <Stack.Screen name="ScorePage" component={ScorePage} />
-                        <Stack.Screen name="EmptyClassroomPage" component={EmptyClassroomPage} />
+                    <StatusBar translucent backgroundColor="#ff6275"/>
+                    <Stack.Navigator initialRouteName={initialRouter} screenOptions={{headerShown: false}}>
+                        <Stack.Screen name="LoginPage" component={LoginPage}/>
+                        <Stack.Screen name="HomePage" component={HomePage}/>
+                        <Stack.Screen name="TablePage" component={TablePage}/>
+                        <Stack.Screen name="ScorePage" component={ScorePage}/>
+                        <Stack.Screen name="EmptyClassroomPage" component={EmptyClassroomPage}/>
                     </Stack.Navigator>
                 </SafeAreaView>
             </Provider>

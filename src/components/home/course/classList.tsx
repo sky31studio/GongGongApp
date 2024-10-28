@@ -4,12 +4,12 @@ import {BackgroundColor} from "../../../config/globalStyleSheetConfig.ts";
 import ClassComponent from "./classComponent.tsx";
 import NotLoginComponent from "./notLoginComponent.tsx";
 
-const ClassList = memo(({hasToken}: {hasToken: boolean}) => {
+const ClassList = memo(({hasToken}: { hasToken: boolean }) => {
 
     return (
         <View>
             <View style={ss.mainContainer}>
-                {hasToken ? <ClassComponent /> : <NotLoginComponent />}
+                {hasToken ? <ClassComponent/> : <NotLoginComponent/>}
             </View>
         </View>
     )

@@ -30,7 +30,7 @@ const scheduleSlice = createSlice({
     name: 'schedule',
     initialState,
     reducers: {
-        cleanTable: (state, action: {payload: any[] | undefined, type: any}) => {
+        cleanTable: (state, action: { payload: any[] | undefined, type: any }) => {
             state.table = {
                 'Monday': [],
                 'Tuesday': [],
@@ -41,13 +41,13 @@ const scheduleSlice = createSlice({
                 'Sunday': []
             };
         },
-        addSchedules: (state, action: {payload: Course[], type: any}) => {
-            for(let course of action.payload) {
+        addSchedules: (state, action: { payload: Course[], type: any }) => {
+            for (let course of action.payload) {
                 const weekDay: string = getWeekDay(course);
                 state.table[weekDay].push(course);
             }
 
-            for(let i = 1; i <= 7; i++) {
+            for (let i = 1; i <= 7; i++) {
                 state.table[ScheduleWeekDay[i]].sort((a, b) => {
                     return getPeriodStart(a) - getPeriodStart(b);
                 })
@@ -58,7 +58,10 @@ const scheduleSlice = createSlice({
         builder
             .addCase(fetchTable.fulfilled, (state, action) => {
                 scheduleSlice.caseReducers.cleanTable(state, {payload: action.payload, type: 'schedule/cleanTable'});
-                scheduleSlice.caseReducers.addSchedules(state, {payload: action.payload, type: 'schedule/addSchedules'});
+                scheduleSlice.caseReducers.addSchedules(state, {
+                    payload: action.payload,
+                    type: 'schedule/addSchedules'
+                });
             })
     }
 })

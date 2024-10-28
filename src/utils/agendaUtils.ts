@@ -14,8 +14,8 @@ export const containPinToTop = (types: number[]) => {
     return false;
 }
 
-export const generateID = (name: string, time: Date) => {
-    const input = time.toString() + ':' + name;
+export const generateID = (name: string, startTime: string, endTime: string) => {
+    const input = startTime + ':' + endTime + ' ' + name;
 
     return sha256(input).toString();
 }
@@ -23,16 +23,16 @@ export const generateID = (name: string, time: Date) => {
 export const dealExams = (data: any[]) => {
     const res: Agenda[] = [];
 
-    console.log(data);
+    let index = 0;
     for (let exam of data) {
-        let id = generateID(exam.name, exam.start_time);
+        let id = generateID(exam.name, exam.start_time, exam.end_time);
 
         res.push({
             id: id,
             name: exam.name,
             text: exam.text || '',
-            startTime: convertTimeToArray(exam.start_time),
-            endTime: convertTimeToArray(exam.end_time),
+            startTime: exam.start_time,
+            endTime: exam.end_time,
             location: exam.location,
             types: [exam.type === '考试' ? 0 : 1],
         })
@@ -41,22 +41,18 @@ export const dealExams = (data: any[]) => {
     return res;
 }
 
-/**
- * 将字符串形式的时间转为[year, month, day, minute, second]形式的数组
- * @param timeStr 字符串形式的时间
- */
-const convertTimeToArray = (timeStr: string) => {
-    const res: number[] = [];
-    let [left, right] = timeStr.split(' ');
+export const convertDateToString = (startDate: Date, endDate: Date) => {
+    const startYear = startDate.getFullYear();
+    const startMonth = startDate.getMonth() + 1;
+    const startDay = startDate.getDate();
+    const startHour = startDate.getHours();
+    const startMinute = startDate.getMinutes();
+    const endHour = endDate.getHours();
+    const endMinute = endDate.getMinutes();
 
-    let [year, month, day] = left.split('-');
-    res.push(Number(year), Number(month), Number(day));
+    return `${startYear}/${transTo2Digits(startMonth)}/${transTo2Digits(startDay)} ${transTo2Digits(startHour)}:${transTo2Digits(startMinute)}-${transTo2Digits(endHour)}:${transTo2Digits(endMinute)}`;
+}
 
-    let [hour, minute] = right.split(':');
-    res.push(Number(hour), Number(minute));
-
-    let date = new Date(Number(year), Number(month) - 1, Number(day));
-    res.push(date.getDay());
-
-    return res;
+export const transTo2Digits = (num: number) => {
+    return num < 10 ? `0${num}` : num.toString();
 }

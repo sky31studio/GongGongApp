@@ -1,9 +1,16 @@
-import React, {useEffect, useRef, useState} from "react";
-import {Pressable, StyleSheet, Text, TextInput, View} from "react-native";
+import React, {useEffect, useState} from "react";
+import {Pressable, StyleSheet, Text, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
-import Animated, {Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
+import Animated, {
+    Easing,
+    interpolateColor,
+    runOnJS,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming
+} from "react-native-reanimated";
 import {useAppDispatch} from "../../../app/hooks.ts";
 import {hideAddBoard} from "../../../app/slice/agendaSlice.ts";
 import MyTextInput from "./myTextInput.tsx";
@@ -16,18 +23,36 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
  */
 const AddBoard = () => {
     const dispatch = useAppDispatch();
-    const [onlyExam, setOnlyExam] = useState(false);
-    const [name, setName] = useState('');
-    const [dateVisibility, setDateVisibility] = useState(false);
+    const [onlyExam, setOnlyExam] = useState<boolean>(false);
+    const [name, setName] = useState<string>('');
     const [dateStr, setDateStr] = useState<string>('');
+    const [location, setLocation] = useState<string>('');
+    const [tip, setTip] = useState<string>('');
+    const [dateVisibility, setDateVisibility] = useState<boolean>(false);
 
-    const translateY = useSharedValue(500);
 
+    const translateY = useSharedValue(0);
     const animatedStyle = useAnimatedStyle(() => {
         return {
             transform: [{translateY: translateY.value}]
         }
     })
+
+    const colorValue = useSharedValue(0);
+    const buttonAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            backgroundColor: interpolateColor(colorValue.value, [0, 1], [BackgroundColor.invalid, BackgroundColor.primary])
+        }
+    })
+
+    useEffect(() => {
+        if (name !== '' && location !== '') {
+            colorValue.value = withTiming(1, {
+                duration: 300,
+                easing: Easing.ease,
+            })
+        }
+    }, [name, location]);
 
     useEffect(() => {
         translateY.value = withTiming(0, {
@@ -55,23 +80,19 @@ const AddBoard = () => {
         setName(data);
     }
 
-    const handleTime = () => {
-
+    const handleLocation = (data: string) => {
+        setLocation(data);
     }
 
-    const handleLocation = () => {
-
-    }
-
-    const handleTip = () => {
-
+    const handleTip = (data: string) => {
+        setTip(data);
     }
 
     const showDatePicker = () => {
         setDateVisibility(true);
     }
 
-    const handleConfirm = (date) => {
+    const handleConfirm = (date: any) => {
         console.log(date);
         console.log(typeof date);
     }
@@ -81,7 +102,7 @@ const AddBoard = () => {
     }
 
     return (
-        <View style={{flex: 1, position: 'relative', backgroundColor: 'rgba(45,45,45,0.3)'}}>
+        <View style={{flex: 1, position: 'relative', backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1000}}>
             <Animated.View style={[ss.addAgendaContainer, animatedStyle]}>
                 <View style={{width: '100%', height: 30, display: 'flex', alignItems: 'flex-end'}}>
                     <Pressable onPress={handleClose}>
@@ -90,11 +111,12 @@ const AddBoard = () => {
                 </View>
                 <View>
                     <Text style={ss.inputAgendaText}>事项名称</Text>
-                    <Pressable onPress={handleOnlyExam} style={{display: 'flex', flexDirection: 'row', position: 'absolute', top: 0, right: 0}}>
+                    <Pressable onPress={handleOnlyExam}
+                               style={{display: 'flex', flexDirection: 'row', position: 'absolute', top: 0, right: 0}}>
                         <SvgXml xml={onlyExam ? XMLResources.exam : XMLResources.notExam} width="16" height="16"/>
                         <Text style={{marginLeft: 5, color: FontColor.grey, lineHeight: 17}}>仅考试</Text>
                     </Pressable>
-                    <MyTextInput placeholder={'如: 英语四级'} sendData={handleName} />
+                    <MyTextInput placeholder={'如: 英语四级'} sendData={handleName}/>
                 </View>
                 <View style={{display: 'flex', flexDirection: 'row', width: '100%', marginTop: 10}}>
                     <View style={{width: '40%'}}>
@@ -105,16 +127,26 @@ const AddBoard = () => {
                     </View>
                     <View style={{flex: 1, marginLeft: 10}}>
                         <Text style={ss.inputAgendaText}>地点</Text>
-                        <MyTextInput placeholder={'(选填)'} sendData={handleName} />
+                        <MyTextInput placeholder={'(选填)'} sendData={handleName}/>
                     </View>
                 </View>
                 <View style={{marginTop: 10}}>
                     <Text style={ss.inputAgendaText}>备注</Text>
-                    <MyTextInput placeholder={'(选填)如: 四级500分一击必中!!!'} sendData={handleName} multiline={true} height={90} alignCenter={false} />
+                    <MyTextInput placeholder={'(选填)如: 四级500分一击必中!!!'} sendData={handleName} multiline={true}
+                                 height={90} alignCenter={false}/>
                 </View>
                 <View style={{display: 'flex', alignItems: 'center', marginTop: 25}}>
-                    <Pressable style={[ss.finishButton, {backgroundColor: '#123'}]}>
-                        <Text style={{fontSize: FontSize.m, color: FontColor.light, textAlign: 'center', height: '100%', lineHeight: 30, fontWeight: '600'}}>完成</Text>
+                    <Pressable>
+                        <Animated.View style={[ss.finishButton, buttonAnimatedStyle]}>
+                            <Text style={{
+                                fontSize: FontSize.m,
+                                color: FontColor.light,
+                                textAlign: 'center',
+                                height: '100%',
+                                lineHeight: 30,
+                                fontWeight: '600'
+                            }}>完成</Text>
+                        </Animated.View>
                     </Pressable>
                 </View>
                 <DateTimePickerModal
@@ -122,7 +154,7 @@ const AddBoard = () => {
                     mode="date"
                     onConfirm={handleConfirm}
                     onCancel={handleCancel}
-                    ></DateTimePickerModal>
+                ></DateTimePickerModal>
             </Animated.View>
         </View>
     )

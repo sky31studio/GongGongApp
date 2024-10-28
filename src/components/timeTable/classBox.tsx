@@ -6,6 +6,7 @@ interface ClassBoxProps {
     color?: string,
     course: ClassObject,
 }
+
 /**
  * Schedule组件中的课程单元格
  * @param color 课程单元格的背景颜色
