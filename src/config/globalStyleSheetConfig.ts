@@ -1,5 +1,6 @@
 export const BackgroundColor = {
     primary: '#FF6275',
+    primaryGradient: '#FF9999',
     secondary: '#FF6C87',
     tertiary: '#FFAA69',
     iconPrimary: '#8FB5FB',

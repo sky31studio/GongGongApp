@@ -1,7 +1,6 @@
 import React, {createContext, useContext, useEffect, useState} from "react";
-import {Animated, Pressable, StyleSheet, Text, View} from "react-native";
+import {Pressable, StyleSheet, Text, View} from "react-native";
 import {SvgXml} from "react-native-svg";
-import LinearGradient from "react-native-linear-gradient";
 import {useAppDispatch} from "../../app/hooks.ts";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
 import {addOnValueChangedListener, getToken} from "../../storage.ts";
@@ -10,6 +9,14 @@ import ClassList from "./course/classList.tsx";
 import {fetchTable} from "../../app/slice/scheduleSlice.ts";
 import {fetchExamData} from "../../app/slice/agendaSlice.ts";
 import XMLResources from "../../basic/XMLResources.ts";
+import Animated, {
+    Easing,
+    interpolateColor,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming
+} from "react-native-reanimated";
+import LinearGradient from "react-native-linear-gradient";
 
 export interface NavigationProps {
     navigation: {
@@ -100,6 +107,27 @@ const MainBoard = () => {
     const [hasToken, setHasToken] = useState(getToken() !== '');
     const [choice, setChoice] = useState(0);
 
+    const translateX = useSharedValue(-50);
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{translateX: translateX.value}]
+        }
+    })
+
+    useEffect(() => {
+        if (choice === 0) {
+            translateX.value = withTiming(-50, {
+                duration: 200,
+                easing: Easing.ease
+            })
+        } else if (choice === 1) {
+            translateX.value = withTiming(50, {
+                duration: 200,
+                easing: Easing.ease
+            })
+        }
+    }, [choice]);
+
     const handleChoice = (value: number) => {
         setChoice(value);
     }
@@ -128,6 +156,16 @@ const MainBoard = () => {
                     <View style={styleSheet.shiftButton}>
                         {countdownButton}
                     </View>
+                    <Animated.View style={[animatedStyle, {position: 'absolute', bottom: 7}]}>
+                        <LinearGradient
+                            colors={[BackgroundColor.primary, BackgroundColor.primaryGradient]} // 定义渐变颜色
+                            start={{x: 0, y: 0}} // 渐变开始的位置
+                            end={{x: 1, y: 0}} // 渐变结束的位置
+                            style={{width: 55, height: 8, borderRadius: 5}} // 渐变容器的样式
+                        >
+
+                        </LinearGradient>
+                    </Animated.View>
                 </View>
             </HomeContext.Provider>
             <View style={styleSheet.mainWrapper}>
@@ -145,51 +183,40 @@ interface ButtonProps {
 
 const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus = false}): React.JSX.Element => {
     const {choice, shiftChoice}: HomeContextType = useContext(HomeContext);
-    const [focused, setFocused] = useState(initFocus);
-    const [focusAnimate] = useState(new Animated.Value(focused ? 1 : 0));
 
-    const opacity = focusAnimate.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 1]
-    });
-
-    const translateY = focusAnimate.interpolate({
-        inputRange: [0, 1],
-        outputRange: [10, 0],
+    const colorValue = useSharedValue(0);
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            color: interpolateColor(colorValue.value, [0, 1], [FontColor.grey, FontColor.dark])
+        }
     })
 
     const handleClick = () => {
-        Animated.timing(focusAnimate, {
-            toValue: 1,
-            duration: 200,
-            useNativeDriver: true,
-        }).start();
         shiftChoice(id);
-        setFocused(true);
     }
 
     useEffect(() => {
-        if (choice !== id) {
-            Animated.timing(focusAnimate, {
-                toValue: 0,
+        if (choice === id && colorValue.value !== 1) {
+            colorValue.value = withTiming(1, {
                 duration: 200,
-                useNativeDriver: true,
-            }).start();
-            setFocused(false);
+                easing: Easing.ease,
+            })
+        } else {
+            colorValue.value = withTiming(0, {
+                duration: 200,
+                easing: Easing.ease,
+            })
         }
     }, [choice])
 
     return (
         <Pressable onPress={handleClick}>
             <View style={styleSheet.shiftBox}>
-                <Text numberOfLines={1}
-                      style={[styleSheet.shiftBoxText, {color: focused ? '#000' : '#999999'}]}>{text}</Text>
-                <Animated.View style={[styleSheet.initBox, {opacity: opacity, transform: [{translateY: translateY}]}]}>
-                    <LinearGradient
-                        colors={[BackgroundColor.primary, '#FF9999']}
-                        style={{flex: 1, borderRadius: 3}}
-                    ></LinearGradient>
-                </Animated.View>
+                <Animated.Text numberOfLines={1}
+                               style={[styleSheet.shiftBoxText, animatedStyle]}
+                >
+                    {text}
+                </Animated.Text>
             </View>
         </Pressable>
     );
@@ -261,6 +288,7 @@ const styleSheet = StyleSheet.create({
         height: '100%',
         paddingHorizontal: 15,
         alignItems: 'center',
+        zIndex: 100
     },
 
     shiftBox: {

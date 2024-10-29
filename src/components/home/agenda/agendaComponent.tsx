@@ -1,10 +1,10 @@
-import {Modal, Pressable, StyleSheet, Text, View} from "react-native";
+import {Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View} from "react-native";
 import React, {useEffect, useState} from "react";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
 import {
-    Agenda,
+    Agenda, hideAddBoard,
     selectAgendaList,
     selectExamLength,
     selectExamList,
@@ -14,13 +14,23 @@ import {
 import XMLResources from "../../../basic/XMLResources.ts";
 import {AgendaType, CNWeekDay} from "../../../utils/enum.ts";
 import {Gesture, GestureDetector, GestureHandlerRootView} from "react-native-gesture-handler";
-import Animated, {useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
-import AddBoard from "./addBoard.tsx";
+import Animated, {Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
 import {convertDateToString} from "../../../utils/agendaUtils.ts";
+import AddBoard from "./addBoard.tsx";
 
 const agendaComponent = () => {
-    const useDispatch = useAppDispatch();
-    const addBoardVisibility = useAppSelector(selectShowAddBoard);
+    const dispatch = useAppDispatch();
+    const winWidth = useWindowDimensions().width;
+    const winHeight = useWindowDimensions().height;
+    const modalVisibility = useAppSelector(selectShowAddBoard);
+
+    const translateY = useSharedValue(400);
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{translateY: translateY.value}]
+        }
+    })
+
     // 是否只展示exam
     const [onlyExam, setOnlyExam] = useState<boolean>(false);
     const countdownList = <CountdownList onlyExam={onlyExam}/>
@@ -29,15 +39,33 @@ const agendaComponent = () => {
         setOnlyExam(!onlyExam);
         console.log(onlyExam);
     }
-    // TODO: 添加倒计时
-    const handleAddCountdown = () => {
-        useDispatch(showAddBoard());
+
+    const showBoard = () => {
+        dispatch(showAddBoard());
+    }
+
+    const openModal = () => {
+        translateY.value = withTiming(0, {
+            duration: 200,
+            easing: Easing.ease
+        }, () => runOnJS(showBoard)());
+    }
+
+    const hideBoard = () => {
+        dispatch(hideAddBoard());
+    }
+
+    const closeModal = () => {
+        translateY.value = withTiming(400, {
+            duration: 200,
+            easing: Easing.ease
+        }, () => runOnJS(hideBoard)());
     }
 
     return (
         <View style={ss.agendaComponentContainer}>
             <View style={ss.functionContainer}>
-                <Pressable onPress={handleAddCountdown}>
+                <Pressable onPress={openModal}>
                     <View style={ss.addContainer}>
                         <SvgXml xml={XMLResources.addCountdown} width="10" height="10"/>
                         <Text style={ss.addText}>添加倒计时</Text>
@@ -52,8 +80,18 @@ const agendaComponent = () => {
                 </View>
             </View>
             {countdownList}
-            <Modal transparent={true} visible={addBoardVisibility}>
-                <AddBoard/>
+            <Modal
+                visible={modalVisibility}
+                animationType={'none'}
+                onRequestClose={closeModal}
+                transparent={true}
+            >
+                <View style={{width: winWidth, height: winHeight, backgroundColor: 'rgba(0, 0, 0, .25)'}}>
+                    <Animated.View style={[animatedStyle, {position: 'absolute', bottom: 0}]}>
+                        <AddBoard handleClose={closeModal}/>
+                    </Animated.View>
+
+                </View>
             </Modal>
         </View>
     )
@@ -92,7 +130,7 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
 
     // 没有考试展示
     const noExam = (
-        <View style={{marginTop: 20}}>
+        <View style={{marginTop: 20, display: 'flex', alignItems: 'center'}}>
             <SvgXml xml={XMLResources.noAgendaOnlyExams} width={193} height={127}/>
             <Text
                 style={{
@@ -105,8 +143,10 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
     )
 
     return (
-        <GestureHandlerRootView style={ss.countdownListContainer}>
-            {agendaListLength === 0 && onlyExam ? noExam : renderList}
+        <GestureHandlerRootView style={{width: '100%'}}>
+            <ScrollView style={ss.countdownListContainer}>
+                {agendaListLength === 0 && onlyExam ? noExam : renderList}
+            </ScrollView>
         </GestureHandlerRootView>
     );
 }
@@ -150,13 +190,17 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
             startTranslateX.value = translateX.value;
         })
         .onUpdate((event) => {
-            translateX.value = startTranslateX.value + event.translationX;
+            if (startTranslateX.value + event.translationX >= 0) {
+                translateX.value = 0;
+            } else {
+                translateX.value = startTranslateX.value + event.translationX;
+            }
         })
         .onEnd((event) => {
             const velocityX = event.velocityX;
             if (velocityX < 0) {
-                if (velocityX < -300 || translateX.value + event.translationX < -30) {
-                    translateX.value = withTiming(-60, {
+                if (velocityX < -300 || translateX.value + event.translationX < -40) {
+                    translateX.value = withTiming(-80, {
                         duration: 300,
                     })
                 } else {
@@ -165,12 +209,12 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
                     })
                 }
             } else {
-                if (velocityX > 300 || translateX.value + event.translationX > -30) {
+                if (velocityX > 300 || translateX.value + event.translationX > -40) {
                     translateX.value = withTiming(0, {
                         duration: 300,
                     })
                 } else {
-                    translateX.value = withTiming(-60, {
+                    translateX.value = withTiming(-80, {
                         duration: 300,
                     })
                 }
@@ -209,7 +253,7 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
                     <Pressable
                         style={[ss.agendaButton, {
                             backgroundColor: BackgroundColor.iconSecondaryBackground,
-                            right: -60
+                            right: -80
                         }]}>
                         <SvgXml xml={XMLResources.deleteAgenda} width={15} height={15}/>
                         <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconSecondary}]}>删除</Text>
@@ -217,7 +261,7 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
                     </Pressable>
                     <Pressable style={[ss.agendaButton, {
                         backgroundColor: BackgroundColor.iconPrimaryBackground,
-                        right: -30
+                        right: -40
                     }]}>
                         <SvgXml xml={XMLResources.pinToTop} width={15} height={15}/>
                         <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconPrimary}]}>{'置顶'}</Text>
@@ -251,7 +295,7 @@ const ss = StyleSheet.create({
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
+        maxHeight: '100%',
     },
 
     addContainer: {
@@ -364,7 +408,7 @@ const ss = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         height: 75,
-        width: 30,
+        width: 40,
         top: 0,
     },
 

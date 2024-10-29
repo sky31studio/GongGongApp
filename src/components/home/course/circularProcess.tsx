@@ -22,7 +22,7 @@ let CircularProcess: React.ComponentType<ProcessProps>;
 CircularProcess = ({done, todo}): React.JSX.Element => {
     const innerRadius = 28;
     const circumference = 2 * Math.PI * innerRadius;
-    const completion = done / todo;
+    const completion = todo === 0 ? 1 : done / todo;
     const theta = useSharedValue(2 * Math.PI);
     const animateTo = useDerivedValue(() => theta.value * completion);
     const dashoffset = useSharedValue(circumference);
