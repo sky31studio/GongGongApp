@@ -22,14 +22,12 @@ import Animated, {
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import Resources from "../../basic/Resources.ts";
-import {NavigationProps} from "../home/homePage.tsx";
 import XMLResources from "../../basic/XMLResources.ts";
 
 /**
  * 登录主界面
- * @param navigation 路由
  */
-const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
+const LoginPage = ({sendData}: { sendData: any }): React.JSX.Element => {
     let handleUsername, handlePassword, handleLogin;
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -76,7 +74,7 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
                 alertAnimation();
                 return;
             }
-            navigation.navigate('HomePage');
+            sendData(true);
         }
     }
 

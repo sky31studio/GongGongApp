@@ -8,7 +8,7 @@ interface InitialState {
     termID: string,
 }
 
-const initialState = {
+const initialState: InitialState = {
     date: "",
     termID: "",
 }
@@ -26,7 +26,7 @@ const globalSlice = createSlice({
         },
         setTermID: (state, action) => {
             state.termID = action.payload.termID;
-        }
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -51,4 +51,5 @@ export const selectTheWeek = createSelector(
     }
 )
 
+export const {setDate, setTermID} = globalSlice.actions;
 export default globalSlice.reducer;

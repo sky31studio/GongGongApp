@@ -19,7 +19,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
     }, [dispatch]);
 
     const handleGoBack = () => {
-        navigation.goBack();
+        navigation.navigate('Home');
     }
 
     return (

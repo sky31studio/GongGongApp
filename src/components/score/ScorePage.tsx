@@ -38,7 +38,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
     })
 
     const handleBack = () => {
-        navigation.navigate('HomePage');
+        navigation.navigate('Home');
     }
     return (
         <View style={{height: '100%'}}>

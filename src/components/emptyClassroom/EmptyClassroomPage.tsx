@@ -10,7 +10,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
 
 
     const handleBack = () => {
-        navigation.navigate('HomePage');
+        navigation.navigate('Home');
     }
 
     return (

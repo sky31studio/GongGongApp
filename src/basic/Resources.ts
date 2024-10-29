@@ -110,6 +110,20 @@ class Resources {
         }
     }
 
+    public static async getInfo() {
+        try {
+            const response = await axios.get(`${rootUrl}/info`, {
+                headers: {
+                    'token': getToken()
+                }
+            })
+
+            return response.data.data;
+
+        } catch (error) {
+            console.log(error);
+        }
+    }
 }
 
 export default Resources;

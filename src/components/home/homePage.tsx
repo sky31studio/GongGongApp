@@ -1,5 +1,5 @@
-import React, {createContext, useContext, useEffect, useState} from "react";
-import {Pressable, StyleSheet, Text, View} from "react-native";
+import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
+import {Pressable, StyleSheet, Text, useWindowDimensions, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import {useAppDispatch} from "../../app/hooks.ts";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
@@ -18,6 +18,10 @@ import Animated, {
 } from "react-native-reanimated";
 import LinearGradient from "react-native-linear-gradient";
 import {getFirstDate} from "../../app/slice/globalSlice.ts";
+import {createNativeStackNavigator} from "@react-navigation/native-stack";
+import EmptyClassroomPage from "../emptyClassroom/EmptyClassroomPage.tsx";
+import {TablePage} from "../timeTable/tablePage.tsx";
+import ScorePage from "../score/ScorePage.tsx";
 
 export interface NavigationProps {
     navigation: {
@@ -26,7 +30,8 @@ export interface NavigationProps {
     };
 }
 
-const HomePage = ({navigation}: NavigationProps) => {
+const HomePage = () => {
+    const Stack = createNativeStackNavigator();
     const dispatch = useAppDispatch();
 
     // 登录成功，一次性请求全部数据
@@ -36,8 +41,20 @@ const HomePage = ({navigation}: NavigationProps) => {
         dispatch(getFirstDate());
     }, []);
 
+    return (
+        <Stack.Navigator screenOptions={{headerShown: false}}>
+            <Stack.Screen name="Home" component={Home}/>
+            <Stack.Screen name="EmptyClassroomPage" component={EmptyClassroomPage}/>
+            <Stack.Screen name="TablePage" component={TablePage}/>
+            <Stack.Screen name="ScorePage" component={ScorePage}/>
+        </Stack.Navigator>
+    );
+}
+
+const Home = ({navigation}: NavigationProps) => {
     const functionBar = () => <FunctionBar navigation={navigation}/>;
     const marinBoard = () => <MainBoard/>;
+
     return (
         <View style={styleSheet.homeContainer}>
             <View style={{width: '100%', height: '18%'}}>
@@ -47,7 +64,7 @@ const HomePage = ({navigation}: NavigationProps) => {
                 {marinBoard()}
             </View>
         </View>
-    );
+    )
 }
 
 const FunctionBar: React.ComponentType<NavigationProps> = ({navigation}) => {
@@ -107,9 +124,13 @@ const MainBoard = () => {
     const countdownButton = <ShiftButton id={1} text='倒计时'/>;
 
     const [hasToken, setHasToken] = useState(getToken() !== '');
-    const [choice, setChoice] = useState(0);
+    const [choice, setChoice] = useState<number>(0);
+    const winWidth = useWindowDimensions().width;
 
-    const translateX = useSharedValue(-50);
+    const classList = useMemo(() => <ClassList hasToken={hasToken}/>, [hasToken]);
+    const agendaList = useMemo(() => <AgendaList hasToken={hasToken}/>, [hasToken]);
+
+    const translateX = useSharedValue(-winWidth * 0.12);
     const animatedStyle = useAnimatedStyle(() => {
         return {
             transform: [{translateX: translateX.value}]
@@ -118,12 +139,12 @@ const MainBoard = () => {
 
     useEffect(() => {
         if (choice === 0) {
-            translateX.value = withTiming(-50, {
+            translateX.value = withTiming(-winWidth * 0.12, {
                 duration: 200,
                 easing: Easing.ease
             })
         } else if (choice === 1) {
-            translateX.value = withTiming(50, {
+            translateX.value = withTiming(winWidth * 0.12, {
                 duration: 200,
                 easing: Easing.ease
             })
@@ -158,7 +179,7 @@ const MainBoard = () => {
                     <View style={styleSheet.shiftButton}>
                         {countdownButton}
                     </View>
-                    <Animated.View style={[animatedStyle, {position: 'absolute', bottom: 7}]}>
+                    <Animated.View style={[animatedStyle, {position: 'absolute', bottom: 8}]}>
                         <LinearGradient
                             colors={[BackgroundColor.primary, BackgroundColor.primaryGradient]} // 定义渐变颜色
                             start={{x: 0, y: 0}} // 渐变开始的位置
@@ -171,7 +192,7 @@ const MainBoard = () => {
                 </View>
             </HomeContext.Provider>
             <View style={styleSheet.mainWrapper}>
-                {choice === 0 ? <ClassList hasToken={hasToken}/> : <AgendaList hasToken={hasToken}/>}
+                {choice === 0 ? classList : agendaList}
             </View>
         </View>
     );
