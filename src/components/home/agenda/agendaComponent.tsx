@@ -4,10 +4,11 @@ import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
 import {
-    Agenda, hideAddBoard,
+    Agenda,
+    hideAddBoard,
     selectAgendaList,
     selectExamLength,
-    selectExamList,
+    selectOnlyExamList,
     selectShowAddBoard,
     showAddBoard
 } from "../../../app/slice/agendaSlice.ts";
@@ -37,7 +38,6 @@ const agendaComponent = () => {
 
     const handleOnlyExam = () => {
         setOnlyExam(!onlyExam);
-        console.log(onlyExam);
     }
 
     const showBoard = () => {
@@ -101,7 +101,7 @@ const agendaComponent = () => {
  * Agenda列表部分
  */
 const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => {
-    const agendaList = onlyExam ? useAppSelector(selectExamList) : useAppSelector(selectAgendaList);
+    const agendaList = onlyExam ? useAppSelector(selectOnlyExamList) : useAppSelector(selectAgendaList);
     const agendaListLength = useAppSelector(selectExamLength);
 
     const [lastTime, setLastTime] = useState(new Date());
@@ -115,17 +115,22 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
         }
     })
 
-    let renderList;
-    renderList = agendaList.map((agenda: Agenda, index) => {
-        let startDate = new Date(agenda.startTime);
-        let endDate = new Date(agenda.endTime);
+    const renderList = agendaList
+        .filter((agenda: Agenda) => {
+            let endDate = new Date(agenda.endTime);
+            const countdown = Math.floor((endDate.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
+            // 说明该Agenda已经过期
+            return countdown >= 0;
+        })
+        .map((agenda: Agenda) => {
+            let endDate = new Date(agenda.endTime);
+            const countdown = Math.floor((endDate.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
 
-
-        const countdown = Math.floor((endDate.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
-        // 说明该Agenda已经过期
-        if (countdown < 0) return;
-
-        return <AgendaBox agenda={agenda} countdown={countdown} key={agenda.id}/>
+            return (
+                <View key={agenda.id}>
+                    <AgendaBox agenda={agenda} countdown={countdown}/>
+                </View>
+            )
     })
 
     // 没有考试展示
@@ -167,7 +172,7 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
     }
 
     // 标签渲染
-    const typeList = agenda.types.map((type, index) => {
+    const typeList = agenda.types.map((type) => {
         return (
             <View style={ss.agendaTagContainer}>
                 <Text style={{fontSize: FontSize.ss, color: FontColor.light, lineHeight: 15}}>{AgendaType[type]}</Text>
@@ -192,6 +197,8 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
         .onUpdate((event) => {
             if (startTranslateX.value + event.translationX >= 0) {
                 translateX.value = 0;
+            } else if (startTranslateX.value + event.translationX <= -80) {
+                translateX.value = -80;
             } else {
                 translateX.value = startTranslateX.value + event.translationX;
             }

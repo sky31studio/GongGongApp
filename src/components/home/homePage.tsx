@@ -17,6 +17,7 @@ import Animated, {
     withTiming
 } from "react-native-reanimated";
 import LinearGradient from "react-native-linear-gradient";
+import {getFirstDate} from "../../app/slice/globalSlice.ts";
 
 export interface NavigationProps {
     navigation: {
@@ -32,6 +33,7 @@ const HomePage = ({navigation}: NavigationProps) => {
     useEffect(() => {
         dispatch(fetchTable());
         dispatch(fetchExamData());
+        dispatch(getFirstDate());
     }, []);
 
     const functionBar = () => <FunctionBar navigation={navigation}/>;

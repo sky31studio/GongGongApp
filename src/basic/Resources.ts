@@ -97,7 +97,7 @@ class Resources {
 
     public static async getFirstDate() {
         try {
-            const response = await axios.get(`${rootUrl}/rank`, {
+            const response = await axios.get(`${rootUrl}/calendar`, {
                 headers: {
                     'token': getToken()
                 }

@@ -73,7 +73,6 @@ const AddBoard = ({handleClose}: { handleClose: () => void }) => {
 
     const handleConfirm = (date: any) => {
         const tmp = new Date(date);
-        console.log(tmp);
         setDateVisibility(false);
     }
 

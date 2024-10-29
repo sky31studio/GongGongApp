@@ -30,3 +30,13 @@ export const FontSize = {
     ll: 18,
     xxl: 20,
 }
+
+export const CourseColor = [
+    '#FCB971',
+    '#749BFF',
+    '#FFB838',
+    '#F57878',
+    '#A99BFF',
+    '#61BEFA',
+    '#63C1BD',
+]

@@ -10,7 +10,7 @@ const weekTime = ['01-01', '01-02', '01-03', '01-04', '01-05', '01-06', '01-07']
 
 const weekdayCNName = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
-export default function Schedule(): React.JSX.Element {
+export default function Schedule({week}: { week: number }): React.JSX.Element {
     let timeInterval;
     timeInterval = TimeTableConfig.getTimeInterval(new Date());
     // 左侧时间表
@@ -50,7 +50,7 @@ export default function Schedule(): React.JSX.Element {
     timeListWithGap = [monthItem, ...timeListWithGap];
 
     const table = useAppSelector(selectTable);
-    const courses = useMemo(() => getAllCoursesByWeek(table, 6), [table]);
+    const courses = useMemo(() => getAllCoursesByWeek(table, week), [table, week]);
 
     const classList = () => {
         return courses.map((item, index) => {

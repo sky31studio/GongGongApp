@@ -13,8 +13,8 @@ interface ClassBoxProps {
  * @param course 课程信息来源
  */
 let ClassBox: React.ComponentType<ClassBoxProps>;
-ClassBox = ({course, color = '#1cb128'}) => {
-    const {name, classroom} = course;
+ClassBox = ({course}) => {
+    const {name, classroom, color} = course;
 
     return (
         <View style={{...styleSheet.boxContainer, backgroundColor: color}}>

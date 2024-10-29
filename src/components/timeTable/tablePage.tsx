@@ -1,12 +1,17 @@
 import {Image, Pressable, StyleSheet, Text, View} from "react-native";
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import Schedule from "./schedule";
 import {NavigationProps} from "../home/homePage.tsx";
-import {useAppDispatch} from "../../app/hooks.ts";
-import {BackgroundColor} from "../../config/globalStyleSheetConfig.ts";
+import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
+import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
 import {fetchTable} from "../../app/slice/scheduleSlice.ts";
+import {selectTheWeek} from "../../app/slice/globalSlice.ts";
+import {SvgXml} from "react-native-svg";
+import XMLResources from "../../basic/XMLResources.ts";
 
 export const TablePage = ({navigation}: NavigationProps) => {
+    const theWeek = useAppSelector(selectTheWeek);
+    const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
 
     const dispatch = useAppDispatch();
     useEffect(() => {
@@ -29,28 +34,20 @@ export const TablePage = ({navigation}: NavigationProps) => {
                 flexDirection: 'column',
             }}>
                 <View style={styleSheet.guideBar}>
-                    <Pressable onPress={handleGoBack}>
-                        <Image
-                            source={require('../../assets/png/leftArrow.png')}
-                            style={{
-                                width: 30,
-                                height: 30,
-                                position: 'absolute',
-                                left: 5,
-                                bottom: '40%',
-                            }}></Image>
+                    <Pressable onPress={handleGoBack} style={styleSheet.backButton}>
+                        <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
                     </Pressable>
-
                     <View style={styleSheet.weekBox}>
                         <View style={styleSheet.textBox}>
                             <Text style={{
-                                color: 'black',
+                                color: FontColor.light,
                                 height: 20,
                                 lineHeight: 20,
                                 fontSize: 18,
                                 fontWeight: '600'
-                            }}>第5周</Text>
-                            <Text style={{color: 'black', fontSize: 12}}>本周</Text>
+                            }}>第{theWeek}周</Text>
+                            {theWeek === currentWeek &&
+                                <Text style={{color: FontColor.light, fontSize: 12}}>本周</Text>}
                             <Image
                                 source={require('../../assets/png/leftArrow.png')}
                                 style={{
@@ -79,7 +76,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
                     ></Image>
                 </View>
                 <View style={styleSheet.tableWrapper}>
-                    <Schedule></Schedule>
+                    <Schedule week={currentWeek}></Schedule>
                 </View>
             </View>
         </View>
@@ -109,7 +106,6 @@ const styleSheet = StyleSheet.create({
     },
 
     textBox: {
-        maxWidth: 50,
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
@@ -135,5 +131,16 @@ const styleSheet = StyleSheet.create({
         flex: 1,
         display: 'flex',
         flexDirection: 'column'
+    },
+
+    backButton: {
+        height: 24,
+        width: 20,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute',
+        top: 50,
+        left: 20,
     }
 })

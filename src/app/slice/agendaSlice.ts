@@ -105,6 +105,31 @@ export const selectAgendaList = createSelector(
     }
 );
 
+// 返回exam中只有考试标签的列表
+export const selectOnlyExamList = createSelector(
+    [selectExamList, selectSelfList],
+    (examList) => {
+        const res = examList.slice();
+
+        for (let i = 0; i < res.length; i++) {
+            let isExam = false;
+            for (let type of res[i].types) {
+                if (type === 0) {
+                    isExam = true;
+                    break;
+                }
+            }
+
+            if (!isExam) {
+                res.splice(i, 1);
+                i--;
+            }
+        }
+
+        return res;
+    }
+);
+
 export const selectExamLength = (state: RootState) => state.exam.examList.length;
 
 export const {showAddBoard, hideAddBoard} = agendaSlice.actions;
