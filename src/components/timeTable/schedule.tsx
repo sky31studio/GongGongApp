@@ -5,12 +5,20 @@ import TimeTableConfig from "../../config/TimeTableConfig";
 import {getAllCoursesByWeek} from "../../utils/tableUtils.ts";
 import {useAppSelector} from "../../app/hooks.ts";
 import {selectTable} from "../../app/slice/scheduleSlice.ts";
-
-const weekTime = ['01-01', '01-02', '01-03', '01-04', '01-05', '01-06', '01-07'];
+import {selectFirstDate} from "../../app/slice/globalSlice.ts";
+import {transTo2Digits} from "../../utils/agendaUtils.ts";
 
 const weekdayCNName = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
 export default function Schedule({week}: { week: number }): React.JSX.Element {
+    const date = useAppSelector(selectFirstDate);
+    const firstDate = useMemo(() => {
+        const tmpDate = new Date(date);
+
+        tmpDate.setDate(tmpDate.getDate() + (week - 1) * 7);
+        return tmpDate;
+    }, [date, week]);
+
     let timeInterval;
     timeInterval = TimeTableConfig.getTimeInterval(new Date());
     // 左侧时间表
@@ -54,11 +62,15 @@ export default function Schedule({week}: { week: number }): React.JSX.Element {
 
     const classList = () => {
         return courses.map((item, index) => {
+            const showDate = new Date(firstDate);
+            showDate.setDate(showDate.getDate() + index);
+
             const weekDayItem = (
                 <View style={styleSheet.weekdayItemWrapper}>
                     <View style={styleSheet.weekdayItem}>
                         <Text style={styleSheet.wItemBoldText}>{weekdayCNName[index]}</Text>
-                        <Text style={styleSheet.wItemSlimText}>{weekTime[index]}</Text>
+                        <Text
+                            style={styleSheet.wItemSlimText}>{`${transTo2Digits(showDate.getMonth() + 1)}-${transTo2Digits(showDate.getDate())}`}</Text>
                     </View>
                 </View>
             );

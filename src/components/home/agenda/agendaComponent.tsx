@@ -14,10 +14,11 @@ import {
 } from "../../../app/slice/agendaSlice.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {AgendaType, CNWeekDay} from "../../../utils/enum.ts";
-import {Gesture, GestureDetector, GestureHandlerRootView} from "react-native-gesture-handler";
+import {GestureHandlerRootView} from "react-native-gesture-handler";
 import Animated, {Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
 import {convertDateToString} from "../../../utils/agendaUtils.ts";
 import AddBoard from "./addBoard.tsx";
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 
 const agendaComponent = () => {
     const dispatch = useAppDispatch();
@@ -148,8 +149,11 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
     )
 
     return (
-        <GestureHandlerRootView style={{width: '100%'}}>
-            <ScrollView style={ss.countdownListContainer}>
+        <GestureHandlerRootView style={{width: '100%', flex: 1}}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={true}
+                style={ss.countdownListContainer}>
                 {agendaListLength === 0 && onlyExam ? noExam : renderList}
             </ScrollView>
         </GestureHandlerRootView>
@@ -180,102 +184,61 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
         )
     })
 
-    const translateX = useSharedValue(0);
-    const startTranslateX = useSharedValue(0);
+    const rightAction = () => {
+        return (
+            <View style={{height: '100%', display: 'flex', flexDirection: 'row'}}>
+                <Pressable style={[ss.agendaButton, {
+                    backgroundColor: BackgroundColor.iconPrimaryBackground,
+                }]}>
+                    <SvgXml xml={XMLResources.pinToTop} width={15} height={15}/>
+                    <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconPrimary}]}>{'置顶'}</Text>
+                </Pressable>
+                <Pressable
+                    style={[ss.agendaButton, {
+                        backgroundColor: BackgroundColor.iconSecondaryBackground,
+                    }]}>
+                    <SvgXml xml={XMLResources.deleteAgenda} width={15} height={15}/>
+                    <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconSecondary}]}>删除</Text>
 
-    const animatedStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{translateX: translateX.value}],
-        }
-    })
-
-    const pan = Gesture.Pan()
-        .shouldCancelWhenOutside(false)
-        .onBegin(() => {
-            startTranslateX.value = translateX.value;
-        })
-        .onUpdate((event) => {
-            if (startTranslateX.value + event.translationX >= 0) {
-                translateX.value = 0;
-            } else if (startTranslateX.value + event.translationX <= -80) {
-                translateX.value = -80;
-            } else {
-                translateX.value = startTranslateX.value + event.translationX;
-            }
-        })
-        .onEnd((event) => {
-            const velocityX = event.velocityX;
-            if (velocityX < 0) {
-                if (velocityX < -300 || translateX.value + event.translationX < -40) {
-                    translateX.value = withTiming(-80, {
-                        duration: 300,
-                    })
-                } else {
-                    translateX.value = withTiming(0, {
-                        duration: 300,
-                    })
-                }
-            } else {
-                if (velocityX > 300 || translateX.value + event.translationX > -40) {
-                    translateX.value = withTiming(0, {
-                        duration: 300,
-                    })
-                } else {
-                    translateX.value = withTiming(-80, {
-                        duration: 300,
-                    })
-                }
-            }
-        })
+                </Pressable>
+            </View>
+        )
+    }
 
     return (
-        <GestureDetector gesture={pan}>
-            <View style={{width: '100%', overflow: 'hidden'}}>
-                <Animated.View style={[ss.agendaContainer, animatedStyle]}>
-                    <View style={ss.agendaNameContainer}>
-                        <Text numberOfLines={1} ellipsizeMode="tail" style={ss.agendaName}>{agenda.name}</Text>
-                        {agenda.types.length && typeList}
+        <Swipeable
+            renderRightActions={rightAction}
+            rightThreshold={40}
+            overshootRight={false}
+        >
+            <View style={[ss.agendaContainer]}>
+                <View style={ss.agendaNameContainer}>
+                    <Text numberOfLines={1} ellipsizeMode="tail" style={ss.agendaName}>{agenda.name}</Text>
+                    {agenda.types.length && typeList}
+                </View>
+                {agenda.text !== '' && <Text style={[ss.agendaText]}>{agenda.text}</Text>}
+                <View style={ss.agendaLocationAndTimeContainer}>
+                    <SvgXml xml={XMLResources.clock} width={9} height={9}/>
+                    <Text style={[ss.agendaInfoText]}>{timeStr}</Text>
+                    <Text style={[ss.agendaInfoText]}>{weekDay}</Text>
+                    <View style={{
+                        width: .5,
+                        height: 12,
+                        backgroundColor: FontColor.grey,
+                        marginHorizontal: 5
+                    }}></View>
+                    <SvgXml xml={XMLResources.location} width={9} height={9}/>
+                    <Text style={[ss.agendaInfoText]}>{location}</Text>
+                </View>
+                {agenda.startTime !== '' && (
+                    <View style={ss.countdownContainer}>
+                        <Text style={ss.countdownText}>还剩</Text>
+                        <Text style={ss.countdownDayText}>{countdown}</Text>
+                        <Text style={ss.countdownText}>天</Text>
                     </View>
-                    {agenda.text !== '' && <Text style={[ss.agendaText]}>{agenda.text}</Text>}
-                    <View style={ss.agendaLocationAndTimeContainer}>
-                        <SvgXml xml={XMLResources.clock} width={9} height={9}/>
-                        <Text style={[ss.agendaInfoText]}>{timeStr}</Text>
-                        <Text style={[ss.agendaInfoText]}>{weekDay}</Text>
-                        <View style={{
-                            width: .5,
-                            height: 12,
-                            backgroundColor: FontColor.grey,
-                            marginHorizontal: 5
-                        }}></View>
-                        <SvgXml xml={XMLResources.location} width={9} height={9}/>
-                        <Text style={[ss.agendaInfoText]}>{location}</Text>
-                    </View>
-                    {agenda.startTime !== '' && (
-                        <View style={ss.countdownContainer}>
-                            <Text style={ss.countdownText}>还剩</Text>
-                            <Text style={ss.countdownDayText}>{countdown}</Text>
-                            <Text style={ss.countdownText}>天</Text>
-                        </View>
-                    )}
-                    <Pressable
-                        style={[ss.agendaButton, {
-                            backgroundColor: BackgroundColor.iconSecondaryBackground,
-                            right: -80
-                        }]}>
-                        <SvgXml xml={XMLResources.deleteAgenda} width={15} height={15}/>
-                        <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconSecondary}]}>删除</Text>
-
-                    </Pressable>
-                    <Pressable style={[ss.agendaButton, {
-                        backgroundColor: BackgroundColor.iconPrimaryBackground,
-                        right: -40
-                    }]}>
-                        <SvgXml xml={XMLResources.pinToTop} width={15} height={15}/>
-                        <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconPrimary}]}>{'置顶'}</Text>
-                    </Pressable>
-                </Animated.View>
+                )}
             </View>
-        </GestureDetector>
+        </Swipeable>
     )
 }
 
@@ -302,7 +265,8 @@ const ss = StyleSheet.create({
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
-        maxHeight: '100%',
+        flex: 1,
+        overflow: 'hidden',
     },
 
     addContainer: {
@@ -341,6 +305,7 @@ const ss = StyleSheet.create({
         borderTopColor: '#EEEEEE',
         paddingVertical: 10,
         paddingHorizontal: 25,
+        backgroundColor: '#fff',
     },
 
     agendaNameContainer: {
@@ -410,13 +375,11 @@ const ss = StyleSheet.create({
     },
 
     agendaButton: {
-        position: 'absolute',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         height: 75,
         width: 40,
-        top: 0,
     },
 
     agendaButtonText: {

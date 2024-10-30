@@ -7,6 +7,8 @@ import {NavigationProps} from "../home/homePage.tsx";
 import Resources from "../../basic/Resources.ts";
 import {dealScore, SingleScoreList} from "../../utils/scoreUtils.ts";
 import SingleScore from "./SingleScore.tsx";
+import {useAppDispatch} from "../../app/hooks.ts";
+import {setBottomTabVisibility} from "../../app/slice/globalSlice.ts";
 import ScrollView = Animated.ScrollView;
 
 
@@ -16,9 +18,11 @@ const ScorePage = ({navigation}: NavigationProps) => {
     const [gpa, setGpa] = useState<string>('');
     const [classRank, setClassRank] = useState<number>(0);
     const [majorRank, setMajorRank] = useState<number>(0);
+    const dispatch = useAppDispatch();
 
 
     useEffect(() => {
+        dispatch(setBottomTabVisibility(false));
         Resources.getScore().then((data) => {
             setScoreList(dealScore(data));
         })
@@ -39,6 +43,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
 
     const handleBack = () => {
         navigation.navigate('Home');
+        dispatch(setBottomTabVisibility(true));
     }
     return (
         <View style={{height: '100%'}}>

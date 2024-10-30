@@ -14,6 +14,7 @@ export const BackgroundColor = {
 
 export const FontColor = {
     primary: '#FF6275',
+    secondary: '#8fb5fb',
     light: '#fff',
     grey: '#A6A6A6',
     greyLight: '#A7A7A7',

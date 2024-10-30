@@ -1,26 +1,59 @@
-import {Image, Pressable, StyleSheet, Text, View} from "react-native";
+import {Pressable, StyleSheet, Text, View} from "react-native";
 import React, {useEffect, useState} from "react";
 import Schedule from "./schedule";
 import {NavigationProps} from "../home/homePage.tsx";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
-import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
+import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {fetchTable} from "../../app/slice/scheduleSlice.ts";
-import {selectTheWeek} from "../../app/slice/globalSlice.ts";
+import {selectTheWeek, setBottomTabVisibility} from "../../app/slice/globalSlice.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
+import Animated, {interpolate, useAnimatedStyle, useSharedValue} from "react-native-reanimated";
 
 export const TablePage = ({navigation}: NavigationProps) => {
     const theWeek = useAppSelector(selectTheWeek);
     const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
+
+    const dropWeekList = useSharedValue<number>(0);
+    const arrowAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{
+                rotate: `${interpolate(dropWeekList.value, [0, 1], [-90, 90])}deg`
+            }]
+        }
+    })
+
+    const weekListAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            maxHeight: interpolate(dropWeekList.value, [0, 1], [0, 40])
+        }
+    })
 
     const dispatch = useAppDispatch();
     useEffect(() => {
         dispatch(fetchTable());
     }, [dispatch]);
 
+    useEffect(() => {
+        dispatch(setBottomTabVisibility(false));
+    }, []);
+
     const handleGoBack = () => {
         navigation.navigate('Home');
+        dispatch(setBottomTabVisibility(true));
     }
+
+    const weekList = Array(21).fill(0).map((_, i) => {
+        const color = currentWeek === i + 1 ? FontColor.secondary : FontColor.grey;
+
+        return (
+            <View>
+                <Text style={{fontSize: FontSize.m, color: color}}>第</Text>
+                <Text style={{fontSize: FontSize.l, color: color}}>{i + 1}</Text>
+                <Text style={{fontSize: FontSize.m, color: color}}>周</Text>
+            </View>
+        )
+    })
 
     return (
         <View style={{
@@ -48,33 +81,22 @@ export const TablePage = ({navigation}: NavigationProps) => {
                             }}>第{theWeek}周</Text>
                             {theWeek === currentWeek &&
                                 <Text style={{color: FontColor.light, fontSize: 12}}>本周</Text>}
-                            <Image
-                                source={require('../../assets/png/leftArrow.png')}
+                            <SvgXml
+                                xml={XMLResources.backArrow}
+                                width={14} height={14}
                                 style={{
-                                    width: 18,
-                                    height: 18,
-                                    transform: [
-                                        {rotate: '-90deg'}
-                                    ],
+                                    transform: [{rotate: '-90deg'}],
                                     position: 'absolute',
                                     right: -20,
                                     top: 0,
                                 }}
-                            ></Image>
+                            />
                         </View>
                     </View>
-
-                    <Image
-                        source={require('../../assets/png/reload.png')}
-                        style={{
-                            width: 26,
-                            height: 26,
-                            position: 'absolute',
-                            right: 10,
-                            bottom: '40%'
-                        }}
-                    ></Image>
                 </View>
+                <Animated.ScrollView horizontal={true} style={[weekListAnimatedStyle]}>
+
+                </Animated.ScrollView>
                 <View style={styleSheet.tableWrapper}>
                     <Schedule week={currentWeek}></Schedule>
                 </View>
@@ -142,5 +164,5 @@ const styleSheet = StyleSheet.create({
         position: 'absolute',
         top: 50,
         left: 20,
-    }
+    },
 })
