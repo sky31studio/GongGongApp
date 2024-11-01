@@ -1,5 +1,5 @@
 import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
-import {Pressable, StyleSheet, Text, useWindowDimensions, View} from "react-native";
+import {BackHandler, Pressable, StyleSheet, Text, ToastAndroid, useWindowDimensions, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import {useAppDispatch} from "../../app/hooks.ts";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
@@ -22,6 +22,7 @@ import {createNativeStackNavigator} from "@react-navigation/native-stack";
 import EmptyClassroomPage from "../emptyClassroom/EmptyClassroomPage.tsx";
 import {TablePage} from "../timeTable/tablePage.tsx";
 import ScorePage from "../score/ScorePage.tsx";
+import {getScoreOverview} from "../../app/slice/scoreSlice.ts";
 
 export interface NavigationProps {
     navigation: {
@@ -33,12 +34,31 @@ export interface NavigationProps {
 const HomePage = () => {
     const Stack = createNativeStackNavigator();
     const dispatch = useAppDispatch();
+    const [lastPressed, setLastPressed] = useState<number | null>(null)
 
     // 登录成功，一次性请求全部数据
     useEffect(() => {
         dispatch(fetchTable());
         dispatch(fetchExamData());
         dispatch(getFirstDate());
+        dispatch(getScoreOverview());
+
+        let backPressListener = BackHandler.addEventListener('hardwareBackPress', () => {
+            const now = Date.now();
+            if (lastPressed && now - lastPressed < 2000) {
+                BackHandler.exitApp();
+            } else {
+                ToastAndroid.showWithGravity('再返回一次退出应用', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+                setLastPressed(now);
+            }
+
+            return false;
+        })
+
+        return () => {
+            backPressListener.remove();
+        }
+
     }, []);
 
     return (
@@ -115,7 +135,7 @@ interface HomeContextType {
 
 const HomeContext = createContext<HomeContextType>({
     choice: 0,
-    shiftChoice: (value: number) => {
+    shiftChoice: () => {
     }
 });
 
@@ -207,7 +227,7 @@ interface ButtonProps {
 const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus = false}): React.JSX.Element => {
     const {choice, shiftChoice}: HomeContextType = useContext(HomeContext);
 
-    const colorValue = useSharedValue(0);
+    const colorValue = useSharedValue(initFocus ? 1 : 0);
     const animatedStyle = useAnimatedStyle(() => {
         return {
             color: interpolateColor(colorValue.value, [0, 1], [FontColor.grey, FontColor.dark])

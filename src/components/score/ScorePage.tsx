@@ -7,19 +7,19 @@ import {NavigationProps} from "../home/homePage.tsx";
 import Resources from "../../basic/Resources.ts";
 import {dealScore, SingleScoreList} from "../../utils/scoreUtils.ts";
 import SingleScore from "./SingleScore.tsx";
-import {useAppDispatch} from "../../app/hooks.ts";
+import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {setBottomTabVisibility} from "../../app/slice/globalSlice.ts";
+import {selectAverageScore, selectClassRank, selectGpa, selectMajorRank} from "../../app/slice/scoreSlice.ts";
 import ScrollView = Animated.ScrollView;
 
 
 const ScorePage = ({navigation}: NavigationProps) => {
-    const [scoreList, setScoreList] = useState<SingleScoreList[]>([]);
-    const [averageScore, setAverageScore] = useState<string>('');
-    const [gpa, setGpa] = useState<string>('');
-    const [classRank, setClassRank] = useState<number>(0);
-    const [majorRank, setMajorRank] = useState<number>(0);
     const dispatch = useAppDispatch();
-
+    const [scoreList, setScoreList] = useState<SingleScoreList[]>([]);
+    const averageScore = useAppSelector(selectAverageScore)
+    const gpa = useAppSelector(selectGpa);
+    const classRank = useAppSelector(selectClassRank);
+    const majorRank = useAppSelector(selectMajorRank);
 
     useEffect(() => {
         dispatch(setBottomTabVisibility(false));
@@ -27,12 +27,6 @@ const ScorePage = ({navigation}: NavigationProps) => {
             setScoreList(dealScore(data));
         })
 
-        Resources.getRank().then((data) => {
-            setAverageScore(data.average_score);
-            setGpa(data.gpa);
-            setClassRank(data.class_rank);
-            setMajorRank(data.major_rank);
-        })
     }, []);
 
     const renderList = scoreList.map((singleScore, index) => {
@@ -57,23 +51,32 @@ const ScorePage = ({navigation}: NavigationProps) => {
             <View style={ss.mainContainer}>
                 <View style={ss.totalContainer}>
                     <ScoreBox score={gpa} text={'平均绩点'}/>
-                    <ScoreBox score={classRank.toString()} text={'班级排名'}/>
-                    <ScoreBox score={majorRank.toString()} text={'年级排名'}/>
+                    <ScoreBox score={classRank} text={'班级排名'}/>
+                    <ScoreBox score={majorRank} text={'年级排名'}/>
                     <ScoreBox score={averageScore} text={'平均成绩'}/>
                 </View>
                 <ScrollView style={ss.scoreListContainer}>
-                    {renderList}
+                    {renderList.map((item) => (
+                        item
+                    ))}
                 </ScrollView>
             </View>
         </View>
     )
 }
 
-const ScoreBox = ({score, text}: { score: string, text: string }) => {
+/**
+ * 总概中的单个内容框
+ * @param score 对应分数
+ * @param text 底部文字
+ * @constructor
+ */
+const ScoreBox = ({score, text}: { score: number, text: string }) => {
+    const currentScore: string = score === -1 ? '--' : score.toString();
 
     return (
         <View style={ss.scoreBoxContainer}>
-            <Text style={{color: FontColor.primary, fontSize: FontSize.xxl, fontWeight: '400'}}>{score}</Text>
+            <Text style={{color: FontColor.primary, fontSize: FontSize.xxl, fontWeight: '400'}}>{currentScore}</Text>
             <Text style={{color: FontColor.dark, fontSize: FontSize.xxs}}>{text}</Text>
         </View>
     )

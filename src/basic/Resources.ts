@@ -80,7 +80,7 @@ class Resources {
         }
     }
 
-    public static async getRank() {
+    public static async getScoreOverview() {
         try {
             const response = await axios.get(`${rootUrl}/rank`, {
                 headers: {

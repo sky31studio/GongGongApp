@@ -6,7 +6,7 @@ import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
 
 const InfoPage = () => {
-    const [info, setInfo] = useState<{ student_id: string, name: string, major: string }>();
+    const [_, setInfo] = useState<{ student_id: string, name: string, major: string }>();
 
     useEffect(() => {
         Resources.getInfo().then((data) => {
@@ -27,11 +27,59 @@ const InfoPage = () => {
                 </Pressable>
             </View>
             <View style={ss.mainContainer}>
-                <View style={ss.totalContainer}>
+                {/* 个人信息 */}
+                <View style={ss.infoContainer}>
+                    <View></View>
+                    <View></View>
+                </View>
+                <Text
+                    style={{
+                        fontSize: FontSize.l,
+                        color: FontColor.dark,
+                        marginVertical: 15,
+                    }}
+                >小Tips</Text>
+
+                {/* 更多信息 */}
+                <View>
+
+                </View>
+
+                {/* 登录/退出登录 按钮 */}
+                <View>
 
                 </View>
             </View>
 
+
+        </View>
+    )
+}
+
+/**
+ * 更多信息中的跳转盒子
+ * @param title
+ * @param handleNavigation
+ */
+const navigationBox = ({title, handleNavigation}: {
+    title: string,
+    handleNavigation: () => void
+}) => {
+
+    return (
+        <View
+            style={{
+                width: '100%',
+                paddingVertical: 8,
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between'
+            }}
+        >
+            <Text>{title}</Text>
+            <Pressable>
+                <SvgXml xml={XMLResources.infoArrow} width={10} height={10}/>
+            </Pressable>
         </View>
     )
 }
@@ -64,14 +112,13 @@ const ss = StyleSheet.create({
         transform: [{translateY: -20}],
     },
 
-    totalContainer: {
+    infoContainer: {
         width: '86%',
-        height: 100,
+        paddingVertical: 15,
         borderRadius: 13,
         backgroundColor: '#fff',
         display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'space-around',
+        flexDirection: 'column',
         alignItems: 'center',
     },
 })

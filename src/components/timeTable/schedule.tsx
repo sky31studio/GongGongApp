@@ -7,6 +7,7 @@ import {useAppSelector} from "../../app/hooks.ts";
 import {selectTable} from "../../app/slice/scheduleSlice.ts";
 import {selectFirstDate} from "../../app/slice/globalSlice.ts";
 import {transTo2Digits} from "../../utils/agendaUtils.ts";
+import Animated from "react-native-reanimated";
 
 const weekdayCNName = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
@@ -138,19 +139,23 @@ export default function Schedule({week}: { week: number }): React.JSX.Element {
             return (
                 <View key={index} style={styleSheet.weekdayContainer}>
                     {weekDayItem}
-                    {classItemList}
+                    {classItemList.map((item) => (
+                        item
+                    ))}
                 </View>
             )
         });
     }
 
     return (
-        <View style={styleSheet.scheduleContainer}>
+        <Animated.View style={styleSheet.scheduleContainer}>
             <View style={styleSheet.timeContainer}>
-                {timeListWithGap}
+                {timeListWithGap.map((item) => (
+                    item
+                ))}
             </View>
             {classList()}
-        </View>
+        </Animated.View>
     );
 }
 

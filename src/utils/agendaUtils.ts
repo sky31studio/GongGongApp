@@ -23,7 +23,6 @@ export const generateID = (name: string, startTime: string, endTime: string) => 
 export const dealExams = (data: any[]) => {
     const res: Agenda[] = [];
 
-    let index = 0;
     for (let exam of data) {
         let id = generateID(exam.name, exam.start_time, exam.end_time);
 

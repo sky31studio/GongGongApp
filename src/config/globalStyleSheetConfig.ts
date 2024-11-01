@@ -8,8 +8,9 @@ export const BackgroundColor = {
     iconSecondary: '#FE2741',
     iconSecondaryBackground: '#ffbfc6',
     mainLight: '#fff',
-    grey: '#FAFAFA',
+    grey: '#EEEEEE',
     invalid: '#B7B7B7',
+    focused: 'rgba(167, 191, 253, .2)'
 }
 
 export const FontColor = {

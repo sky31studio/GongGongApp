@@ -7,6 +7,8 @@ import {Provider} from "react-redux";
 import {store} from "./src/app/store.ts";
 import LoginPage from "./src/components/login/loginPage.tsx";
 import TabNavigation from "./src/components/tabNavigation.tsx";
+import {MMKV} from "react-native-mmkv";
+import {userDirectory} from "./src/utils/globalUtils.ts";
 
 const {height: screenHeight} = Dimensions.get('window');
 
@@ -15,7 +17,14 @@ function App(): React.JSX.Element {
     const [isLogin, setIsLogin] = useState<boolean>(false);
 
     const handleLogin = (data: boolean) => {
-        setIsLogin(data);
+        if (data) {
+            const storage = new MMKV({
+                id: 'user-storage',
+                path: `${userDirectory}/mmkvStorage`
+            })
+
+            setIsLogin(data);
+        }
     }
 
     const backgroundStyle = {

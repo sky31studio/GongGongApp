@@ -1,4 +1,4 @@
-import {Pressable, StyleSheet, Text, View} from "react-native";
+import {BackHandler, Pressable, StyleSheet, Text, View} from "react-native";
 import React, {useEffect, useState} from "react";
 import Schedule from "./schedule";
 import {NavigationProps} from "../home/homePage.tsx";
@@ -14,18 +14,18 @@ export const TablePage = ({navigation}: NavigationProps) => {
     const theWeek = useAppSelector(selectTheWeek);
     const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
 
-    const dropWeekList = useSharedValue<number>(0);
+    const dropWeekListValue = useSharedValue<number>(0);
     const arrowAnimatedStyle = useAnimatedStyle(() => {
         return {
             transform: [{
-                rotate: `${interpolate(dropWeekList.value, [0, 1], [-90, 90])}deg`
+                rotate: `${interpolate(dropWeekListValue.value, [0, 1], [-90, 90])}deg`
             }]
         }
     })
 
     const weekListAnimatedStyle = useAnimatedStyle(() => {
         return {
-            maxHeight: interpolate(dropWeekList.value, [0, 1], [0, 40])
+            maxHeight: interpolate(dropWeekListValue.value, [0, 1], [0, 40])
         }
     })
 
@@ -36,6 +36,12 @@ export const TablePage = ({navigation}: NavigationProps) => {
 
     useEffect(() => {
         dispatch(setBottomTabVisibility(false));
+
+        const listener = BackHandler.addEventListener('hardwareBackPress', () => {
+            dispatch(setBottomTabVisibility(true));
+            return false;
+        })
+        return () => listener.remove();
     }, []);
 
     const handleGoBack = () => {
@@ -43,17 +49,40 @@ export const TablePage = ({navigation}: NavigationProps) => {
         dispatch(setBottomTabVisibility(true));
     }
 
-    const weekList = Array(21).fill(0).map((_, i) => {
-        const color = currentWeek === i + 1 ? FontColor.secondary : FontColor.grey;
+    const toggleWeekList = () => {
+        dropWeekListValue.value = dropWeekListValue.value === 0 ? 1 : 0;
+    }
+
+    const weekData = Array.from({length: 21}, (_, index) => {
+        return {
+            week: index + 1,
+        }
+    });
+
+
+    const weekListRenderItem = (item: any) => {
+        const color = currentWeek === item.week ? FontColor.secondary : FontColor.grey;
+        let backgroundColor = 'transparent';
+        if (theWeek === item.week) backgroundColor = BackgroundColor.grey;
+        if (currentWeek === item.week) backgroundColor = BackgroundColor.focused;
 
         return (
-            <View>
+            <Pressable
+                onPress={() => setCurrentWeek(item.week)}
+                style={{
+                    backgroundColor: backgroundColor,
+                    borderRadius: 4,
+                    paddingHorizontal: 6,
+                    paddingVertical: 8,
+                    marginHorizontal: 5,
+                }}
+            >
                 <Text style={{fontSize: FontSize.m, color: color}}>第</Text>
-                <Text style={{fontSize: FontSize.l, color: color}}>{i + 1}</Text>
+                <Text style={{fontSize: FontSize.l, color: color}}>{item.week}</Text>
                 <Text style={{fontSize: FontSize.m, color: color}}>周</Text>
-            </View>
+            </Pressable>
         )
-    })
+    }
 
     return (
         <View style={{
@@ -79,24 +108,39 @@ export const TablePage = ({navigation}: NavigationProps) => {
                                 fontSize: 18,
                                 fontWeight: '600'
                             }}>第{theWeek}周</Text>
-                            {theWeek === currentWeek &&
-                                <Text style={{color: FontColor.light, fontSize: 12}}>本周</Text>}
-                            <SvgXml
-                                xml={XMLResources.backArrow}
-                                width={14} height={14}
-                                style={{
-                                    transform: [{rotate: '-90deg'}],
-                                    position: 'absolute',
-                                    right: -20,
-                                    top: 0,
-                                }}
-                            />
+                            <Text style={{
+                                color: FontColor.light,
+                                fontSize: 12
+                            }}>{theWeek === currentWeek ? '本周' : '非本周'}</Text>
+                            <Animated.View
+                                style={[
+                                    arrowAnimatedStyle,
+                                    {
+                                        position: 'absolute',
+                                        right: -20,
+                                        top: 0,
+                                    }
+                                ]}
+                            >
+                                <Pressable onPress={toggleWeekList}>
+                                    <SvgXml
+                                        xml={XMLResources.backArrow}
+                                        width={14} height={14}
+                                    />
+                                </Pressable>
+                            </Animated.View>
                         </View>
                     </View>
                 </View>
-                <Animated.ScrollView horizontal={true} style={[weekListAnimatedStyle]}>
 
-                </Animated.ScrollView>
+                <Animated.FlatList
+                    style={[weekListAnimatedStyle]}
+                    data={weekData}
+                    renderItem={weekListRenderItem}
+                    horizontal={true}
+                    keyExtractor={item => item.week.toString()}
+                />
+
                 <View style={styleSheet.tableWrapper}>
                     <Schedule week={currentWeek}></Schedule>
                 </View>

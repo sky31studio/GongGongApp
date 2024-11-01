@@ -49,7 +49,9 @@ const InfoBoard = ({infos}: { infos: any[] }) => {
 
     return (
         <View style={ss.mainInfoContainer}>
-            {infoList}
+            {infoList.map((item) => (
+                item
+            ))}
         </View>
     )
 }

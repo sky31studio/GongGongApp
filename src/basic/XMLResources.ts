@@ -723,4 +723,16 @@ export default class XMLResources {
 </defs>
 </svg>
     `;
+    static infoArrow = `
+    <svg width="10" height="11" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_19_22374)">
+<path d="M3 9.5L7 5.5L3 1.5" stroke="#B7B7B7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<clipPath id="clip0_19_22374">
+<rect width="10" height="10" fill="white" transform="translate(0 10.5) rotate(-90)"/>
+</clipPath>
+</defs>
+</svg>
+    `;
 }

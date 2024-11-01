@@ -6,13 +6,11 @@ import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleS
 import Animated, {
     Easing,
     interpolateColor,
-    runOnJS,
     useAnimatedStyle,
     useSharedValue,
     withTiming
 } from "react-native-reanimated";
 import {useAppDispatch} from "../../../app/hooks.ts";
-import {hideAddBoard} from "../../../app/slice/agendaSlice.ts";
 import MyTextInput from "./myTextInput.tsx";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 

@@ -8,19 +8,22 @@ import XMLResources from "../../../basic/XMLResources.ts";
 import {ENWeekDay} from "../../../utils/enum.ts";
 import {getCoursesByWeekAndWeekDay} from "../../../utils/tableUtils.ts";
 import {selectTable} from "../../../app/slice/scheduleSlice.ts";
+import {selectTheWeek} from "../../../app/slice/globalSlice.ts";
+import {toCNNumber} from "../../../utils/globalUtils.ts";
 
 const tagText = ['已结束', '上课中', '即将上课', ''];
-const tagColor = ['#EEEEEE', '#8FB5FB', '#FFAA69', '#'];
+const tagColor = [BackgroundColor.grey, BackgroundColor.iconPrimaryBackground, BackgroundColor.tertiary, '#'];
 const tagFontColor = ['#A6A6A6', '#FFFFFF', '#FFFFFF', '#'];
 
 const ClassComponent = () => {
     const table = useAppSelector(selectTable);
+    const currentWeek = useAppSelector(selectTheWeek);
     const [lastTime, setLastTime] = useState(new Date());
     const weekDay = useMemo(() => lastTime.getDay(), [lastTime]);
-    const month = lastTime.getMonth() + 1;
-    const day = lastTime.getDate();
+    const month = useMemo(() => lastTime.getMonth() + 1, [lastTime]);
+    const day = useMemo(() => lastTime.getDate(), [lastTime]);
 
-    let courses: any[] = useMemo(() => getCoursesByWeekAndWeekDay(table, 8, weekDay === 0 ? 7 : weekDay), [table]);
+    let courses: any[] = useMemo(() => getCoursesByWeekAndWeekDay(table, currentWeek, weekDay === 0 ? 7 : weekDay), [table, currentWeek, weekDay]);
     let done = useMemo(() => {
         for (let i = 0; i < courses.length; i++) {
 
@@ -47,13 +50,13 @@ const ClassComponent = () => {
             }
         }
         return courses.length;
-    }, [lastTime]);
+    }, [lastTime, courses]);
 
 
     let classTimeline;
     classTimeline = courses.map((course, index) => {
         // 课程状态标签 0--已结束 1--上课中 2--即将上课 3--未开始
-        let isDeprecated = 2;
+        let isDeprecated;
 
         const currentHour = lastTime.getHours();
         const currentMinute = lastTime.getMinutes();
@@ -143,7 +146,7 @@ const ClassComponent = () => {
         </View>
     )
 
-    const circleProcess = useMemo(() => <CircularProcess done={done} todo={courses.length}/>, [done, courses]);
+    const circleProcess = useMemo(() => <CircularProcess done={done} todo={courses.length}/>, [done, courses.length]);
 
     const intervalId = setInterval(() => {
         setLastTime(new Date());
@@ -167,7 +170,7 @@ const ClassComponent = () => {
                 </View>
                 <View style={styleSheet.date}>
                     <Text>{lastTime.getFullYear()}/{month < 10 ? `0${month}` : month}/{day < 10 ? `0${day}` : day}</Text>
-                    <Text style={styleSheet.weekText}>第十七周</Text>
+                    <Text style={styleSheet.weekText}>第{toCNNumber(currentWeek)}周</Text>
                 </View>
             </View>
             <View style={styleSheet.timelineContainer}>

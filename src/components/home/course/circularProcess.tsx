@@ -40,7 +40,7 @@ CircularProcess = ({done, todo}): React.JSX.Element => {
                 duration: 1000,
             })
         );
-    }, [])
+    }, [todo]);
 
     return (
         <View style={styleSheet.circularProcessContainer}>

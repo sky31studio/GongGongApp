@@ -2,12 +2,14 @@ import {configureStore} from "@reduxjs/toolkit";
 import agendaReducer from "./slice/agendaSlice.ts"
 import scheduleReducer from "./slice/scheduleSlice.ts"
 import globalReducer from "./slice/globalSlice.ts"
+import scoreReducer from "./slice/scoreSlice.ts"
 
 export const store = configureStore({
     reducer: {
         exam: agendaReducer,
         schedule: scheduleReducer,
         global: globalReducer,
+        score: scoreReducer,
     }
 });
 
