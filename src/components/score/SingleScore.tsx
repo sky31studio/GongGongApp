@@ -36,22 +36,19 @@ const SingleScore = ({scoreList, term}: { scoreList: SingleScoreList, term: numb
  */
 const InfoBoard = ({infos}: { infos: any[] }) => {
 
-    const infoList = infos.map((info) => {
-
-        return (
-            <View style={[ss.infoContainer]}>
-                <Text style={[ss.infoText, {textAlign: 'left', width: '64%'}]}>{info.name}</Text>
-                <Text style={[ss.infoText, {textAlign: 'center', width: '18%'}]}>{info.credit}</Text>
-                <Text style={[ss.infoText, {textAlign: 'center', width: '18%'}]}>{info.score}</Text>
-            </View>
-        )
-    })
-
     return (
         <View style={ss.mainInfoContainer}>
-            {infoList.map((item) => (
-                item
-            ))}
+            {
+                infos.map((info, index) => {
+                    return (
+                        <View style={[ss.infoContainer]} key={index}>
+                            <Text style={[ss.infoText, {textAlign: 'left', width: '64%'}]}>{info.name}</Text>
+                            <Text style={[ss.infoText, {textAlign: 'center', width: '18%'}]}>{info.credit}</Text>
+                            <Text style={[ss.infoText, {textAlign: 'center', width: '18%'}]}>{info.score}</Text>
+                        </View>
+                    )
+                })
+            }
         </View>
     )
 }

@@ -33,6 +33,10 @@ export const FontSize = {
     xxl: 20,
 }
 
+export const BorderColor = {
+    grey: '#A6A6A6',
+}
+
 export const CourseColor = [
     '#FCB971',
     '#749BFF',

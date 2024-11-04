@@ -178,6 +178,21 @@ export const getAllCoursesByWeek = (table: Record<string, Course[]>, week: numbe
     return res;
 }
 
+export const getCourseCount = (table: Record<string, Course[]>, week: number, weekDay: number) => {
+    let ans = 0;
+    for(let course of table[ScheduleWeekDay[weekDay]]) {
+        const start = getWeekStart(course);
+        const end = getWeekEnd(course);
+        for (let i = 0; i < start.length; i++) {
+            if (start[i] <= week && end[i] >= week) {
+                ans++;
+            }
+        }
+    }
+
+    return ans;
+}
+
 export const diffDate = (earlier: Date, later: Date) => {
     return Math.floor((later.getTime() - earlier.getTime()) / (1000 * 3600 * 24));
 }

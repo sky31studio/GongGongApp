@@ -1,11 +1,16 @@
 import React, {useEffect, useState} from "react";
 import {Pressable, StyleSheet, Text, View} from "react-native";
 import Resources from "../../basic/Resources.ts";
-import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
+import {BackgroundColor, BorderColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
+import {useAppSelector} from "../../app/hooks.ts";
+import {selectCurrentAgendaNumber} from "../../app/slice/agendaSlice.ts";
+import {selectCurrentCourseNumber} from "../../app/slice/scheduleSlice.ts";
 
 const InfoPage = () => {
+    const agendaNumber = useAppSelector(selectCurrentAgendaNumber);
+    const courseNumber = useAppSelector(selectCurrentCourseNumber);
     const [_, setInfo] = useState<{ student_id: string, name: string, major: string }>();
 
     useEffect(() => {
@@ -29,19 +34,49 @@ const InfoPage = () => {
             <View style={ss.mainContainer}>
                 {/* 个人信息 */}
                 <View style={ss.infoContainer}>
-                    <View></View>
-                    <View></View>
+                    <View style={ss.innerInfoContainer}>
+                        <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 6}}>
+                            <View style={{width: 35, height: 35, borderRadius: 20, backgroundColor: 'red'}}></View>
+                            <Text style={{marginLeft: 12}}>点击登录</Text>
+                        </View>
+
+                        <Pressable style={ss.editInfoButton}>
+                            <Text
+                                style={{
+                                    color: FontColor.grey,
+                                    fontSize: FontSize.ss,
+                                    width: '100%',
+                                    textAlign: 'center',
+                                    height: '100%',
+                                    lineHeight: 17,
+                                }}
+                            >编辑资料</Text>
+                        </Pressable>
+
+                    </View>
+                    <View style={[ss.innerInfoContainer, {marginTop: 25}]}>
+                        <View style={ss.infoBox}>
+                            <Text>{courseNumber}</Text>
+                            <Text style={ss.infoBoxText}>今日课程</Text>
+                        </View>
+                        <View style={ss.infoBox}>
+                            <Text>{agendaNumber}</Text>
+                            <Text style={ss.infoBoxText}>倒计时</Text>
+                        </View>
+                    </View>
                 </View>
                 <Text
                     style={{
                         fontSize: FontSize.l,
                         color: FontColor.dark,
                         marginVertical: 15,
+                        alignSelf: 'flex-start',
+                        fontWeight: '600'
                     }}
                 >小Tips</Text>
 
                 {/* 更多信息 */}
-                <View>
+                <View style={ss.infoContainer}>
 
                 </View>
 
@@ -109,17 +144,47 @@ const ss = StyleSheet.create({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        transform: [{translateY: -20}],
+        transform: [{translateY: -35}],
+        paddingHorizontal: '7%',
     },
 
     infoContainer: {
-        width: '86%',
+        width: '100%',
         paddingVertical: 15,
+        paddingHorizontal: 20,
         borderRadius: 13,
         backgroundColor: '#fff',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+    },
+
+    innerInfoContainer: {
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+
+    infoBox: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+    },
+
+    infoBoxText: {
+        fontSize: FontSize.s,
+        color: FontColor.grey,
+    },
+
+    editInfoButton: {
+        borderWidth: 1,
+        borderColor: BorderColor.grey,
+        width: 60,
+        height: 20,
+        paddingHorizontal: 5,
+        borderRadius: 10,
     },
 })
 

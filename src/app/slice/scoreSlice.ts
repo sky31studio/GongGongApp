@@ -21,10 +21,10 @@ export const getScoreOverview = createAsyncThunk('score/getScore', async () => {
     const originData = await Resources.getScoreOverview();
 
     return {
-        gpa: originData.gpa,
-        classRank: originData.class_rank,
-        majorRank: originData.major_rank,
-        averageScore: originData.average_score,
+        gpa: originData.gpa || -1,
+        classRank: originData.class_rank || -1,
+        majorRank: originData.major_rank || -1,
+        averageScore: originData.average_score || -1,
     }
 })
 
@@ -33,6 +33,7 @@ const scoreSlice = createSlice({
     initialState,
     reducers: {
         setAll: (state, action) => {
+            console.log(action.payload)
             state.gpa = action.payload.gpa;
             state.classRank = action.payload.classRank;
             state.majorRank = action.payload.majorRank;
@@ -41,8 +42,11 @@ const scoreSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(fetchTable.fulfilled, (state, action) => {
-                scoreSlice.caseReducers.setAll(state, action);
+            .addCase(getScoreOverview.fulfilled, (state, action: {payload: any, type: any}) => {
+                scoreSlice.caseReducers.setAll(state, {
+                    payload: action.payload,
+                    type: action.type
+                });
             })
     }
 })

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Dimensions, SafeAreaView, StatusBar, StyleSheet, useColorScheme,} from 'react-native';
 
 import {Colors,} from 'react-native/Libraries/NewAppScreen';
@@ -7,8 +7,7 @@ import {Provider} from "react-redux";
 import {store} from "./src/app/store.ts";
 import LoginPage from "./src/components/login/loginPage.tsx";
 import TabNavigation from "./src/components/tabNavigation.tsx";
-import {MMKV} from "react-native-mmkv";
-import {userDirectory} from "./src/utils/globalUtils.ts";
+import {getToken} from "./src/storage.ts";
 
 const {height: screenHeight} = Dimensions.get('window');
 
@@ -18,11 +17,6 @@ function App(): React.JSX.Element {
 
     const handleLogin = (data: boolean) => {
         if (data) {
-            const storage = new MMKV({
-                id: 'user-storage',
-                path: `${userDirectory}/mmkvStorage`
-            })
-
             setIsLogin(data);
         }
     }
@@ -30,6 +24,16 @@ function App(): React.JSX.Element {
     const backgroundStyle = {
         backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
     };
+
+    useEffect(() => {
+        const checkIsLogin = async () => {
+            if(getToken() !== '') {
+                setIsLogin(false);
+            }
+        }
+
+        checkIsLogin();
+    }, []);
 
     return (
         <NavigationContainer>

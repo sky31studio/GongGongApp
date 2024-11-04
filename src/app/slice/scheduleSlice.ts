@@ -1,9 +1,10 @@
-import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
+import {createAsyncThunk, createSelector, createSlice} from "@reduxjs/toolkit";
 import {ScheduleWeekDay} from "../../utils/enum.ts";
 import {RootState} from "../store.ts";
 import Course, {getPeriodStart, getWeekDay} from "../../components/timeTable/course.ts";
 import Resources from "../../basic/Resources.ts";
-import {dealTable} from "../../utils/tableUtils.ts";
+import {dealTable, getAllCoursesByWeek, getCourseCount} from "../../utils/tableUtils.ts";
+import {selectCurrentTime, selectTheWeek} from "./globalSlice.ts";
 
 export const fetchTable = createAsyncThunk('schedule/fetchTable', async () => {
     const originData: any[] = await Resources.fetchClassData();
@@ -67,6 +68,15 @@ const scheduleSlice = createSlice({
 })
 
 export const selectTable = (state: RootState) => state.schedule.table;
-export const {cleanTable, addSchedules} = scheduleSlice.actions;
 
+export const selectCurrentCourseNumber = createSelector(
+    [selectTable, selectCurrentTime, selectTheWeek],
+    (table, currentTime, theWeek) => {
+        const weekDay = (new Date(currentTime)).getDay();
+
+        return getCourseCount(table, theWeek, weekDay === 0 ? 7 : weekDay);
+    }
+)
+
+export const {cleanTable, addSchedules} = scheduleSlice.actions;
 export default scheduleSlice.reducer;

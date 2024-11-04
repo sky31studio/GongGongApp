@@ -170,7 +170,7 @@ const ClassComponent = () => {
                 </View>
                 <View style={styleSheet.date}>
                     <Text>{lastTime.getFullYear()}/{month < 10 ? `0${month}` : month}/{day < 10 ? `0${day}` : day}</Text>
-                    <Text style={styleSheet.weekText}>第{toCNNumber(currentWeek)}周</Text>
+                    <Text style={styleSheet.weekText}>第{currentWeek === -1 ? '---' : currentWeek}周</Text>
                 </View>
             </View>
             <View style={styleSheet.timelineContainer}>

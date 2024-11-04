@@ -33,16 +33,10 @@ export interface NavigationProps {
 
 const HomePage = () => {
     const Stack = createNativeStackNavigator();
-    const dispatch = useAppDispatch();
     const [lastPressed, setLastPressed] = useState<number | null>(null)
 
     // 登录成功，一次性请求全部数据
     useEffect(() => {
-        dispatch(fetchTable());
-        dispatch(fetchExamData());
-        dispatch(getFirstDate());
-        dispatch(getScoreOverview());
-
         let backPressListener = BackHandler.addEventListener('hardwareBackPress', () => {
             const now = Date.now();
             if (lastPressed && now - lastPressed < 2000) {

@@ -1,4 +1,5 @@
 import {MMKV} from "react-native-mmkv";
+import {userDirectory} from "./utils/globalUtils.ts";
 
 export const storage = new MMKV();
 

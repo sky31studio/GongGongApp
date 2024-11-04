@@ -1,17 +1,42 @@
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
 import HomePage from "./home/homePage.tsx";
 import InfoPage from "./info/infoPage.tsx";
-import {useAppSelector} from "../app/hooks.ts";
-import {selectBottomTabVisibility} from "../app/slice/globalSlice.ts";
+import {useAppDispatch, useAppSelector} from "../app/hooks.ts";
+import {getFirstDate, resetCurrentTime, selectBottomTabVisibility} from "../app/slice/globalSlice.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../basic/XMLResources.ts";
 import {Text} from "react-native";
 import {FontColor, FontSize} from "../config/globalStyleSheetConfig.ts";
+import {useEffect} from "react";
+import {getToken} from "../storage.ts";
+import {fetchTable} from "../app/slice/scheduleSlice.ts";
+import {fetchExamData} from "../app/slice/agendaSlice.ts";
+import {getScoreOverview} from "../app/slice/scoreSlice.ts";
 
 const TabNavigation = () => {
+    const dispatch = useAppDispatch();
     const tabVisibility = useAppSelector(selectBottomTabVisibility);
 
     const Tab = createBottomTabNavigator();
+
+    console.log(getToken());
+
+    // 每10秒，重置当前时间
+    useEffect(() => {
+        dispatch(fetchTable());
+        dispatch(fetchExamData());
+        dispatch(getFirstDate());
+        dispatch(getScoreOverview());
+        console.log(111);
+
+        const intervalID = setInterval(() => {
+            dispatch(resetCurrentTime());
+        }, 8000);
+
+        return () => {
+            clearInterval(intervalID);
+        }
+    }, []);
 
     return (
         <Tab.Navigator

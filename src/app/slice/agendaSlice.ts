@@ -2,6 +2,7 @@ import {createAsyncThunk, createSelector, createSlice} from "@reduxjs/toolkit";
 import Resources from "../../basic/Resources.ts";
 import {RootState} from "../store.ts";
 import {dealExams, generateID} from "../../utils/agendaUtils.ts";
+import {selectCurrentTime} from "./globalSlice.ts";
 
 export const fetchExamData = createAsyncThunk('exam/fetchExamData', async () => {
     const data = await Resources.getExam();
@@ -47,6 +48,7 @@ const agendaSlice = createSlice({
             }
 
             state.examList.push(action.payload);
+            state.examList.sort(compare);
         },
         removeExam: (state, action) => {
             for (let exam of state.examList) {
@@ -55,6 +57,7 @@ const agendaSlice = createSlice({
                     return;
                 }
             }
+            state.examList.sort(compare);
         },
 
         addSelfExam: (state, action) => {
@@ -69,6 +72,17 @@ const agendaSlice = createSlice({
 
             // @ts-ignore
             state.selfList.push({id: id, ...action.payload});
+            state.selfList.sort(compare);
+        },
+
+        removeSelfExam: (state, action) => {
+            for(let self of state.selfList) {
+                if(self.id === action.payload) {
+                    state.selfList.splice(state.selfList.indexOf(self), 1);
+                    return;
+                }
+            }
+            state.selfList.sort(compare);
         },
 
         showAddBoard: (state) => {
@@ -89,10 +103,26 @@ const agendaSlice = createSlice({
     },
 })
 
+const compare = (a: Agenda, b: Agenda): number => {
+    const aStartTime = new Date(a.startTime) || undefined;
+    const bStartTime = new Date(b.startTime) || undefined;
+
+    if(!aStartTime) {
+        return -1;
+    }
+
+    if (!bStartTime) {
+        return 1;
+    }
+
+    return aStartTime.getTime() - bStartTime.getTime();
+}
+
 // exam和self的selector
 export const selectExamList = (state: RootState) => state.exam.examList;
 export const selectSelfList = (state: RootState) => state.exam.selfList;
 export const selectShowAddBoard = (state: RootState) => state.exam.showAddBoard;
+export const selectExamLength = (state: RootState) => state.exam.examList.length;
 
 // 返回exam+self的总表(已排序)
 export const selectAgendaList = createSelector(
@@ -101,9 +131,36 @@ export const selectAgendaList = createSelector(
         const res = examList.slice();
         res.concat(selfList);
 
+        res.sort(compare);
         return res;
     }
 );
+
+export const selectCurrentAgendaNumber = createSelector(
+    [selectExamList, selectSelfList, selectCurrentTime],
+    (examList, selfList, currentTime) => {
+        const list = examList.slice();
+        list.concat(selfList);
+        list.sort(compare);
+
+        let left = 0, right = list.length - 1;
+        for(let i = 0; i < list.length; i++) {
+            if (new Date(list[i].startTime) > new Date(currentTime)) {
+                left = i;
+                break;
+            }
+        }
+
+        for(let i = list.length - 1; i >= 0; i--) {
+            if(list[i].startTime !== '') {
+                right = i;
+                break;
+            }
+        }
+
+        return right - left + 1;
+    }
+)
 
 // 返回exam中只有考试标签的列表
 export const selectOnlyExamList = createSelector(
@@ -130,7 +187,7 @@ export const selectOnlyExamList = createSelector(
     }
 );
 
-export const selectExamLength = (state: RootState) => state.exam.examList.length;
+
 
 export const {showAddBoard, hideAddBoard} = agendaSlice.actions;
 export default agendaSlice.reducer;

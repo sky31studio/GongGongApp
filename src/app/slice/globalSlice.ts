@@ -7,12 +7,14 @@ interface InitialState {
     date: string,
     termID: string,
     bottomTabVisibility: boolean,
+    currentTime: string,
 }
 
 const initialState: InitialState = {
     date: "",
     termID: "",
     bottomTabVisibility: true,
+    currentTime: (new Date()).toString(),
 }
 
 export const getFirstDate = createAsyncThunk('exam/getFirstDate', async () => {
@@ -31,6 +33,9 @@ const globalSlice = createSlice({
         },
         setBottomTabVisibility: (state, action) => {
             state.bottomTabVisibility = action.payload;
+        },
+        resetCurrentTime: (state) => {
+            state.currentTime = (new Date()).toString();
         }
     },
     extraReducers: (builder) => {
@@ -45,17 +50,19 @@ const globalSlice = createSlice({
 export const selectFirstDate = (state: RootState) => state.global.date;
 export const selectTerm = (state: RootState) => state.global.termID;
 export const selectBottomTabVisibility = (state: RootState) => state.global.bottomTabVisibility;
+export const selectCurrentTime = (state: RootState) => state.global.currentTime;
 
 export const selectTheWeek = createSelector(
-    [selectFirstDate],
-    (firstDate) => {
+    [selectFirstDate, selectCurrentTime],
+    (firstDate, currentTime) => {
+        if(!firstDate) return -1;
+
         const date = new Date(firstDate);
-        const now = new Date();
-        const diff = diffDate(date, now);
+        const diff = diffDate(date, new Date(currentTime));
 
         return Math.floor(diff / 7) + 1;
     }
 )
 
-export const {setDate, setTermID, setBottomTabVisibility} = globalSlice.actions;
+export const {setDate, setTermID, setBottomTabVisibility, resetCurrentTime} = globalSlice.actions;
 export default globalSlice.reducer;

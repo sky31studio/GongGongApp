@@ -29,12 +29,6 @@ const ScorePage = ({navigation}: NavigationProps) => {
 
     }, []);
 
-    const renderList = scoreList.map((singleScore, index) => {
-        return (
-            <SingleScore key={index} scoreList={singleScore} term={singleScore.term}/>
-        )
-    })
-
     const handleBack = () => {
         navigation.navigate('Home');
         dispatch(setBottomTabVisibility(true));
@@ -56,9 +50,11 @@ const ScorePage = ({navigation}: NavigationProps) => {
                     <ScoreBox score={averageScore} text={'平均成绩'}/>
                 </View>
                 <ScrollView style={ss.scoreListContainer}>
-                    {renderList.map((item) => (
-                        item
-                    ))}
+                    {
+                        scoreList.map((singleScore, index) => {
+                            return <SingleScore scoreList={singleScore} term={singleScore.term} key={index}/>
+                        })
+                    }
                 </ScrollView>
             </View>
         </View>
@@ -72,7 +68,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
  * @constructor
  */
 const ScoreBox = ({score, text}: { score: number, text: string }) => {
-    const currentScore: string = score === -1 ? '--' : score.toString();
+    const currentScore = score === -1 ? '--' : score;
 
     return (
         <View style={ss.scoreBoxContainer}>
