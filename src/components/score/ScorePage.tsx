@@ -11,6 +11,7 @@ import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {setBottomTabVisibility} from "../../app/slice/globalSlice.ts";
 import {selectAverageScore, selectClassRank, selectGpa, selectMajorRank} from "../../app/slice/scoreSlice.ts";
 import ScrollView = Animated.ScrollView;
+import MyPager from "../timeTable/MyPager.tsx";
 
 
 const ScorePage = ({navigation}: NavigationProps) => {

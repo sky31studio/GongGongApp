@@ -20,6 +20,10 @@ export default function Schedule({week}: { week: number }): React.JSX.Element {
         return tmpDate;
     }, [date, week]);
 
+    const currentMonth = useMemo(() => {
+        return firstDate.getMonth() + 1;
+    }, [firstDate])
+
     let timeInterval;
     timeInterval = TimeTableConfig.getTimeInterval(new Date());
     // 左侧时间表
@@ -53,7 +57,8 @@ export default function Schedule({week}: { week: number }): React.JSX.Element {
     // 左上角表示月份的单元格
     const monthItem = (
         <View style={styleSheet.monthItem}>
-            <Text style={styleSheet.monthText}>1月</Text>
+            <Text style={styleSheet.monthText}>{currentMonth}</Text>
+            <Text style={styleSheet.monthText}>月</Text>
         </View>
     );
     timeListWithGap = [monthItem, ...timeListWithGap];
@@ -202,8 +207,7 @@ const styleSheet = StyleSheet.create({
     },
 
     monthText: {
-        width: 13,
-        height: '100%',
+        width: '100%',
         textAlign: 'center',
         textAlignVertical: 'center',
         color: '#000',

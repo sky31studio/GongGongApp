@@ -19,15 +19,11 @@ const TabNavigation = () => {
 
     const Tab = createBottomTabNavigator();
 
-    console.log(getToken());
-
-    // 每10秒，重置当前时间
     useEffect(() => {
         dispatch(fetchTable());
         dispatch(fetchExamData());
         dispatch(getFirstDate());
         dispatch(getScoreOverview());
-        console.log(111);
 
         const intervalID = setInterval(() => {
             dispatch(resetCurrentTime());

@@ -1,13 +1,10 @@
 import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
-import {BackHandler, Pressable, StyleSheet, Text, ToastAndroid, useWindowDimensions, View} from "react-native";
+import {BackHandler, Pressable, StyleSheet, Text, useWindowDimensions, View} from "react-native";
 import {SvgXml} from "react-native-svg";
-import {useAppDispatch} from "../../app/hooks.ts";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
 import {addOnValueChangedListener, getToken} from "../../storage.ts";
 import {AgendaList} from "./agenda/agendaList.tsx";
 import ClassList from "./course/classList.tsx";
-import {fetchTable} from "../../app/slice/scheduleSlice.ts";
-import {fetchExamData} from "../../app/slice/agendaSlice.ts";
 import XMLResources from "../../basic/XMLResources.ts";
 import Animated, {
     Easing,
@@ -17,12 +14,10 @@ import Animated, {
     withTiming
 } from "react-native-reanimated";
 import LinearGradient from "react-native-linear-gradient";
-import {getFirstDate} from "../../app/slice/globalSlice.ts";
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
 import EmptyClassroomPage from "../emptyClassroom/EmptyClassroomPage.tsx";
 import {TablePage} from "../timeTable/tablePage.tsx";
 import ScorePage from "../score/ScorePage.tsx";
-import {getScoreOverview} from "../../app/slice/scoreSlice.ts";
 
 export interface NavigationProps {
     navigation: {
@@ -33,20 +28,13 @@ export interface NavigationProps {
 
 const HomePage = () => {
     const Stack = createNativeStackNavigator();
-    const [lastPressed, setLastPressed] = useState<number | null>(null)
 
     // 登录成功，一次性请求全部数据
     useEffect(() => {
         let backPressListener = BackHandler.addEventListener('hardwareBackPress', () => {
             const now = Date.now();
-            if (lastPressed && now - lastPressed < 2000) {
-                BackHandler.exitApp();
-            } else {
-                ToastAndroid.showWithGravity('再返回一次退出应用', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
-                setLastPressed(now);
-            }
 
-            return false;
+            return true;
         })
 
         return () => {

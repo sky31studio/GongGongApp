@@ -1,18 +1,21 @@
-import {BackHandler, Pressable, StyleSheet, Text, View} from "react-native";
-import React, {useEffect, useState} from "react";
-import Schedule from "./schedule";
-import {NavigationProps} from "../home/homePage.tsx";
+import {Pressable, StyleSheet, Text, View} from "react-native";
+import React, {useEffect, useRef, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {fetchTable} from "../../app/slice/scheduleSlice.ts";
 import {selectTheWeek, setBottomTabVisibility} from "../../app/slice/globalSlice.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
-import Animated, {interpolate, useAnimatedStyle, useSharedValue} from "react-native-reanimated";
+import Animated, {Easing, interpolate, useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
+import PagerView from "react-native-pager-view";
+import Schedule from "./schedule.tsx";
+import {NavigationProps} from "../home/homePage.tsx";
 
 export const TablePage = ({navigation}: NavigationProps) => {
+    // const navigation = useNavigation();
     const theWeek = useAppSelector(selectTheWeek);
     const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
+    const pagerViewRef = useRef<PagerView>(null);
 
     const dropWeekListValue = useSharedValue<number>(0);
     const arrowAnimatedStyle = useAnimatedStyle(() => {
@@ -25,7 +28,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
 
     const weekListAnimatedStyle = useAnimatedStyle(() => {
         return {
-            maxHeight: interpolate(dropWeekListValue.value, [0, 1], [0, 40])
+            maxHeight: interpolate(dropWeekListValue.value, [0, 1], [0, 50])
         }
     })
 
@@ -36,12 +39,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
 
     useEffect(() => {
         dispatch(setBottomTabVisibility(false));
-
-        const listener = BackHandler.addEventListener('hardwareBackPress', () => {
-            dispatch(setBottomTabVisibility(true));
-            return false;
-        })
-        return () => listener.remove();
+        console.log(123);
     }, []);
 
     const handleGoBack = () => {
@@ -50,7 +48,16 @@ export const TablePage = ({navigation}: NavigationProps) => {
     }
 
     const toggleWeekList = () => {
-        dropWeekListValue.value = dropWeekListValue.value === 0 ? 1 : 0;
+
+        dropWeekListValue.value = withTiming(dropWeekListValue.value === 0 ? 1 : 0, {
+            duration: 300,
+            easing: Easing.ease,
+        });
+    }
+
+    const handlePageSelected = (e: any) => {
+        const index= e.nativeEvent.position;
+        setCurrentWeek(index + 1);
     }
 
     const weekData = Array.from({length: 21}, (_, index) => {
@@ -60,26 +67,50 @@ export const TablePage = ({navigation}: NavigationProps) => {
     });
 
 
-    const weekListRenderItem = (item: any) => {
-        const color = currentWeek === item.week ? FontColor.secondary : FontColor.grey;
+    const weekListRenderItem = (data: any) => {
+        const color = currentWeek === data.item.week ? FontColor.secondary : FontColor.grey;
         let backgroundColor = 'transparent';
-        if (theWeek === item.week) backgroundColor = BackgroundColor.grey;
-        if (currentWeek === item.week) backgroundColor = BackgroundColor.focused;
+        if (theWeek === data.item.week) backgroundColor = BackgroundColor.grey;
+        if (currentWeek === data.item.week) backgroundColor = BackgroundColor.focused;
+
+        // TODO: 滚动
+        const handleClick = () => {
+            setCurrentWeek(data.item.week);
+            pagerViewRef.current?.setPage(data.item.week - 1);
+        }
 
         return (
+
+
             <Pressable
-                onPress={() => setCurrentWeek(item.week)}
+                onPress={handleClick}
                 style={{
+                    height: 44,
+                    width: 65,
                     backgroundColor: backgroundColor,
                     borderRadius: 4,
-                    paddingHorizontal: 6,
+                    paddingHorizontal: 4,
                     paddingVertical: 8,
+                    marginVertical: 3,
                     marginHorizontal: 5,
+                    display: 'flex',
+                    flexDirection: 'column',
                 }}
             >
-                <Text style={{fontSize: FontSize.m, color: color}}>第</Text>
-                <Text style={{fontSize: FontSize.l, color: color}}>{item.week}</Text>
-                <Text style={{fontSize: FontSize.m, color: color}}>周</Text>
+                <View
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Text style={{fontSize: FontSize.m, color: color}}>第</Text>
+                    <Text style={{fontSize: FontSize.l, letterSpacing: 4, color: color, fontWeight: 600}}>{data.item.week}</Text>
+                    <Text style={{fontSize: FontSize.m, color: color}}>周</Text>
+                </View>
+                {theWeek === data.item.week && <Text style={{fontSize: FontSize.xxs, color: color, textAlign: 'center'}}>(本周)</Text>}
+
             </Pressable>
         )
     }
@@ -107,7 +138,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
                                 lineHeight: 20,
                                 fontSize: 18,
                                 fontWeight: '600'
-                            }}>第{theWeek}周</Text>
+                            }}>第{currentWeek}周</Text>
                             <Text style={{
                                 color: FontColor.light,
                                 fontSize: 12
@@ -134,16 +165,28 @@ export const TablePage = ({navigation}: NavigationProps) => {
                 </View>
 
                 <Animated.FlatList
+                    showsHorizontalScrollIndicator={false}
                     style={[weekListAnimatedStyle]}
                     data={weekData}
                     renderItem={weekListRenderItem}
                     horizontal={true}
                     keyExtractor={item => item.week.toString()}
                 />
-
-                <View style={styleSheet.tableWrapper}>
-                    <Schedule week={currentWeek}></Schedule>
-                </View>
+                <PagerView
+                    ref={pagerViewRef}
+                    style={[styleSheet.tableWrapper]}
+                    initialPage={currentWeek - 1}
+                    onPageSelected={handlePageSelected}
+                    offscreenPageLimit={2}
+                >
+                    {weekData.map((item, index) => {
+                       return (
+                           <View key={index} style={{flex: 1}}>
+                               <Schedule week={item.week}></Schedule>
+                           </View>
+                       )
+                    })}
+                </PagerView>
             </View>
         </View>
     );
@@ -179,7 +222,6 @@ const styleSheet = StyleSheet.create({
     },
 
     tableWrapper: {
-        width: '100%',
         flex: 1,
     },
 
