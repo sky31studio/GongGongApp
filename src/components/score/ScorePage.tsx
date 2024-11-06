@@ -8,10 +8,8 @@ import Resources from "../../basic/Resources.ts";
 import {dealScore, SingleScoreList} from "../../utils/scoreUtils.ts";
 import SingleScore from "./SingleScore.tsx";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
-import {setBottomTabVisibility} from "../../app/slice/globalSlice.ts";
 import {selectAverageScore, selectClassRank, selectGpa, selectMajorRank} from "../../app/slice/scoreSlice.ts";
 import ScrollView = Animated.ScrollView;
-import MyPager from "../timeTable/MyPager.tsx";
 
 
 const ScorePage = ({navigation}: NavigationProps) => {
@@ -23,7 +21,6 @@ const ScorePage = ({navigation}: NavigationProps) => {
     const majorRank = useAppSelector(selectMajorRank);
 
     useEffect(() => {
-        dispatch(setBottomTabVisibility(false));
         Resources.getScore().then((data) => {
             setScoreList(dealScore(data));
         })
@@ -31,8 +28,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
     }, []);
 
     const handleBack = () => {
-        navigation.navigate('Home');
-        dispatch(setBottomTabVisibility(true));
+        navigation.navigate('TabNavigation');
     }
     return (
         <View style={{height: '100%'}}>

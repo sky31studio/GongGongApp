@@ -1,6 +1,5 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import Resources from "../../basic/Resources.ts";
-import {fetchTable} from "./scheduleSlice.ts";
 import {RootState} from "../store.ts";
 
 interface initialState {

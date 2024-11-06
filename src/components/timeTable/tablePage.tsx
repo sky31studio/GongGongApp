@@ -1,9 +1,8 @@
 import {Pressable, StyleSheet, Text, View} from "react-native";
-import React, {useEffect, useRef, useState} from "react";
-import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
+import React, {useRef, useState} from "react";
+import {useAppSelector} from "../../app/hooks.ts";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
-import {fetchTable} from "../../app/slice/scheduleSlice.ts";
-import {selectTheWeek, setBottomTabVisibility} from "../../app/slice/globalSlice.ts";
+import {selectTheWeek} from "../../app/slice/globalSlice.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
 import Animated, {Easing, interpolate, useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
@@ -12,9 +11,9 @@ import Schedule from "./schedule.tsx";
 import {NavigationProps} from "../home/homePage.tsx";
 
 export const TablePage = ({navigation}: NavigationProps) => {
-    // const navigation = useNavigation();
     const theWeek = useAppSelector(selectTheWeek);
     const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
+    const [pagerViewVisible, setPagerViewVisible] = useState<boolean>(true);
     const pagerViewRef = useRef<PagerView>(null);
 
     const dropWeekListValue = useSharedValue<number>(0);
@@ -32,19 +31,10 @@ export const TablePage = ({navigation}: NavigationProps) => {
         }
     })
 
-    const dispatch = useAppDispatch();
-    useEffect(() => {
-        dispatch(fetchTable());
-    }, [dispatch]);
-
-    useEffect(() => {
-        dispatch(setBottomTabVisibility(false));
-        console.log(123);
-    }, []);
-
     const handleGoBack = () => {
+        // setPagerViewVisible(false);
+
         navigation.navigate('Home');
-        dispatch(setBottomTabVisibility(true));
     }
 
     const toggleWeekList = () => {
@@ -172,12 +162,12 @@ export const TablePage = ({navigation}: NavigationProps) => {
                     horizontal={true}
                     keyExtractor={item => item.week.toString()}
                 />
-                <PagerView
+                {pagerViewVisible && <PagerView
                     ref={pagerViewRef}
                     style={[styleSheet.tableWrapper]}
                     initialPage={currentWeek - 1}
                     onPageSelected={handlePageSelected}
-                    offscreenPageLimit={2}
+                    offscreenPageLimit={1}
                 >
                     {weekData.map((item, index) => {
                        return (
@@ -186,7 +176,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
                            </View>
                        )
                     })}
-                </PagerView>
+                </PagerView>}
             </View>
         </View>
     );

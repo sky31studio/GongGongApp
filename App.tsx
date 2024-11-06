@@ -6,8 +6,8 @@ import {NavigationContainer} from "@react-navigation/native";
 import {Provider} from "react-redux";
 import {store} from "./src/app/store.ts";
 import LoginPage from "./src/components/login/loginPage.tsx";
-import TabNavigation from "./src/components/tabNavigation.tsx";
 import {getToken} from "./src/storage.ts";
+import HomeNavigation from "./src/components/HomeNavigation.tsx";
 
 const {height: screenHeight} = Dimensions.get('window');
 
@@ -40,7 +40,7 @@ function App(): React.JSX.Element {
             <Provider store={store}>
                 <SafeAreaView style={[backgroundStyle, styles.fullScreen]}>
                     <StatusBar translucent backgroundColor="#ff6275"/>
-                    {isLogin ? <TabNavigation/> : <LoginPage sendData={handleLogin}/>}
+                    {isLogin ? <HomeNavigation/> : <LoginPage sendData={handleLogin}/>}
                 </SafeAreaView>
             </Provider>
         </NavigationContainer>

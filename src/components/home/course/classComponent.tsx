@@ -9,7 +9,6 @@ import {ENWeekDay} from "../../../utils/enum.ts";
 import {getCoursesByWeekAndWeekDay} from "../../../utils/tableUtils.ts";
 import {selectTable} from "../../../app/slice/scheduleSlice.ts";
 import {selectTheWeek} from "../../../app/slice/globalSlice.ts";
-import {toCNNumber} from "../../../utils/globalUtils.ts";
 
 const tagText = ['已结束', '上课中', '即将上课', ''];
 const tagColor = [BackgroundColor.grey, BackgroundColor.iconPrimaryBackground, BackgroundColor.tertiary, '#'];

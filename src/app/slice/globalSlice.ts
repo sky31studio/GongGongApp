@@ -6,14 +6,12 @@ import {diffDate} from "../../utils/tableUtils.ts";
 interface InitialState {
     date: string,
     termID: string,
-    bottomTabVisibility: boolean,
     currentTime: string,
 }
 
 const initialState: InitialState = {
     date: "",
     termID: "",
-    bottomTabVisibility: true,
     currentTime: (new Date()).toString(),
 }
 
@@ -31,9 +29,6 @@ const globalSlice = createSlice({
         setTermID: (state, action) => {
             state.termID = action.payload.termID;
         },
-        setBottomTabVisibility: (state, action) => {
-            state.bottomTabVisibility = action.payload;
-        },
         resetCurrentTime: (state) => {
             state.currentTime = (new Date()).toString();
         }
@@ -49,7 +44,6 @@ const globalSlice = createSlice({
 
 export const selectFirstDate = (state: RootState) => state.global.date;
 export const selectTerm = (state: RootState) => state.global.termID;
-export const selectBottomTabVisibility = (state: RootState) => state.global.bottomTabVisibility;
 export const selectCurrentTime = (state: RootState) => state.global.currentTime;
 
 export const selectTheWeek = createSelector(
@@ -64,5 +58,5 @@ export const selectTheWeek = createSelector(
     }
 )
 
-export const {setDate, setTermID, setBottomTabVisibility, resetCurrentTime} = globalSlice.actions;
+export const {setDate, setTermID, resetCurrentTime} = globalSlice.actions;
 export default globalSlice.reducer;

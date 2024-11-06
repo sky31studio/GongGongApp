@@ -1,5 +1,5 @@
 import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
-import {BackHandler, Pressable, StyleSheet, Text, useWindowDimensions, View} from "react-native";
+import {Pressable, StyleSheet, Text, useWindowDimensions, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
 import {addOnValueChangedListener, getToken} from "../../storage.ts";
@@ -14,43 +14,13 @@ import Animated, {
     withTiming
 } from "react-native-reanimated";
 import LinearGradient from "react-native-linear-gradient";
-import {createNativeStackNavigator} from "@react-navigation/native-stack";
-import EmptyClassroomPage from "../emptyClassroom/EmptyClassroomPage.tsx";
 import {TablePage} from "../timeTable/tablePage.tsx";
-import ScorePage from "../score/ScorePage.tsx";
 
 export interface NavigationProps {
     navigation: {
         navigate: (name: string, params?: object) => void;
         goBack: () => void;
     };
-}
-
-const HomePage = () => {
-    const Stack = createNativeStackNavigator();
-
-    // 登录成功，一次性请求全部数据
-    useEffect(() => {
-        let backPressListener = BackHandler.addEventListener('hardwareBackPress', () => {
-            const now = Date.now();
-
-            return true;
-        })
-
-        return () => {
-            backPressListener.remove();
-        }
-
-    }, []);
-
-    return (
-        <Stack.Navigator screenOptions={{headerShown: false}}>
-            <Stack.Screen name="Home" component={Home}/>
-            <Stack.Screen name="EmptyClassroomPage" component={EmptyClassroomPage}/>
-            <Stack.Screen name="TablePage" component={TablePage}/>
-            <Stack.Screen name="ScorePage" component={ScorePage}/>
-        </Stack.Navigator>
-    );
 }
 
 const Home = ({navigation}: NavigationProps) => {
@@ -352,4 +322,4 @@ const styleSheet = StyleSheet.create({
     },
 });
 
-export default HomePage;
+export default Home;
