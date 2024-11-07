@@ -3,17 +3,17 @@ import Home, {NavigationProps} from "./home/homePage.tsx";
 import InfoPage from "./info/infoPage.tsx";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../basic/XMLResources.ts";
-import {Text} from "react-native";
+import {Text, View} from "react-native";
 import {FontColor, FontSize} from "../config/globalStyleSheetConfig.ts";
 
-const TabNavigation = ({navigation}: NavigationProps) => {
+const TabNavigation = () => {
     const Tab = createBottomTabNavigator();
 
     return (
         <Tab.Navigator
             detachInactiveScreens={false}
-            initialRouteName={'homePage'}
         >
+
             <Tab.Screen name={'homePage'} component={Home} options={{
                 headerShown: false,
                 tabBarIcon: ({focused}) => {

@@ -38,7 +38,7 @@ export default function Schedule({week}: { week: number }): React.JSX.Element {
         }
 
         const view = (
-            <View style={ss}>
+            <View style={ss} key={index}>
                 <Text style={styleSheet.tItemBoldText}>{index + 1}</Text>
                 <Text style={styleSheet.tItemSlimText}>{item.start}</Text>
                 <Text style={styleSheet.tItemSlimText}>{item.end}</Text>
@@ -155,8 +155,10 @@ export default function Schedule({week}: { week: number }): React.JSX.Element {
     return (
         <Animated.View style={styleSheet.scheduleContainer}>
             <View style={styleSheet.timeContainer}>
-                {timeListWithGap.map((item) => (
-                    item
+                {timeListWithGap.map((item, index) => (
+                    <View key={index} style={{flex: 1}}>
+                        {item}
+                    </View>
                 ))}
             </View>
             {classList()}

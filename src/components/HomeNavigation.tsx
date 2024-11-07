@@ -9,6 +9,7 @@ import {fetchExamData} from "../app/slice/agendaSlice.ts";
 import {getFirstDate, resetCurrentTime} from "../app/slice/globalSlice.ts";
 import {getScoreOverview} from "../app/slice/scoreSlice.ts";
 import {useAppDispatch} from "../app/hooks.ts";
+import Home from "./home/homePage.tsx";
 
 const HomeNavigation = () => {
     const dispatch = useAppDispatch();
@@ -32,7 +33,6 @@ const HomeNavigation = () => {
 
     return (
         <Stack.Navigator
-            initialRouteName={'TabNavigation'}
             screenOptions={{
                 headerShown: false,
             }}

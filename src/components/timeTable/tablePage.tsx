@@ -32,9 +32,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
     })
 
     const handleGoBack = () => {
-        // setPagerViewVisible(false);
-
-        navigation.navigate('Home');
+        navigation.navigate('TabNavigation');
     }
 
     const toggleWeekList = () => {
