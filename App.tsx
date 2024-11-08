@@ -28,7 +28,7 @@ function App(): React.JSX.Element {
     useEffect(() => {
         const checkIsLogin = async () => {
             if(getToken() !== '') {
-                setIsLogin(false);
+                setIsLogin(true);
             }
         }
 

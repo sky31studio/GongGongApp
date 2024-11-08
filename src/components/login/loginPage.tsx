@@ -67,9 +67,9 @@ const LoginPage = ({sendData}: { sendData: any }): React.JSX.Element => {
             setShowAlert(true);
             alertAnimation();
         } else {
-            const code = await Resources.login(username, password);
-            if (code !== 200) {
-                setAlertText('登录失败，请确认账号密码后重新登录');
+            const res = await Resources.login(username, password);
+            if (res.code === 0) {
+                setAlertText(res.message);
                 setShowAlert(true);
                 alertAnimation();
                 return;

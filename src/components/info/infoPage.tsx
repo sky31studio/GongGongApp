@@ -1,23 +1,20 @@
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {Pressable, StyleSheet, Text, View} from "react-native";
-import Resources from "../../basic/Resources.ts";
 import {BackgroundColor, BorderColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
-import {useAppSelector} from "../../app/hooks.ts";
+import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {selectCurrentAgendaNumber} from "../../app/slice/agendaSlice.ts";
 import {selectCurrentCourseNumber} from "../../app/slice/scheduleSlice.ts";
+import {selectStudentID, selectStudentMajor, selectStudentName} from "../../app/slice/infoSlice.ts";
 
 const InfoPage = () => {
+    const dispatch = useAppDispatch();
     const agendaNumber = useAppSelector(selectCurrentAgendaNumber);
     const courseNumber = useAppSelector(selectCurrentCourseNumber);
-    const [_, setInfo] = useState<{ student_id: string, name: string, major: string }>();
-
-    useEffect(() => {
-        Resources.getInfo().then((data) => {
-            setInfo(data);
-        })
-    }, []);
+    const studentID = useAppSelector(selectStudentID);
+    const name = useAppSelector(selectStudentName);
+    const major = useAppSelector(selectStudentMajor);
 
     return (
         <View style={{flex: 1}}>

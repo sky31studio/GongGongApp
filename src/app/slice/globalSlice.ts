@@ -36,8 +36,8 @@ const globalSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(getFirstDate.fulfilled, (state, action) => {
-                state.date = action.payload.start;
-                state.termID = action.payload.term_id;
+                state.date = action.payload.start || '';
+                state.termID = action.payload.term_id || '';
             })
     }
 })

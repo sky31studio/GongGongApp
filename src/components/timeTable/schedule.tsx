@@ -14,14 +14,22 @@ const weekdayCNName = ["周一", "周二", "周三", "周四", "周五", "周六
 export default function Schedule({week}: { week: number }): React.JSX.Element {
     const date = useAppSelector(selectFirstDate);
     const firstDate = useMemo(() => {
-        const tmpDate = new Date(date);
+        if (date !== '') {
+            const tmpDate = new Date(date);
 
-        tmpDate.setDate(tmpDate.getDate() + (week - 1) * 7);
-        return tmpDate;
+            tmpDate.setDate(tmpDate.getDate() + (week - 1) * 7);
+            return tmpDate;
+        }
+
+        return '';
     }, [date, week]);
 
     const currentMonth = useMemo(() => {
-        return firstDate.getMonth() + 1;
+        if (firstDate !== '') {
+            return firstDate.getMonth() + 1;
+        }
+
+        return '--';
     }, [firstDate])
 
     let timeInterval;
@@ -68,15 +76,20 @@ export default function Schedule({week}: { week: number }): React.JSX.Element {
 
     const classList = () => {
         return courses.map((item, index) => {
-            const showDate = new Date(firstDate);
-            showDate.setDate(showDate.getDate() + index);
+            let showText = '--';
+            if (firstDate !== '') {
+                const showDate = new Date(firstDate);
+                showDate.setDate(showDate.getDate() + index);
+
+                showText = `${transTo2Digits(showDate.getMonth() + 1)}-${transTo2Digits(showDate.getDate())}`;
+            }
 
             const weekDayItem = (
                 <View style={styleSheet.weekdayItemWrapper}>
                     <View style={styleSheet.weekdayItem}>
                         <Text style={styleSheet.wItemBoldText}>{weekdayCNName[index]}</Text>
                         <Text
-                            style={styleSheet.wItemSlimText}>{`${transTo2Digits(showDate.getMonth() + 1)}-${transTo2Digits(showDate.getDate())}`}</Text>
+                            style={styleSheet.wItemSlimText}>{showText}</Text>
                     </View>
                 </View>
             );

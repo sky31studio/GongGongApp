@@ -3,6 +3,7 @@ import agendaReducer from "./slice/agendaSlice.ts"
 import scheduleReducer from "./slice/scheduleSlice.ts"
 import globalReducer from "./slice/globalSlice.ts"
 import scoreReducer from "./slice/scoreSlice.ts"
+import infoReducer from "./slice/infoSlice.ts"
 
 export const store = configureStore({
     reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
         schedule: scheduleReducer,
         global: globalReducer,
         score: scoreReducer,
+        info: infoReducer,
     }
 });
 

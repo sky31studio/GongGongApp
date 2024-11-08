@@ -9,7 +9,7 @@ import {fetchExamData} from "../app/slice/agendaSlice.ts";
 import {getFirstDate, resetCurrentTime} from "../app/slice/globalSlice.ts";
 import {getScoreOverview} from "../app/slice/scoreSlice.ts";
 import {useAppDispatch} from "../app/hooks.ts";
-import Home from "./home/homePage.tsx";
+import {getInfo} from "../app/slice/infoSlice.ts";
 
 const HomeNavigation = () => {
     const dispatch = useAppDispatch();
@@ -21,6 +21,7 @@ const HomeNavigation = () => {
         dispatch(fetchExamData());
         dispatch(getFirstDate());
         dispatch(getScoreOverview());
+        dispatch(getInfo());
 
         const intervalID = setInterval(() => {
             dispatch(resetCurrentTime());

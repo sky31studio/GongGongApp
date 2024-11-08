@@ -3,6 +3,7 @@ import {getToken, setToken} from "../storage.ts";
 import {hostUrl} from "../config/UrlConfig.ts";
 
 const rootUrl = hostUrl;
+const MAX_ATTEMPTS = 5;
 
 class Resources {
     /**
@@ -10,13 +11,22 @@ class Resources {
      */
     public static async fetchClassData() {
         try {
-            const response = await axios(`${rootUrl}/courses`, {
-                headers: {
-                    'token': getToken()
-                }
-            })
+            let count = 0;
+            while (true) {
+                const response = await axios(`${rootUrl}/courses`, {
+                    headers: {
+                        'token': getToken()
+                    }
+                })
 
-            return response.data.data;
+                if (response.data.data) {
+                    console.log(response.data.data);
+                    return response.data.data;
+                }
+
+                count++;
+                if (count >= MAX_ATTEMPTS) return [];
+            }
         } catch (error) {
             console.log(`请求失败: ${error}`);
         }
@@ -41,25 +51,46 @@ class Resources {
             // response状态码
             const code = response.status;
             if (code === 200) {
-                setToken(response.data.data['session_id']);
+                const status = response.data.code;
+                if (status === 1) {
+                    setToken(response.data.data['token']);
+                }
+
+                return {
+                    code: status,
+                    message: response.data.message,
+                }
             }
 
-            return code;
+            return {
+                code: 0,
+                message: '网络连接超时'
+            };
 
         } catch (error) {
             console.log(error);
+            return {
+                code: 0,
+                message: '网络连接超时'
+            }
         }
     }
 
     public static async getExam() {
         try {
-            const response = await axios.get(`${rootUrl}/exams`, {
-                headers: {
-                    'token': getToken()
-                }
-            });
+            let count = 0;
+            while (true) {
+                const response = await axios.get(`${rootUrl}/exams`, {
+                    headers: {
+                        'token': getToken()
+                    }
+                });
 
-            return response.data.data.exams;
+                if (response.data.data) return response.data.data.exams;
+
+                count++;
+                if (count >= MAX_ATTEMPTS) return [];
+            }
         } catch (error) {
             console.log(error);
         }
@@ -67,14 +98,19 @@ class Resources {
 
     public static async getScore() {
         try {
-            const response = await axios.get(`${rootUrl}/scores`, {
-                headers: {
-                    'token': getToken()
-                }
-            })
+            let count = 0;
+            while (true) {
+                const response = await axios.get(`${rootUrl}/scores`, {
+                    headers: {
+                        'token': getToken()
+                    }
+                })
 
-            return response.data.data.scores;
+                if (response.data.data) return response.data.data.scores;
 
+                count++;
+                if (count >= MAX_ATTEMPTS) return [];
+            }
         } catch (error) {
             console.log(error);
         }
@@ -82,14 +118,19 @@ class Resources {
 
     public static async getScoreOverview() {
         try {
-            const response = await axios.get(`${rootUrl}/rank`, {
-                headers: {
-                    'token': getToken()
-                }
-            })
+            let count = 0;
+            while (true) {
+                const response = await axios.get(`${rootUrl}/rank`, {
+                    headers: {
+                        'token': getToken()
+                    }
+                })
 
-            return response.data.data;
+                if (response.data.data) return response.data.data;
 
+                count++;
+                if (count >= MAX_ATTEMPTS) return null;
+            }
         } catch (error) {
             console.log(error);
         }
@@ -97,14 +138,19 @@ class Resources {
 
     public static async getFirstDate() {
         try {
-            const response = await axios.get(`${rootUrl}/calendar`, {
-                headers: {
-                    'token': getToken()
-                }
-            })
+            let count = 0;
+            while (true) {
+                const response = await axios.get(`${rootUrl}/calendar`, {
+                    headers: {
+                        'token': getToken()
+                    }
+                })
 
-            return response.data.data;
+                if (response.data.data) return response.data.data;
 
+                count++;
+                if (count >= MAX_ATTEMPTS) return null;
+            }
         } catch (error) {
             console.log(error);
         }
@@ -112,14 +158,20 @@ class Resources {
 
     public static async getInfo() {
         try {
-            const response = await axios.get(`${rootUrl}/info`, {
-                headers: {
-                    'token': getToken()
-                }
-            })
+            let count = 0;
 
-            return response.data.data;
+            while (true) {
+                const response = await axios.get(`${rootUrl}/info`, {
+                    headers: {
+                        'token': getToken()
+                    }
+                })
 
+                if (response.data.data) return response.data.data;
+
+                count++;
+                if (count >= MAX_ATTEMPTS) return null;
+            }
         } catch (error) {
             console.log(error);
         }
