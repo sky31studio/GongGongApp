@@ -1,6 +1,7 @@
 import axios from "axios";
 import {getToken, setToken} from "../storage.ts";
 import {hostUrl} from "../config/UrlConfig.ts";
+import {sleep} from "../utils/globalUtils.ts";
 
 const rootUrl = hostUrl;
 const MAX_ATTEMPTS = 5;
@@ -20,12 +21,13 @@ class Resources {
                 })
 
                 if (response.data.data) {
-                    console.log(response.data.data);
                     return response.data.data;
                 }
 
                 count++;
                 if (count >= MAX_ATTEMPTS) return [];
+
+                await sleep(1000);
             }
         } catch (error) {
             console.log(`请求失败: ${error}`);
@@ -86,10 +88,14 @@ class Resources {
                     }
                 });
 
-                if (response.data.data) return response.data.data.exams;
+                if (response.data.data) {
+                    return response.data.data.exams;
+                }
 
                 count++;
                 if (count >= MAX_ATTEMPTS) return [];
+
+                await sleep(1000);
             }
         } catch (error) {
             console.log(error);
@@ -106,10 +112,14 @@ class Resources {
                     }
                 })
 
-                if (response.data.data) return response.data.data.scores;
+                if (response.data.data) {
+                    return response.data.data.scores;
+                }
 
                 count++;
                 if (count >= MAX_ATTEMPTS) return [];
+
+                await sleep(1000);
             }
         } catch (error) {
             console.log(error);
@@ -126,10 +136,14 @@ class Resources {
                     }
                 })
 
-                if (response.data.data) return response.data.data;
+                if (response.data.data) {
+                    return response.data.data;
+                }
 
                 count++;
                 if (count >= MAX_ATTEMPTS) return null;
+
+                await sleep(1000);
             }
         } catch (error) {
             console.log(error);
@@ -146,10 +160,14 @@ class Resources {
                     }
                 })
 
-                if (response.data.data) return response.data.data;
+                if (response.data.data) {
+                    return response.data.data;
+                }
 
                 count++;
                 if (count >= MAX_ATTEMPTS) return null;
+
+                await sleep(1000);
             }
         } catch (error) {
             console.log(error);
@@ -167,10 +185,64 @@ class Resources {
                     }
                 })
 
-                if (response.data.data) return response.data.data;
+                if (response.data.data) {
+                    return response.data.data;
+                }
 
                 count++;
                 if (count >= MAX_ATTEMPTS) return null;
+
+                await sleep(1000);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    public static async getTodayClassroomStatus() {
+        try {
+            let count = 0;
+            while (true) {
+                const response = await axios.get(`${rootUrl}/classroom/today`, {
+                    headers: {
+                        'token': getToken()
+                    }
+                })
+
+                if (response.data.data) {
+                    return response.data.data.classrooms;
+                }
+
+                count++;
+                if (count >= MAX_ATTEMPTS) return null;
+
+                await sleep(1000);
+
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    public static async getTomorrowClassroomStatus() {
+        try {
+            let count = 0;
+            while (true) {
+                const response = await axios.get(`${rootUrl}/classroom/tomorrow`, {
+                    headers: {
+                        'token': getToken()
+                    }
+                })
+
+                if (response.data.data) {
+                    return response.data.data.classrooms;
+                }
+
+                count++;
+                if (count >= MAX_ATTEMPTS) return null;
+
+                await sleep(1000);
+
             }
         } catch (error) {
             console.log(error);

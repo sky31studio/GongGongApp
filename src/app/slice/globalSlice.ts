@@ -7,12 +7,14 @@ interface InitialState {
     date: string,
     termID: string,
     currentTime: string,
+    isLogin: boolean,
 }
 
 const initialState: InitialState = {
     date: "",
     termID: "",
     currentTime: (new Date()).toString(),
+    isLogin: false,
 }
 
 export const getFirstDate = createAsyncThunk('exam/getFirstDate', async () => {
@@ -31,6 +33,12 @@ const globalSlice = createSlice({
         },
         resetCurrentTime: (state) => {
             state.currentTime = (new Date()).toString();
+        },
+        loginSuccessful: (state) => {
+            state.isLogin = true;
+        },
+        logoutSuccessful: (state) => {
+            state.isLogin = false;
         }
     },
     extraReducers: (builder) => {
@@ -45,6 +53,7 @@ const globalSlice = createSlice({
 export const selectFirstDate = (state: RootState) => state.global.date;
 export const selectTerm = (state: RootState) => state.global.termID;
 export const selectCurrentTime = (state: RootState) => state.global.currentTime;
+export const selectIsLogin = (state: RootState) => state.global.isLogin;
 
 export const selectTheWeek = createSelector(
     [selectFirstDate, selectCurrentTime],
@@ -58,5 +67,5 @@ export const selectTheWeek = createSelector(
     }
 )
 
-export const {setDate, setTermID, resetCurrentTime} = globalSlice.actions;
+export const {setDate, setTermID, resetCurrentTime, loginSuccessful, logoutSuccessful} = globalSlice.actions;
 export default globalSlice.reducer;

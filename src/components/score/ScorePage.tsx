@@ -7,13 +7,12 @@ import {NavigationProps} from "../home/homePage.tsx";
 import Resources from "../../basic/Resources.ts";
 import {dealScore, SingleScoreList} from "../../utils/scoreUtils.ts";
 import SingleScore from "./SingleScore.tsx";
-import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
+import {useAppSelector} from "../../app/hooks.ts";
 import {selectAverageScore, selectClassRank, selectGpa, selectMajorRank} from "../../app/slice/scoreSlice.ts";
 import ScrollView = Animated.ScrollView;
 
 
 const ScorePage = ({navigation}: NavigationProps) => {
-    const dispatch = useAppDispatch();
     const [scoreList, setScoreList] = useState<SingleScoreList[]>([]);
     const averageScore = useAppSelector(selectAverageScore)
     const gpa = useAppSelector(selectGpa);

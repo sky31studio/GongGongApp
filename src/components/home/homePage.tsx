@@ -14,7 +14,6 @@ import Animated, {
     withTiming
 } from "react-native-reanimated";
 import LinearGradient from "react-native-linear-gradient";
-import {TablePage} from "../timeTable/tablePage.tsx";
 
 export interface NavigationProps {
     navigation: {

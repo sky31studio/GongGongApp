@@ -1,5 +1,6 @@
 export const BackgroundColor = {
     primary: '#FF6275',
+    primarySemiTransparent: '#ffa2ac',
     primaryGradient: '#FF9999',
     secondary: '#FF6C87',
     tertiary: '#FFAA69',

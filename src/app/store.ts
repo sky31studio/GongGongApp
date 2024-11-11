@@ -4,6 +4,7 @@ import scheduleReducer from "./slice/scheduleSlice.ts"
 import globalReducer from "./slice/globalSlice.ts"
 import scoreReducer from "./slice/scoreSlice.ts"
 import infoReducer from "./slice/infoSlice.ts"
+import classroomReducer from "./slice/classroomSlice.ts"
 
 export const store = configureStore({
     reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
         global: globalReducer,
         score: scoreReducer,
         info: infoReducer,
+        classroom: classroomReducer,
     }
 });
 

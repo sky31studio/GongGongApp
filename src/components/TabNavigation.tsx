@@ -1,9 +1,9 @@
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
-import Home, {NavigationProps} from "./home/homePage.tsx";
-import InfoPage from "./info/infoPage.tsx";
+import Home from "./home/homePage.tsx";
+import InfoPage from "./info/InfoPage.tsx";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../basic/XMLResources.ts";
-import {Text, View} from "react-native";
+import {Text} from "react-native";
 import {FontColor, FontSize} from "../config/globalStyleSheetConfig.ts";
 
 const TabNavigation = () => {

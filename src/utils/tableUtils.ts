@@ -171,7 +171,7 @@ export const getClassList = (table: Record<string, Course[]>, weekNumber: number
  */
 export const getAllCoursesByWeek = (table: Record<string, Course[]>, week: number): ClassObject[][] => {
     const res: ClassObject[][] = [];
-    for (let i = 1; i < 7; i++) {
+    for (let i = 1; i <= 7; i++) {
         res.push(getClassList(table, week, i));
     }
 

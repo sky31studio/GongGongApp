@@ -13,7 +13,7 @@ import {NavigationProps} from "../home/homePage.tsx";
 export const TablePage = ({navigation}: NavigationProps) => {
     const theWeek = useAppSelector(selectTheWeek);
     const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
-    const [pagerViewVisible, setPagerViewVisible] = useState<boolean>(true);
+    // const [pagerViewVisible, setPagerViewVisible] = useState<boolean>(true);
     const pagerViewRef = useRef<PagerView>(null);
 
     const dropWeekListValue = useSharedValue<number>(0);
@@ -43,10 +43,10 @@ export const TablePage = ({navigation}: NavigationProps) => {
         });
     }
 
-    const handlePageSelected = (e: any) => {
-        const index= e.nativeEvent.position;
-        setCurrentWeek(index + 1);
-    }
+    // const handlePageSelected = (e: any) => {
+    //     const index= e.nativeEvent.position;
+    //     setCurrentWeek(index + 1);
+    // }
 
     const weekData = Array.from({length: 21}, (_, index) => {
         return {
@@ -159,22 +159,27 @@ export const TablePage = ({navigation}: NavigationProps) => {
                     renderItem={weekListRenderItem}
                     horizontal={true}
                     keyExtractor={item => item.week.toString()}
+                    removeClippedSubviews={false}
                 />
-                {pagerViewVisible && <PagerView
-                    ref={pagerViewRef}
-                    style={[styleSheet.tableWrapper]}
-                    initialPage={currentWeek - 1}
-                    onPageSelected={handlePageSelected}
-                    offscreenPageLimit={1}
-                >
-                    {weekData.map((item, index) => {
-                       return (
-                           <View key={index} style={{flex: 1}}>
-                               <Schedule week={item.week}></Schedule>
-                           </View>
-                       )
-                    })}
-                </PagerView>}
+                {/*{pagerViewVisible && <PagerView*/}
+                {/*    ref={pagerViewRef}*/}
+                {/*    style={[styleSheet.tableWrapper]}*/}
+                {/*    initialPage={currentWeek - 1}*/}
+                {/*    onPageSelected={handlePageSelected}*/}
+                {/*    offscreenPageLimit={1}*/}
+                {/*>*/}
+                {/*    {weekData.map((item, index) => {*/}
+                {/*       return (*/}
+                {/*           <View key={index} style={{flex: 1}}>*/}
+                {/*               <Schedule week={item.week}></Schedule>*/}
+                {/*           </View>*/}
+                {/*       )*/}
+                {/*    })}*/}
+                {/*</PagerView>}*/}
+                {/*<PagerView style={{flex: 1}}>*/}
+                {/*    <View><Text style={{color: 'black'}}>123</Text></View>*/}
+                {/*</PagerView>*/}
+                <Schedule week={currentWeek}></Schedule>
             </View>
         </View>
     );

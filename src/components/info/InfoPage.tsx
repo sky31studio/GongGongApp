@@ -7,14 +7,21 @@ import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {selectCurrentAgendaNumber} from "../../app/slice/agendaSlice.ts";
 import {selectCurrentCourseNumber} from "../../app/slice/scheduleSlice.ts";
 import {selectStudentID, selectStudentMajor, selectStudentName} from "../../app/slice/infoSlice.ts";
+import {logoutSuccessful, selectIsLogin} from "../../app/slice/globalSlice.ts";
+import {NavigationProps} from "../home/homePage.tsx";
 
-const InfoPage = () => {
+const InfoPage = ({navigation}: NavigationProps) => {
     const dispatch = useAppDispatch();
     const agendaNumber = useAppSelector(selectCurrentAgendaNumber);
     const courseNumber = useAppSelector(selectCurrentCourseNumber);
     const studentID = useAppSelector(selectStudentID);
     const name = useAppSelector(selectStudentName);
     const major = useAppSelector(selectStudentMajor);
+    const isLogin = useAppSelector(selectIsLogin);
+
+    const handleReLogin = () => {
+        dispatch(logoutSuccessful());
+    }
 
     return (
         <View style={{flex: 1}}>
@@ -34,7 +41,9 @@ const InfoPage = () => {
                     <View style={ss.innerInfoContainer}>
                         <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 6}}>
                             <View style={{width: 35, height: 35, borderRadius: 20, backgroundColor: 'red'}}></View>
-                            <Text style={{marginLeft: 12}}>点击登录</Text>
+                            <Pressable style={{height: '100%', paddingHorizontal: 12}} onPress={isLogin ? null : handleReLogin}>
+                                <Text>{isLogin ? name : '点击登录'}</Text>
+                            </Pressable>
                         </View>
 
                         <Pressable style={ss.editInfoButton}>
@@ -73,14 +82,35 @@ const InfoPage = () => {
                 >小Tips</Text>
 
                 {/* 更多信息 */}
-                <View style={ss.infoContainer}>
-
+                <View style={[ss.infoContainer, {paddingTop: 5, paddingBottom: 40, paddingHorizontal: 0}]}>
+                    <NavigationBox title={'新功能'} handleNavigation={() => null}/>
+                    <NavigationBox title={'新手指南'} handleNavigation={() => null}/>
+                    <NavigationBox title={'关于拱拱'} handleNavigation={() => null}/>
+                    <NavigationBox title={'联系我们'} handleNavigation={() => null}/>
                 </View>
-
                 {/* 登录/退出登录 按钮 */}
-                <View>
-
-                </View>
+                <Pressable
+                    style={{
+                        height: 43,
+                        width: '100%',
+                        borderRadius: 12,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: BackgroundColor.primary,
+                        marginVertical: 15,
+                        bottom: 0,
+                        position: 'absolute',
+                        transform: [{translateY: 35}]
+                    }}
+                    onPress={handleReLogin}>
+                    <Text
+                        style={{
+                            color: FontColor.light,
+                            letterSpacing: 1,
+                            fontWeight: '600'
+                        }}
+                    >{isLogin ? '退出登录' : '登录'}</Text>
+                </Pressable>
             </View>
 
 
@@ -93,7 +123,7 @@ const InfoPage = () => {
  * @param title
  * @param handleNavigation
  */
-const navigationBox = ({title, handleNavigation}: {
+const NavigationBox = ({title, handleNavigation}: {
     title: string,
     handleNavigation: () => void
 }) => {
@@ -102,14 +132,23 @@ const navigationBox = ({title, handleNavigation}: {
         <View
             style={{
                 width: '100%',
-                paddingVertical: 8,
+                paddingVertical: 12,
+                paddingHorizontal: 20,
                 display: 'flex',
                 flexDirection: 'row',
-                justifyContent: 'space-between'
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderBottomWidth: .5,
+                borderBottomColor: BackgroundColor.grey,
             }}
         >
-            <Text>{title}</Text>
-            <Pressable>
+            <Text
+                style={{
+                    fontSize: FontSize.s,
+                    color: FontColor.dark,
+                }}
+            >{title}</Text>
+            <Pressable onPress={handleNavigation}>
                 <SvgXml xml={XMLResources.infoArrow} width={10} height={10}/>
             </Pressable>
         </View>

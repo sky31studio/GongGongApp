@@ -8,6 +8,7 @@ import {selectTable} from "../../app/slice/scheduleSlice.ts";
 import {selectFirstDate} from "../../app/slice/globalSlice.ts";
 import {transTo2Digits} from "../../utils/agendaUtils.ts";
 import Animated from "react-native-reanimated";
+import {FontSize} from "../../config/globalStyleSheetConfig.ts";
 
 const weekdayCNName = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
@@ -168,10 +169,8 @@ export default function Schedule({week}: { week: number }): React.JSX.Element {
     return (
         <Animated.View style={styleSheet.scheduleContainer}>
             <View style={styleSheet.timeContainer}>
-                {timeListWithGap.map((item, index) => (
-                    <View key={index} style={{flex: 1}}>
-                        {item}
-                    </View>
+                {timeListWithGap.map((item) => (
+                    item
                 ))}
             </View>
             {classList()}
@@ -196,11 +195,11 @@ const styleSheet = StyleSheet.create({
 
     tItemBoldText: {
         width: '100%',
-        height: 30,
+        height: 25,
         textAlign: 'center',
         lineHeight: 30,
         fontWeight: '600',
-        paddingBottom: 6,
+        paddingBottom: 4,
         color: '#000',
     },
 
@@ -280,6 +279,7 @@ const styleSheet = StyleSheet.create({
         width: '100%',
         fontWeight: '200',
         textAlign: 'center',
+        fontSize: FontSize.s,
         textAlignVertical: 'center',
     },
 
