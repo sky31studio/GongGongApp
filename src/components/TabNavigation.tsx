@@ -13,7 +13,6 @@ const TabNavigation = () => {
         <Tab.Navigator
             detachInactiveScreens={false}
         >
-
             <Tab.Screen name={'homePage'} component={Home} options={{
                 headerShown: false,
                 tabBarIcon: ({focused}) => {

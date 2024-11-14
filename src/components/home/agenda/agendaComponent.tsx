@@ -1,37 +1,29 @@
-import {Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View} from "react-native";
-import React, {useEffect, useState} from "react";
+import {Pressable, ScrollView, StyleSheet, Text, ToastAndroid, useWindowDimensions, View} from "react-native";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
 import {
+    addExamToTop,
+    addSelfToTop,
     Agenda,
-    hideAddBoard,
+    removeExamFromTop,
+    removeSelf,
+    removeSelfFromTop,
     selectAgendaList,
     selectExamLength,
     selectOnlyExamList,
-    selectShowAddBoard,
     showAddBoard
 } from "../../../app/slice/agendaSlice.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {AgendaType, CNWeekDay} from "../../../utils/enum.ts";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
-import Animated, {Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
 import {convertDateToString} from "../../../utils/agendaUtils.ts";
-import AddBoard from "./addBoard.tsx";
-import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Swipeable, {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
+import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
 
 const agendaComponent = () => {
     const dispatch = useAppDispatch();
-    const winWidth = useWindowDimensions().width;
-    const winHeight = useWindowDimensions().height;
-    const modalVisibility = useAppSelector(selectShowAddBoard);
-
-    const translateY = useSharedValue(400);
-    const animatedStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{translateY: translateY.value}]
-        }
-    })
 
     // 是否只展示exam
     const [onlyExam, setOnlyExam] = useState<boolean>(false);
@@ -41,32 +33,14 @@ const agendaComponent = () => {
         setOnlyExam(!onlyExam);
     }
 
-    const showBoard = () => {
+    const openBoard = () => {
         dispatch(showAddBoard());
-    }
-
-    const openModal = () => {
-        translateY.value = withTiming(0, {
-            duration: 200,
-            easing: Easing.ease
-        }, () => runOnJS(showBoard)());
-    }
-
-    const hideBoard = () => {
-        dispatch(hideAddBoard());
-    }
-
-    const closeModal = () => {
-        translateY.value = withTiming(400, {
-            duration: 200,
-            easing: Easing.ease
-        }, () => runOnJS(hideBoard)());
     }
 
     return (
         <View style={ss.agendaComponentContainer}>
             <View style={ss.functionContainer}>
-                <Pressable onPress={openModal}>
+                <Pressable onPress={openBoard}>
                     <View style={ss.addContainer}>
                         <SvgXml xml={XMLResources.addCountdown} width="10" height="10"/>
                         <Text style={ss.addText}>添加倒计时</Text>
@@ -81,19 +55,6 @@ const agendaComponent = () => {
                 </View>
             </View>
             {countdownList}
-            <Modal
-                visible={modalVisibility}
-                animationType={'none'}
-                onRequestClose={closeModal}
-                transparent={true}
-            >
-                <View style={{width: winWidth, height: winHeight, backgroundColor: 'rgba(0, 0, 0, .25)'}}>
-                    <Animated.View style={[animatedStyle, {position: 'absolute', bottom: 0}]}>
-                        <AddBoard handleClose={closeModal}/>
-                    </Animated.View>
-
-                </View>
-            </Modal>
         </View>
     )
 }
@@ -161,6 +122,17 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
 }
 
 const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) => {
+    const winWidth = useWindowDimensions().width;
+    const dispatch = useAppDispatch();
+
+    const swipeableRef = useRef<SwipeableMethods>(null);
+    const isOnTop = useMemo(() => {
+        for (let type of agenda.types) {
+            if (type === 2) return true;
+        }
+        return false;
+    }, [agenda.types])
+
     // yyyy/mm/dd mm:ss-mm:ss
     let timeStr;
     let weekDay;
@@ -177,26 +149,65 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
 
     // 标签渲染
     const typeList = agenda.types.map((type) => {
+        const backgroundColor = type === 2 ? 'rgba(254, 39, 65, 1)' : BackgroundColor.tertiary;
+
         return (
-            <View style={ss.agendaTagContainer}>
-                <Text style={{fontSize: FontSize.ss, color: FontColor.light, lineHeight: 15}}>{AgendaType[type]}</Text>
+            <View style={[ss.agendaTagContainer, {backgroundColor: backgroundColor}]}>
+                <ScalingNotAllowedText style={{
+                    fontSize: FontSize.ss,
+                    color: FontColor.light,
+                    lineHeight: 15
+                }}>{AgendaType[type]}</ScalingNotAllowedText>
             </View>
         )
     })
 
+    const handlePinToTop = () => {
+        swipeableRef.current?.reset();
+        if (agenda.isCustom) {
+            dispatch(addSelfToTop(agenda.id));
+        } else {
+            dispatch(addExamToTop(agenda.id));
+        }
+    }
+
+    const handleUnpinToTop = () => {
+        swipeableRef.current?.reset();
+        if (agenda.isCustom) {
+            dispatch(removeSelfFromTop(agenda.id));
+        } else {
+            dispatch(removeExamFromTop(agenda.id));
+        }
+    }
+
+    const handleDelete = () => {
+        if (!agenda.isCustom) {
+            ToastAndroid.showWithGravity('考试不可以删除!', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+            swipeableRef.current?.close();
+        } else {
+            dispatch(removeSelf);
+        }
+    }
+
     const rightAction = () => {
         return (
             <View style={{height: '100%', display: 'flex', flexDirection: 'row'}}>
-                <Pressable style={[ss.agendaButton, {
-                    backgroundColor: BackgroundColor.iconPrimaryBackground,
-                }]}>
-                    <SvgXml xml={XMLResources.pinToTop} width={15} height={15}/>
-                    <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconPrimary}]}>{'置顶'}</Text>
+                <Pressable
+                    style={[ss.agendaButton, {
+                        backgroundColor: BackgroundColor.iconPrimaryBackground,
+                    }]}
+                    onPress={isOnTop ? handleUnpinToTop : handlePinToTop}
+                >
+                    <SvgXml xml={isOnTop ? XMLResources.unPinToTop : XMLResources.pinToTop} width={15} height={15}/>
+                    <Text
+                        style={[ss.agendaButtonText, {color: BackgroundColor.iconPrimary}]}>{isOnTop ? '取消置顶' : '置顶'}</Text>
                 </Pressable>
                 <Pressable
                     style={[ss.agendaButton, {
                         backgroundColor: BackgroundColor.iconSecondaryBackground,
-                    }]}>
+                    }]}
+                    onPress={handleDelete}
+                >
                     <SvgXml xml={XMLResources.deleteAgenda} width={15} height={15}/>
                     <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconSecondary}]}>删除</Text>
 
@@ -207,20 +218,25 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
 
     return (
         <Swipeable
+            ref={swipeableRef}
             renderRightActions={rightAction}
             rightThreshold={40}
             overshootRight={false}
+
         >
             <View style={[ss.agendaContainer]}>
                 <View style={ss.agendaNameContainer}>
-                    <Text numberOfLines={1} ellipsizeMode="tail" style={ss.agendaName}>{agenda.name}</Text>
+                    <ScalingNotAllowedText numberOfLines={1} ellipsizeMode="tail"
+                                           style={[ss.agendaName, {maxWidth: winWidth * .4}
+                                           ]}>{agenda.name}</ScalingNotAllowedText>
                     {agenda.types.length && typeList}
                 </View>
-                {agenda.text !== '' && <Text style={[ss.agendaText]}>{agenda.text}</Text>}
+                {agenda.text !== '' && <ScalingNotAllowedText
+                    style={[ss.agendaText, {maxWidth: winWidth * .4}]}>{agenda.text}</ScalingNotAllowedText>}
                 <View style={ss.agendaLocationAndTimeContainer}>
                     <SvgXml xml={XMLResources.clock} width={9} height={9}/>
-                    <Text style={[ss.agendaInfoText]}>{timeStr}</Text>
-                    <Text style={[ss.agendaInfoText]}>{weekDay}</Text>
+                    <ScalingNotAllowedText style={[ss.agendaInfoText]}>{timeStr}</ScalingNotAllowedText>
+                    <ScalingNotAllowedText style={[ss.agendaInfoText]}>{weekDay}</ScalingNotAllowedText>
                     <View style={{
                         width: .5,
                         height: 12,
@@ -228,13 +244,13 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
                         marginHorizontal: 5
                     }}></View>
                     <SvgXml xml={XMLResources.location} width={9} height={9}/>
-                    <Text style={[ss.agendaInfoText]}>{location}</Text>
+                    <ScalingNotAllowedText style={[ss.agendaInfoText]}>{location}</ScalingNotAllowedText>
                 </View>
                 {agenda.startTime !== '' && (
                     <View style={ss.countdownContainer}>
-                        <Text style={ss.countdownText}>还剩</Text>
-                        <Text style={ss.countdownDayText}>{countdown}</Text>
-                        <Text style={ss.countdownText}>天</Text>
+                        <ScalingNotAllowedText style={ss.countdownText}>还剩</ScalingNotAllowedText>
+                        <ScalingNotAllowedText style={ss.countdownDayText}>{countdown}</ScalingNotAllowedText>
+                        <ScalingNotAllowedText style={ss.countdownText}>天</ScalingNotAllowedText>
                     </View>
                 )}
             </View>
@@ -343,7 +359,6 @@ const ss = StyleSheet.create({
         height: 18,
         borderRadius: 14,
         borderBottomLeftRadius: 0,
-        backgroundColor: BackgroundColor.tertiary,
         marginLeft: 10,
         paddingVertical: 2,
         paddingHorizontal: 8,

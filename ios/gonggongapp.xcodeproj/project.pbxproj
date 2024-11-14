@@ -14,6 +14,12 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		7699B88040F8A987B510C191 /* libPods-gonggongapp-gonggongappTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-gonggongapp-gonggongappTests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		BED483C1957D4FEE801CF820 /* PingFangSC-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D2E8930518904C0F8A681863 /* PingFangSC-Light.ttf */; };
+		21D042E0110C4180B4261835 /* PingFangSC-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 446712A8A16C48608A31648D /* PingFangSC-Medium.ttf */; };
+		15F2DA467BA7477F8E5F707E /* PingFangSC-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6E31C597BAE8436EB9FE8F44 /* PingFangSC-Regular.ttf */; };
+		4604FEA3DEFA421CA404CEA7 /* PingFangSC-Semibold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2F5ADE97C6A94289868BBBB8 /* PingFangSC-Semibold.ttf */; };
+		8C66DD118AF94ED790625E64 /* PingFangSC-Thin.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C20E29341FB146239E167657 /* PingFangSC-Thin.ttf */; };
+		AA7EA063FA39480C85CAD971 /* PingFangSC-Ultralight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A4AC5D405A4A479EA7ACFEF0 /* PingFangSC-Ultralight.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +51,12 @@
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = gonggongapp/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-gonggongapp-gonggongappTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-gonggongapp-gonggongappTests.release.xcconfig"; path = "Target Support Files/Pods-gonggongapp-gonggongappTests/Pods-gonggongapp-gonggongappTests.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		D2E8930518904C0F8A681863 /* PingFangSC-Light.ttf */ = {isa = PBXFileReference; name = "PingFangSC-Light.ttf"; path = "../assets/fonts/PingFangSC-Light.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		446712A8A16C48608A31648D /* PingFangSC-Medium.ttf */ = {isa = PBXFileReference; name = "PingFangSC-Medium.ttf"; path = "../assets/fonts/PingFangSC-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		6E31C597BAE8436EB9FE8F44 /* PingFangSC-Regular.ttf */ = {isa = PBXFileReference; name = "PingFangSC-Regular.ttf"; path = "../assets/fonts/PingFangSC-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		2F5ADE97C6A94289868BBBB8 /* PingFangSC-Semibold.ttf */ = {isa = PBXFileReference; name = "PingFangSC-Semibold.ttf"; path = "../assets/fonts/PingFangSC-Semibold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		C20E29341FB146239E167657 /* PingFangSC-Thin.ttf */ = {isa = PBXFileReference; name = "PingFangSC-Thin.ttf"; path = "../assets/fonts/PingFangSC-Thin.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		A4AC5D405A4A479EA7ACFEF0 /* PingFangSC-Ultralight.ttf */ = {isa = PBXFileReference; name = "PingFangSC-Ultralight.ttf"; path = "../assets/fonts/PingFangSC-Ultralight.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -124,6 +136,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				E0CAE2E851E248C3B49226B2 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -149,6 +162,20 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
+		};
+		E0CAE2E851E248C3B49226B2 /* Resources */ = {
+			isa = "PBXGroup";
+			children = (
+				D2E8930518904C0F8A681863 /* PingFangSC-Light.ttf */,
+				446712A8A16C48608A31648D /* PingFangSC-Medium.ttf */,
+				6E31C597BAE8436EB9FE8F44 /* PingFangSC-Regular.ttf */,
+				2F5ADE97C6A94289868BBBB8 /* PingFangSC-Semibold.ttf */,
+				C20E29341FB146239E167657 /* PingFangSC-Thin.ttf */,
+				A4AC5D405A4A479EA7ACFEF0 /* PingFangSC-Ultralight.ttf */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+			path = "";
 		};
 /* End PBXGroup section */
 
@@ -245,6 +272,12 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				BED483C1957D4FEE801CF820 /* PingFangSC-Light.ttf in Resources */,
+				21D042E0110C4180B4261835 /* PingFangSC-Medium.ttf in Resources */,
+				15F2DA467BA7477F8E5F707E /* PingFangSC-Regular.ttf in Resources */,
+				4604FEA3DEFA421CA404CEA7 /* PingFangSC-Semibold.ttf in Resources */,
+				8C66DD118AF94ED790625E64 /* PingFangSC-Thin.ttf in Resources */,
+				AA7EA063FA39480C85CAD971 /* PingFangSC-Ultralight.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

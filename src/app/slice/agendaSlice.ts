@@ -17,6 +17,7 @@ export interface Agenda {
     endTime: string,
     location: string,
     types: number[],
+    isCustom: boolean,
 }
 
 /**
@@ -38,51 +39,88 @@ const agendaSlice = createSlice({
     name: 'exam',
     initialState,
     reducers: {
-        addExam: (state, action: { payload: Agenda, type: any }) => {
-            const id = action.payload.id;
-            // 检查该项是否已经存在
-            for (let exam of state.examList) {
-                if (exam.id === id) {
-                    return;
-                }
-            }
+        // addExam: (state, action: { payload: Agenda, type: any }) => {
+        //     const id = action.payload.id;
+        //     // 检查该项是否已经存在
+        //     for (let exam of state.examList) {
+        //         if (exam.id === id) {
+        //             return;
+        //         }
+        //     }
+        //
+        //     state.examList.push(action.payload);
+        //     state.examList.sort(compare);
+        // },
+        // removeExam: (state, action) => {
+        //     for (let exam of state.examList) {
+        //         if (exam.id === action.payload) {
+        //             state.examList.splice(state.examList.indexOf(exam), 1);
+        //             return;
+        //         }
+        //     }
+        // },
+        // addSelfExam: (state, action) => {
+        //     const id = generateID(action.payload.name, action.payload.startTime, action.payload.endTime);
+        //     // 检查该项是否已经存在
+        //     for (let exam of state.selfList) {
+        //         // @ts-ignore
+        //         if (exam.id === id) {
+        //             return;
+        //         }
+        //     }
+        //
+        //     // @ts-ignore
+        //     state.selfList.push({id: id, ...action.payload});
+        //     state.selfList.sort(compare);
+        // },
 
-            state.examList.push(action.payload);
-            state.examList.sort(compare);
-        },
-        removeExam: (state, action) => {
-            for (let exam of state.examList) {
-                if (exam.id === action.payload) {
-                    state.examList.splice(state.examList.indexOf(exam), 1);
-                    return;
-                }
-            }
-            state.examList.sort(compare);
-        },
-
-        addSelfExam: (state, action) => {
-            const id = generateID(action.payload.name, action.payload.startTime, action.payload.endTime);
-            // 检查该项是否已经存在
-            for (let exam of state.selfList) {
-                // @ts-ignore
-                if (exam.id === id) {
-                    return;
-                }
-            }
-
-            // @ts-ignore
-            state.selfList.push({id: id, ...action.payload});
-            state.selfList.sort(compare);
-        },
-
-        removeSelfExam: (state, action) => {
+        removeSelf: (state, action) => {
             for(let self of state.selfList) {
                 if(self.id === action.payload) {
                     state.selfList.splice(state.selfList.indexOf(self), 1);
                     return;
                 }
             }
-            state.selfList.sort(compare);
+        },
+
+        addExamToTop: (state, action) => {
+            for (let exam of state.examList) {
+                if (exam.id === action.payload) {
+                    exam.types.push(2);
+                    state.examList.sort(compare);
+                    return;
+                }
+            }
+        },
+
+        removeExamFromTop: (state, action) => {
+            for (let exam of state.examList) {
+                if (exam.id === action.payload) {
+                    exam.types.splice(exam.types.indexOf(2), 1);
+                    state.examList.sort(compare);
+                    return;
+                }
+            }
+        },
+
+        addSelfToTop: (state, action) => {
+            for (let self of state.selfList) {
+                if (self.id === action.payload) {
+                    self.types.push(2);
+                    state.selfList.sort(compare);
+                    return;
+                }
+            }
+        },
+
+        removeSelfFromTop: (state, action) => {
+            for (let self of state.selfList) {
+                if (self.id === action.payload) {
+                    self.types.splice(self.types.indexOf(2), 1);
+                    state.selfList.sort(compare);
+                    return;
+                }
+            }
         },
 
         showAddBoard: (state) => {
@@ -96,9 +134,15 @@ const agendaSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchExamData.fulfilled, (state, action) => {
-                for (let exam of action.payload) {
-                    agendaSlice.caseReducers.addExam(state, {payload: exam, type: 'exam/addExam'});
-                }
+                state.examList = action.payload.map((exam: any) => {
+                    const id = generateID(exam.name, exam.startTime, exam.endTime);
+                    return {
+                        id: id,
+                        isCustom: false,
+                        ...exam
+                    }
+                })
+                state.examList.sort(compare);
             })
     },
 })
@@ -106,12 +150,27 @@ const agendaSlice = createSlice({
 const compare = (a: Agenda, b: Agenda): number => {
     const aStartTime = new Date(a.startTime) || undefined;
     const bStartTime = new Date(b.startTime) || undefined;
+    let aIsTop = false;
+    let bIsTop = false;
+    for (let type of a.types) {
+        if (type === 2) {
+            aIsTop = true;
+            break;
+        }
+    }
 
-    if(!aStartTime) {
+    for (let type of b.types) {
+        if (type === 2) {
+            bIsTop = true;
+            break;
+        }
+    }
+
+    if (!aStartTime || aIsTop && !bIsTop) {
         return -1;
     }
 
-    if (!bStartTime) {
+    if (!bStartTime || !aIsTop && bIsTop) {
         return 1;
     }
 
@@ -188,8 +247,15 @@ export const selectOnlyExamList = createSelector(
 );
 
 
-
-export const {showAddBoard, hideAddBoard} = agendaSlice.actions;
+export const {
+    showAddBoard,
+    hideAddBoard,
+    removeSelf,
+    addExamToTop,
+    removeExamFromTop,
+    addSelfToTop,
+    removeSelfFromTop,
+} = agendaSlice.actions;
 export default agendaSlice.reducer;
 
 

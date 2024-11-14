@@ -1,5 +1,5 @@
 import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
-import {Pressable, StyleSheet, Text, useWindowDimensions, View} from "react-native";
+import {Pressable, StyleSheet, useWindowDimensions, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
 import {addOnValueChangedListener, getToken} from "../../storage.ts";
@@ -14,6 +14,7 @@ import Animated, {
     withTiming
 } from "react-native-reanimated";
 import LinearGradient from "react-native-linear-gradient";
+import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 
 export interface NavigationProps {
     navigation: {
@@ -56,24 +57,24 @@ const FunctionBar: React.ComponentType<NavigationProps> = ({navigation}) => {
             <Pressable onPress={toEmptyClassroomPage}>
                 <View style={styleSheet.functionBox}>
                     <SvgXml xml={XMLResources.emptyClassroomIcon} width="100%"/>
-                    <Text style={styleSheet.functionText}>空教室</Text>
+                    <ScalingNotAllowedText style={styleSheet.functionText}>空教室</ScalingNotAllowedText>
                 </View>
             </Pressable>
             <Pressable onPress={toScorePage}>
                 <View style={styleSheet.functionBox}>
                     <SvgXml xml={XMLResources.scoreIcon} width="100%"/>
-                    <Text style={styleSheet.functionText}>查成绩</Text>
+                    <ScalingNotAllowedText style={styleSheet.functionText}>查成绩</ScalingNotAllowedText>
                 </View>
             </Pressable>
             <Pressable onPress={toTablePage}>
                 <View style={styleSheet.functionBox}>
                     <SvgXml xml={XMLResources.courseIcon} width="100%"/>
-                    <Text style={styleSheet.functionText}>课程表</Text>
+                    <ScalingNotAllowedText style={styleSheet.functionText}>课程表</ScalingNotAllowedText>
                 </View>
             </Pressable>
             <View style={styleSheet.functionBox}>
                 <SvgXml xml={XMLResources.emptyScoreIcon} width="100%"/>
-                <Text style={styleSheet.functionText}>多人空课</Text>
+                <ScalingNotAllowedText style={styleSheet.functionText}>多人空课</ScalingNotAllowedText>
             </View>
         </View>
     );
@@ -218,7 +219,6 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
 
 const styleSheet = StyleSheet.create({
     homeContainer: {
-        width: '100%',
         flex: 1,
     },
 
@@ -253,7 +253,6 @@ const styleSheet = StyleSheet.create({
     },
 
     mainBoardWrapper: {
-        width: '100%',
         paddingTop: 50,
         flex: 1,
     },

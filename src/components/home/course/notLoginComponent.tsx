@@ -3,6 +3,7 @@ import {StyleSheet, Text, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import {FontColor} from "../../../config/globalStyleSheetConfig.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
+import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
 
 
 const NotLoginComponent = () => {
@@ -16,7 +17,7 @@ const NotLoginComponent = () => {
                 <SvgXml xml={XMLResources.notLogin} width="100%"/>
             </View>
             <View style={{display: 'flex', alignItems: 'center', paddingVertical: 20}}>
-                <Text style={{color: FontColor.primary}}>登录后才能查看课表哟~</Text>
+                <ScalingNotAllowedText style={{color: FontColor.primary}}>登录后才能查看课表哟~</ScalingNotAllowedText>
             </View>
         </View>
     );

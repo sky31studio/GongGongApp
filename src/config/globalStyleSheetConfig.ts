@@ -47,3 +47,8 @@ export const CourseColor = [
     '#61BEFA',
     '#63C1BD',
 ]
+
+export const FontFamily = {
+    main: 'PingFang SC',
+    sub: 'PingFang SC',
+}

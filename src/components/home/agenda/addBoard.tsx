@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Pressable, StyleSheet, Text, useWindowDimensions, View} from "react-native";
+import {Pressable, StyleSheet, Text, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
@@ -13,13 +13,14 @@ import Animated, {
 import {useAppDispatch} from "../../../app/hooks.ts";
 import MyTextInput from "./myTextInput.tsx";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import {hideAddBoard} from "../../../app/slice/agendaSlice.ts";
 
 
 /**
  * 呼出倒计时添加
  * @constructor
  */
-const AddBoard = ({handleClose}: { handleClose: () => void }) => {
+const AddBoard = () => {
     const dispatch = useAppDispatch();
     const [onlyExam, setOnlyExam] = useState<boolean>(false);
     const [name, setName] = useState<string>('');
@@ -27,9 +28,8 @@ const AddBoard = ({handleClose}: { handleClose: () => void }) => {
     const [location, setLocation] = useState<string>('');
     const [tip, setTip] = useState<string>('');
     const [dateVisibility, setDateVisibility] = useState<boolean>(false);
-    const winWidth = useWindowDimensions().width;
 
-    const colorValue = useSharedValue(400);
+    const colorValue = useSharedValue(0);
     const buttonAnimatedStyle = useAnimatedStyle(() => {
         return {
             backgroundColor: interpolateColor(colorValue.value, [0, 1], [BackgroundColor.invalid, BackgroundColor.primary])
@@ -79,9 +79,9 @@ const AddBoard = ({handleClose}: { handleClose: () => void }) => {
     }
 
     return (
-        <View style={[ss.addAgendaContainer, {width: winWidth}]}>
+        <View style={ss.addAgendaContainer}>
             <View style={{width: '100%', height: 30, display: 'flex', alignItems: 'flex-end'}}>
-                <Pressable onPress={handleClose}>
+                <Pressable onPress={() => dispatch(hideAddBoard())}>
                     <SvgXml xml={XMLResources.closeAddBoard} width="20" height="20"/>
                 </Pressable>
             </View>
@@ -135,16 +135,13 @@ const AddBoard = ({handleClose}: { handleClose: () => void }) => {
 
 const ss = StyleSheet.create({
     addAgendaContainer: {
+        width: '100%',
         height: 400,
         borderTopLeftRadius: 15,
         borderTopRightRadius: 15,
         backgroundColor: 'white',
         paddingHorizontal: 15,
         paddingTop: 15,
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        zIndex: 40,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
