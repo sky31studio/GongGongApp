@@ -16,8 +16,9 @@ export interface Agenda {
     startTime: string,
     endTime: string,
     location: string,
-    types: number[],
+    type: number,
     isCustom: boolean,
+    isOnTop: boolean,
 }
 
 /**
@@ -86,7 +87,7 @@ const agendaSlice = createSlice({
         addExamToTop: (state, action) => {
             for (let exam of state.examList) {
                 if (exam.id === action.payload) {
-                    exam.types.push(2);
+                    exam.isOnTop = true;
                     state.examList.sort(compare);
                     return;
                 }
@@ -96,7 +97,7 @@ const agendaSlice = createSlice({
         removeExamFromTop: (state, action) => {
             for (let exam of state.examList) {
                 if (exam.id === action.payload) {
-                    exam.types.splice(exam.types.indexOf(2), 1);
+                    exam.isOnTop = false;
                     state.examList.sort(compare);
                     return;
                 }
@@ -106,7 +107,7 @@ const agendaSlice = createSlice({
         addSelfToTop: (state, action) => {
             for (let self of state.selfList) {
                 if (self.id === action.payload) {
-                    self.types.push(2);
+                    self.isOnTop = true;
                     state.selfList.sort(compare);
                     return;
                 }
@@ -116,7 +117,7 @@ const agendaSlice = createSlice({
         removeSelfFromTop: (state, action) => {
             for (let self of state.selfList) {
                 if (self.id === action.payload) {
-                    self.types.splice(self.types.indexOf(2), 1);
+                    self.isOnTop = false;
                     state.selfList.sort(compare);
                     return;
                 }
@@ -139,6 +140,7 @@ const agendaSlice = createSlice({
                     return {
                         id: id,
                         isCustom: false,
+                        isOnTop: false,
                         ...exam
                     }
                 })
@@ -150,21 +152,8 @@ const agendaSlice = createSlice({
 const compare = (a: Agenda, b: Agenda): number => {
     const aStartTime = new Date(a.startTime) || undefined;
     const bStartTime = new Date(b.startTime) || undefined;
-    let aIsTop = false;
-    let bIsTop = false;
-    for (let type of a.types) {
-        if (type === 2) {
-            aIsTop = true;
-            break;
-        }
-    }
-
-    for (let type of b.types) {
-        if (type === 2) {
-            bIsTop = true;
-            break;
-        }
-    }
+    let aIsTop = a.isOnTop;
+    let bIsTop = b.isOnTop;
 
     if (!aStartTime || aIsTop && !bIsTop) {
         return -1;
@@ -228,15 +217,7 @@ export const selectOnlyExamList = createSelector(
         const res = examList.slice();
 
         for (let i = 0; i < res.length; i++) {
-            let isExam = false;
-            for (let type of res[i].types) {
-                if (type === 0) {
-                    isExam = true;
-                    break;
-                }
-            }
-
-            if (!isExam) {
+            if (res[i].isCustom) {
                 res.splice(i, 1);
                 i--;
             }

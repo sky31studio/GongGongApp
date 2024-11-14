@@ -1,4 +1,4 @@
-import {Pressable, StyleSheet, Text, View} from "react-native";
+import {Modal, Pressable, StyleSheet, Text, View} from "react-native";
 import React, {useRef, useState} from "react";
 import {useAppSelector} from "../../app/hooks.ts";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
@@ -15,6 +15,8 @@ export const TablePage = ({navigation}: NavigationProps) => {
     const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
     // const [pagerViewVisible, setPagerViewVisible] = useState<boolean>(true);
     const pagerViewRef = useRef<PagerView>(null);
+
+    const [modalVisible, steModalVisible] = useState<boolean>(false);
 
     const dropWeekListValue = useSharedValue<number>(0);
     const arrowAnimatedStyle = useAnimatedStyle(() => {
@@ -68,8 +70,6 @@ export const TablePage = ({navigation}: NavigationProps) => {
         }
 
         return (
-
-
             <Pressable
                 onPress={handleClick}
                 style={{
@@ -151,7 +151,6 @@ export const TablePage = ({navigation}: NavigationProps) => {
                         </View>
                     </View>
                 </View>
-
                 <Animated.FlatList
                     showsHorizontalScrollIndicator={false}
                     style={[weekListAnimatedStyle]}
@@ -180,6 +179,35 @@ export const TablePage = ({navigation}: NavigationProps) => {
                 {/*    <View><Text style={{color: 'black'}}>123</Text></View>*/}
                 {/*</PagerView>*/}
                 <Schedule week={currentWeek}></Schedule>
+                <Modal
+                    visible={false}
+                    transparent={true}
+                    animationType={'fade'}
+                    onRequestClose={() => {
+                    }}
+                >
+                    <View style={{
+                        flex: 1,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'rgba(0, 0, 0, .2)'
+                    }}>
+                        {/*<View*/}
+                        {/*    style={{*/}
+                        {/*        width: '100%',*/}
+                        {/*        paddingVertical: 15,*/}
+                        {/*        backgroundColor: BackgroundColor.mainLight,*/}
+                        {/*        borderTopLeftRadius: 15,*/}
+                        {/*        borderTopRightRadius: 15,*/}
+                        {/*        position: 'absolute',*/}
+                        {/*        bottom: 0,*/}
+                        {/*    }}*/}
+                        {/*>*/}
+
+                        {/*</View>*/}
+                        <View style={{width: 50, height: 50, backgroundColor: 'red'}}></View>
+                    </View>
+                </Modal>
             </View>
         </View>
     );

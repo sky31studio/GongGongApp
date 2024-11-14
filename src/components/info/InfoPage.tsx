@@ -1,5 +1,5 @@
-import React from "react";
-import {Pressable, StyleSheet, Text, View} from "react-native";
+import React, {useState} from "react";
+import {Modal, Pressable, StyleSheet, Text, View} from "react-native";
 import {BackgroundColor, BorderColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
@@ -9,6 +9,7 @@ import {selectCurrentCourseNumber} from "../../app/slice/scheduleSlice.ts";
 import {selectStudentID, selectStudentMajor, selectStudentName} from "../../app/slice/infoSlice.ts";
 import {logoutSuccessful, selectIsLogin} from "../../app/slice/globalSlice.ts";
 import {NavigationProps} from "../home/homePage.tsx";
+import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 
 const InfoPage = ({navigation}: NavigationProps) => {
     const dispatch = useAppDispatch();
@@ -19,8 +20,14 @@ const InfoPage = ({navigation}: NavigationProps) => {
     const major = useAppSelector(selectStudentMajor);
     const isLogin = useAppSelector(selectIsLogin);
 
+    const [modalVisible, setModalVisible] = useState<boolean>(false);
+
+    const openModal = () => setModalVisible(true);
+    const closeModal = () => setModalVisible(false);
+
     const handleReLogin = () => {
-        dispatch(logoutSuccessful());
+        closeModal();
+        setTimeout(() => dispatch(logoutSuccessful()), 800);
     }
 
     return (
@@ -102,7 +109,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                         position: 'absolute',
                         transform: [{translateY: 35}]
                     }}
-                    onPress={handleReLogin}>
+                    onPress={openModal}>
                     <Text
                         style={{
                             color: FontColor.light,
@@ -112,8 +119,65 @@ const InfoPage = ({navigation}: NavigationProps) => {
                     >{isLogin ? '退出登录' : '登录'}</Text>
                 </Pressable>
             </View>
-
-
+            <Modal
+                visible={modalVisible}
+                transparent={true}
+                animationType={'fade'}
+            >
+                <View style={{
+                    flex: 1,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: 'rgba(0, 0, 0, .2)'
+                }}>
+                    <View
+                        style={{
+                            width: '70%',
+                            backgroundColor:
+                            BackgroundColor.mainLight,
+                            borderRadius: 15,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <ScalingNotAllowedText style={{
+                            fontSize: FontSize.ll,
+                            fontWeight: '800',
+                            marginBottom: 25,
+                            marginTop: 10
+                        }}>提示</ScalingNotAllowedText>
+                        <ScalingNotAllowedText style={{fontWeight: '600'}}>确定要退出登录？</ScalingNotAllowedText>
+                        <View style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            width: '100%',
+                            marginTop: 30,
+                            borderTopWidth: 1,
+                            borderTopColor: BackgroundColor.grey
+                        }}>
+                            <Pressable style={{
+                                width: '50%',
+                                alignItems: 'center',
+                                borderRightWidth: 1,
+                                borderRightColor: BackgroundColor.grey,
+                                paddingVertical: 15
+                            }} onPress={closeModal}>
+                                <ScalingNotAllowedText
+                                    style={{color: FontColor.grey, fontSize: FontSize.l}}>取消</ScalingNotAllowedText>
+                            </Pressable>
+                            <Pressable style={{width: '50%', alignItems: 'center', paddingVertical: 15}}
+                                       onPress={handleReLogin}>
+                                <ScalingNotAllowedText style={{
+                                    color: FontColor.primary,
+                                    fontSize: FontSize.l
+                                }}>确定</ScalingNotAllowedText>
+                            </Pressable>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     )
 }

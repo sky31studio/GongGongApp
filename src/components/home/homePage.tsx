@@ -204,6 +204,10 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
         }
     }, [choice])
 
+    useEffect(() => {
+        colorValue.value = initFocus ? 1 : 0;
+    }, []);
+
     return (
         <Pressable onPress={handleClick}>
             <View style={styleSheet.shiftBox}>
@@ -296,7 +300,6 @@ const styleSheet = StyleSheet.create({
         width: 50,
         fontSize: 15,
         textAlign: 'center',
-        zIndex: 10,
     },
     initBox: {
         width: 50,

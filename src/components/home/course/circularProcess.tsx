@@ -19,7 +19,7 @@ interface ProcessProps {
 }
 
 let CircularProcess: React.ComponentType<ProcessProps>;
-CircularProcess = ({done, todo}): React.JSX.Element => {
+CircularProcess = ({done, todo}) => {
     const innerRadius = 28;
     const circumference = 2 * Math.PI * innerRadius;
     const completion = todo === 0 ? 1 : done / todo;

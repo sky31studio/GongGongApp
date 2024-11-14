@@ -1,5 +1,5 @@
 import {Pressable, ScrollView, StyleSheet, Text, ToastAndroid, useWindowDimensions, View} from "react-native";
-import React, {useEffect, useMemo, useRef, useState} from "react";
+import React, {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
@@ -22,7 +22,7 @@ import {convertDateToString} from "../../../utils/agendaUtils.ts";
 import Swipeable, {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
 
-const agendaComponent = () => {
+const agendaComponent = memo(() => {
     const dispatch = useAppDispatch();
 
     // 是否只展示exam
@@ -57,7 +57,7 @@ const agendaComponent = () => {
             {countdownList}
         </View>
     )
-}
+})
 
 /**
  * Agenda列表部分
@@ -77,23 +77,25 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
         }
     })
 
-    const renderList = agendaList
-        .filter((agenda: Agenda) => {
-            let endDate = new Date(agenda.endTime);
-            const countdown = Math.floor((endDate.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
-            // 说明该Agenda已经过期
-            return countdown >= 0;
-        })
-        .map((agenda: Agenda) => {
-            let endDate = new Date(agenda.endTime);
-            const countdown = Math.floor((endDate.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
+    const renderList = useMemo(() => {
+        return agendaList
+            .filter((agenda: Agenda) => {
+                let endDate = new Date(agenda.endTime);
+                const countdown = Math.floor((endDate.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
+                // 说明该Agenda已经过期
+                return countdown >= 0;
+            })
+            .map((agenda: Agenda) => {
+                let endDate = new Date(agenda.endTime);
+                const countdown = Math.floor((endDate.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
 
-            return (
-                <View key={agenda.id}>
-                    <AgendaBox agenda={agenda} countdown={countdown}/>
-                </View>
-            )
-    })
+                return (
+                    <View key={agenda.id}>
+                        <AgendaBox agenda={agenda} countdown={countdown}/>
+                    </View>
+                )
+            })
+    }, [lastTime])
 
     // 没有考试展示
     const noExam = (
@@ -126,17 +128,12 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
     const dispatch = useAppDispatch();
 
     const swipeableRef = useRef<SwipeableMethods>(null);
-    const isOnTop = useMemo(() => {
-        for (let type of agenda.types) {
-            if (type === 2) return true;
-        }
-        return false;
-    }, [agenda.types])
+    const isOnTop = agenda.isOnTop;
 
     // yyyy/mm/dd mm:ss-mm:ss
     let timeStr;
     let weekDay;
-    let location = agenda.location === '' ? '无地点' : agenda.location;
+    let location = useMemo(() => agenda.location === '' ? '无地点' : agenda.location, [agenda.location]);
     if (agenda.startTime === '') {
         timeStr = '无时间';
         weekDay = '';
@@ -148,46 +145,44 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
     }
 
     // 标签渲染
-    const typeList = agenda.types.map((type) => {
-        const backgroundColor = type === 2 ? 'rgba(254, 39, 65, 1)' : BackgroundColor.tertiary;
-
+    const typeTip = () => {
         return (
-            <View style={[ss.agendaTagContainer, {backgroundColor: backgroundColor}]}>
+            <View style={[ss.agendaTagContainer, {backgroundColor: BackgroundColor.tertiary}]}>
                 <ScalingNotAllowedText style={{
                     fontSize: FontSize.ss,
                     color: FontColor.light,
                     lineHeight: 15
-                }}>{AgendaType[type]}</ScalingNotAllowedText>
+                }}>{AgendaType[agenda.type]}</ScalingNotAllowedText>
             </View>
         )
-    })
+    }
 
-    const handlePinToTop = () => {
+    const handlePinToTop = useCallback(() => {
         swipeableRef.current?.reset();
         if (agenda.isCustom) {
             dispatch(addSelfToTop(agenda.id));
         } else {
             dispatch(addExamToTop(agenda.id));
         }
-    }
+    }, [agenda.isCustom, dispatch, agenda.id]);
 
-    const handleUnpinToTop = () => {
+    const handleUnpinToTop = useCallback(() => {
         swipeableRef.current?.reset();
         if (agenda.isCustom) {
             dispatch(removeSelfFromTop(agenda.id));
         } else {
             dispatch(removeExamFromTop(agenda.id));
         }
-    }
+    }, [agenda.isCustom, dispatch, agenda.id]);
 
-    const handleDelete = () => {
+    const handleDelete = useCallback(() => {
         if (!agenda.isCustom) {
             ToastAndroid.showWithGravity('考试不可以删除!', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
             swipeableRef.current?.close();
         } else {
             dispatch(removeSelf);
         }
-    }
+    }, [agenda.isCustom, dispatch]);
 
     const rightAction = () => {
         return (
@@ -229,7 +224,7 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
                     <ScalingNotAllowedText numberOfLines={1} ellipsizeMode="tail"
                                            style={[ss.agendaName, {maxWidth: winWidth * .4}
                                            ]}>{agenda.name}</ScalingNotAllowedText>
-                    {agenda.types.length && typeList}
+                    {typeTip()}
                 </View>
                 {agenda.text !== '' && <ScalingNotAllowedText
                     style={[ss.agendaText, {maxWidth: winWidth * .4}]}>{agenda.text}</ScalingNotAllowedText>}

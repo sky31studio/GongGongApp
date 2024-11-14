@@ -33,7 +33,9 @@ export const dealExams = (data: any[]) => {
             startTime: exam.start_time,
             endTime: exam.end_time,
             location: exam.location,
-            types: [exam.type === '考试' ? 0 : 1],
+            isCustom: false,
+            isOnTop: false,
+            type: exam.type === '考试' ? 0 : 1,
         })
     }
 
