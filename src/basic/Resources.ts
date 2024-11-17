@@ -1,5 +1,4 @@
 import axios from "axios";
-import {getToken, setToken} from "../storage.ts";
 import {hostUrl} from "../config/UrlConfig.ts";
 import {sleep} from "../utils/globalUtils.ts";
 
@@ -10,13 +9,13 @@ class Resources {
     /**
      * 获取课表数据
      */
-    public static async fetchClassData() {
+    public static async fetchClassData(token: string) {
         try {
             let count = 0;
             while (true) {
                 const response = await axios(`${rootUrl}/courses`, {
                     headers: {
-                        'token': getToken()
+                        'token': token
                     }
                 })
 
@@ -52,13 +51,15 @@ class Resources {
 
             // response状态码
             const code = response.status;
+            let token;
             if (code === 200) {
                 const status = response.data.code;
                 if (status === 1) {
-                    setToken(response.data.data['token']);
+                    token = response.data.data['token'];
                 }
 
                 return {
+                    token: token,
                     code: status,
                     message: response.data.message,
                 }
@@ -78,13 +79,13 @@ class Resources {
         }
     }
 
-    public static async getExam() {
+    public static async getExam(token: string) {
         try {
             let count = 0;
             while (true) {
                 const response = await axios.get(`${rootUrl}/exams`, {
                     headers: {
-                        'token': getToken()
+                        'token': token
                     }
                 });
 
@@ -102,13 +103,13 @@ class Resources {
         }
     }
 
-    public static async getScore() {
+    public static async getScore(token: string) {
         try {
             let count = 0;
             while (true) {
                 const response = await axios.get(`${rootUrl}/scores`, {
                     headers: {
-                        'token': getToken()
+                        'token': token
                     }
                 })
 
@@ -126,13 +127,13 @@ class Resources {
         }
     }
 
-    public static async getScoreOverview() {
+    public static async getScoreOverview(token: string) {
         try {
             let count = 0;
             while (true) {
                 const response = await axios.get(`${rootUrl}/rank`, {
                     headers: {
-                        'token': getToken()
+                        'token': token
                     }
                 })
 
@@ -150,13 +151,13 @@ class Resources {
         }
     }
 
-    public static async getFirstDate() {
+    public static async getFirstDate(token: string) {
         try {
             let count = 0;
             while (true) {
                 const response = await axios.get(`${rootUrl}/calendar`, {
                     headers: {
-                        'token': getToken()
+                        'token': token
                     }
                 })
 
@@ -174,14 +175,14 @@ class Resources {
         }
     }
 
-    public static async getInfo() {
+    public static async getInfo(token: string) {
         try {
             let count = 0;
 
             while (true) {
                 const response = await axios.get(`${rootUrl}/info`, {
                     headers: {
-                        'token': getToken()
+                        'token': token
                     }
                 })
 
@@ -199,13 +200,13 @@ class Resources {
         }
     }
 
-    public static async getTodayClassroomStatus() {
+    public static async getTodayClassroomStatus(token: string) {
         try {
             let count = 0;
             while (true) {
                 const response = await axios.get(`${rootUrl}/classroom/today`, {
                     headers: {
-                        'token': getToken()
+                        'token': token
                     }
                 })
 
@@ -224,13 +225,13 @@ class Resources {
         }
     }
 
-    public static async getTomorrowClassroomStatus() {
+    public static async getTomorrowClassroomStatus(token: string) {
         try {
             let count = 0;
             while (true) {
                 const response = await axios.get(`${rootUrl}/classroom/tomorrow`, {
                     headers: {
-                        'token': getToken()
+                        'token': token
                     }
                 })
 

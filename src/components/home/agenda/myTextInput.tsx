@@ -16,7 +16,7 @@ const MyTextInput = ({placeholder, sendData, multiline = false, height = 34, ali
 
     const handleChange = (value: string) => {
         setContent(value);
-        sendData(content);
+        sendData(value);
     }
 
     const handleBlur = () => {

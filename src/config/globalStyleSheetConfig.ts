@@ -11,7 +11,8 @@ export const BackgroundColor = {
     mainLight: '#fff',
     grey: '#EEEEEE',
     invalid: '#B7B7B7',
-    focused: 'rgba(167, 191, 253, .2)'
+    focused: 'rgba(167, 191, 253, .2)',
+    modalShadow: 'rgba(0, 0, 0, .2)',
 }
 
 export const FontColor = {

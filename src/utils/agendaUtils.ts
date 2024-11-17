@@ -1,19 +1,6 @@
 import sha256 from 'crypto-js/sha256'
 import {Agenda} from "../app/slice/agendaSlice.ts";
 
-/**
- * type数组内是否存在置顶type
- * @param types 标签数组
- */
-export const containPinToTop = (types: number[]) => {
-    for (let i of types) {
-        if (i === 1) {
-            return true;
-        }
-    }
-    return false;
-}
-
 export const generateID = (name: string, startTime: string, endTime: string) => {
     const input = startTime + ':' + endTime + ' ' + name;
 
@@ -42,16 +29,20 @@ export const dealExams = (data: any[]) => {
     return res;
 }
 
-export const convertDateToString = (startDate: Date, endDate: Date) => {
+export const convertDateToString = (startDate: Date, endDate: Date | undefined) => {
     const startYear = startDate.getFullYear();
     const startMonth = startDate.getMonth() + 1;
     const startDay = startDate.getDate();
     const startHour = startDate.getHours();
     const startMinute = startDate.getMinutes();
-    const endHour = endDate.getHours();
-    const endMinute = endDate.getMinutes();
 
-    return `${startYear}/${transTo2Digits(startMonth)}/${transTo2Digits(startDay)} ${transTo2Digits(startHour)}:${transTo2Digits(startMinute)}-${transTo2Digits(endHour)}:${transTo2Digits(endMinute)}`;
+    if(endDate) {
+        const endHour = endDate.getHours();
+        const endMinute = endDate.getMinutes();
+        return `${startYear}/${transTo2Digits(startMonth)}/${transTo2Digits(startDay)} ${transTo2Digits(startHour)}:${transTo2Digits(startMinute)}-${transTo2Digits(endHour)}:${transTo2Digits(endMinute)}`;
+    } else {
+        return `${startYear}/${transTo2Digits(startMonth)}/${transTo2Digits(startDay)} ${transTo2Digits(startHour)}:${transTo2Digits(startMinute)}`;
+    }
 }
 
 export const transTo2Digits = (num: number) => {

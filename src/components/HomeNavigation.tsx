@@ -12,20 +12,26 @@ import {useAppDispatch} from "../app/hooks.ts";
 import {getInfo} from "../app/slice/infoSlice.ts";
 import SpecificationPage from "./info/SpecificationPage.tsx";
 import {getTodayEmptyClassroomStatus, getTomorrowEmptyClassroomStatus} from "../app/slice/classroomSlice.ts";
+import {useQuery} from "@realm/react";
+import GongUser from "../dao/object/User.ts";
 
 const HomeNavigation = () => {
+    const user = useQuery<GongUser>('GongUser')[0];
+
     const dispatch = useAppDispatch();
 
     const Stack = createNativeStackNavigator();
 
     useEffect(() => {
-        dispatch(fetchTable());
-        dispatch(fetchExamData());
-        dispatch(getFirstDate());
-        dispatch(getScoreOverview());
-        dispatch(getInfo());
-        dispatch(getTodayEmptyClassroomStatus());
-        dispatch(getTomorrowEmptyClassroomStatus());
+        if(user) {
+            dispatch(fetchTable(user.token));
+            dispatch(fetchExamData(user.token));
+            dispatch(getFirstDate(user.token));
+            dispatch(getScoreOverview(user.token));
+            dispatch(getInfo(user.token));
+            dispatch(getTodayEmptyClassroomStatus(user.token));
+            dispatch(getTomorrowEmptyClassroomStatus(user.token));
+        }
 
         const intervalID = setInterval(() => {
             dispatch(resetCurrentTime());

@@ -17,8 +17,8 @@ const initialState: InitialState = {
     isLogin: false,
 }
 
-export const getFirstDate = createAsyncThunk('exam/getFirstDate', async () => {
-    return await Resources.getFirstDate();
+export const getFirstDate = createAsyncThunk('exam/getFirstDate', async (token: string) => {
+    return await Resources.getFirstDate(token);
 })
 
 const globalSlice = createSlice({

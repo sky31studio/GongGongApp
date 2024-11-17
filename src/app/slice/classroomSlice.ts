@@ -33,16 +33,16 @@ const initialState: InitialState = {
 /**
  * 获取今天的空教室数据
  */
-export const getTodayEmptyClassroomStatus = createAsyncThunk('classroom/getTodayEmptyClassroomStatus', async () => {
-    const todayData = await Resources.getTodayClassroomStatus();
+export const getTodayEmptyClassroomStatus = createAsyncThunk('classroom/getTodayEmptyClassroomStatus', async (token: string) => {
+    const todayData = await Resources.getTodayClassroomStatus(token);
     return dealClassroomData(todayData);
 })
 
 /**
  * 获取明天的空教室数据
  */
-export const getTomorrowEmptyClassroomStatus = createAsyncThunk('classroom/getTomorrowEmptyClassroomStatus', async () => {
-    const tomorrowData = await Resources.getTomorrowClassroomStatus();
+export const getTomorrowEmptyClassroomStatus = createAsyncThunk('classroom/getTomorrowEmptyClassroomStatus', async (token: string) => {
+    const tomorrowData = await Resources.getTomorrowClassroomStatus(token);
 
     return dealClassroomData(tomorrowData);
 })

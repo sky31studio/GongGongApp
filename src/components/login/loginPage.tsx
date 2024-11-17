@@ -26,12 +26,14 @@ import XMLResources from "../../basic/XMLResources.ts";
 import {useAppDispatch} from "../../app/hooks.ts";
 import {loginSuccessful} from "../../app/slice/globalSlice.ts";
 import {NavigationProps} from "../home/homePage.tsx";
+import {useRealm} from "@realm/react";
 
 /**
  * 登录主界面
  */
 const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
     const dispatch = useAppDispatch();
+    const realm = useRealm();
     let handleUsername, handlePassword, handleLogin;
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -78,6 +80,12 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
                 alertAnimation();
                 return;
             }
+            realm.write(() => {
+                realm.create('GongUser', {
+                    token: res.token,
+                })
+            })
+
             dispatch(loginSuccessful());
         }
     }

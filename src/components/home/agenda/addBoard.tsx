@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Pressable, StyleSheet, Text, View} from "react-native";
+import {Pressable, StyleSheet, ToastAndroid, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
@@ -13,7 +13,8 @@ import Animated, {
 import {useAppDispatch} from "../../../app/hooks.ts";
 import MyTextInput from "./myTextInput.tsx";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import {hideAddBoard} from "../../../app/slice/agendaSlice.ts";
+import {addSelf, hideAddBoard} from "../../../app/slice/agendaSlice.ts";
+import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
 
 
 /**
@@ -25,6 +26,7 @@ const AddBoard = () => {
     const [onlyExam, setOnlyExam] = useState<boolean>(false);
     const [name, setName] = useState<string>('');
     const [dateStr, setDateStr] = useState<string>('');
+    const [date, setDate] = useState<Date>(new Date());
     const [location, setLocation] = useState<string>('');
     const [tip, setTip] = useState<string>('');
     const [dateVisibility, setDateVisibility] = useState<boolean>(false);
@@ -36,19 +38,22 @@ const AddBoard = () => {
         }
     })
 
-    const beValid = () => {
-        colorValue.value = withTiming(1, {
-            duration: 300,
-            easing: Easing.ease,
-        })
-    }
-
+    // name和location不为空时，完成按钮变为valid
     useEffect(() => {
         if (name !== '' && location !== '') {
-            beValid();
+            colorValue.value = withTiming(1, {
+                duration: 300,
+                easing: Easing.ease,
+            })
+        } else if(colorValue.value !== 0) {
+            colorValue.value = withTiming(0, {
+                duration: 300,
+                easing: Easing.ease,
+            })
         }
     }, [name, location]);
 
+    // onChangeText监听函数
     const handleOnlyExam = () => {
         setOnlyExam(!onlyExam);
     }
@@ -65,17 +70,51 @@ const AddBoard = () => {
         setTip(data);
     }
 
+    // ----------------------
+
     const showDatePicker = () => {
         setDateVisibility(true);
     }
 
-    const handleConfirm = (date: any) => {
-        const tmp = new Date(date);
+    const handleConfirm = (date: Date) => {
+        if(date.getTime() <= new Date().getTime()) {
+            ToastAndroid.showWithGravity('请选择未来的时间段！', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+            setDateVisibility(false);
+            return;
+        }
+
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        setDate(date);
+        setDateStr(`${year}/${month < 10 ? `0${month}` : month}/${day < 10 ? `0${day}` : day}`);
         setDateVisibility(false);
     }
 
     const handleCancel = () => {
         setDateVisibility(false);
+    }
+
+    // 添加agenda
+    const handleAddAgenda = () => {
+        if(name === '' || location === '') {
+            return;
+        }
+
+        let start = dateStr === '' ? '' : date.toString();
+        // TODO: 目前没有截止时间的选择
+        const end = '';
+        const agenda = {
+            name: name,
+            text: tip,
+            startTime: start,
+            endTime: end,
+            location: location,
+            isCustom: true,
+            isOnTop: false,
+        }
+        dispatch(addSelf(agenda));
+        dispatch(hideAddBoard());
     }
 
     return (
@@ -86,41 +125,41 @@ const AddBoard = () => {
                 </Pressable>
             </View>
             <View style={{width: '100%'}}>
-                <Text style={ss.inputAgendaText}>事项名称</Text>
+                <ScalingNotAllowedText style={ss.inputAgendaText}>事项名称</ScalingNotAllowedText>
                 <Pressable onPress={handleOnlyExam}
                            style={{display: 'flex', flexDirection: 'row', position: 'absolute', top: 0, right: 0}}>
                     <SvgXml xml={onlyExam ? XMLResources.exam : XMLResources.notExam} width="16" height="16"/>
-                    <Text style={{marginLeft: 5, color: FontColor.grey, lineHeight: 17}}>仅考试</Text>
+                    <ScalingNotAllowedText style={{marginLeft: 5, color: FontColor.grey, lineHeight: 17}}>仅考试</ScalingNotAllowedText>
                 </Pressable>
                 <MyTextInput placeholder={'如: 英语四级'} sendData={handleName}/>
             </View>
             <View style={{display: 'flex', flexDirection: 'row', width: '100%', marginTop: 10}}>
                 <View style={{width: '40%'}}>
-                    <Text style={ss.inputAgendaText}>时间</Text>
+                    <ScalingNotAllowedText style={ss.inputAgendaText}>时间</ScalingNotAllowedText>
                     <Pressable style={ss.dateContainer} onPress={showDatePicker}>
-                        <Text>{}</Text>
+                        <ScalingNotAllowedText>{dateStr}</ScalingNotAllowedText>
                     </Pressable>
                 </View>
                 <View style={{flex: 1, marginLeft: 10}}>
-                    <Text style={ss.inputAgendaText}>地点</Text>
-                    <MyTextInput placeholder={'(选填)'} sendData={handleName}/>
+                    <ScalingNotAllowedText style={ss.inputAgendaText}>地点</ScalingNotAllowedText>
+                    <MyTextInput placeholder={'(选填)'} sendData={handleLocation}/>
                 </View>
             </View>
             <View style={{marginTop: 10, width: '100%'}}>
-                <Text style={ss.inputAgendaText}>备注</Text>
-                <MyTextInput placeholder={'(选填)如: 四级500分一击必中!!!'} sendData={handleName} multiline={true}
+                <ScalingNotAllowedText style={ss.inputAgendaText}>备注</ScalingNotAllowedText>
+                <MyTextInput placeholder={'(选填)如: 四级500分一击必中!!!'} sendData={handleTip} multiline={true}
                              height={90} alignCenter={false}/>
             </View>
-            <Pressable style={{marginTop: 25}}>
+            <Pressable onPress={handleAddAgenda} style={{marginTop: 25}}>
                 <Animated.View style={[ss.finishButton, buttonAnimatedStyle]}>
-                    <Text style={{
+                    <ScalingNotAllowedText style={{
                         fontSize: FontSize.m,
                         color: FontColor.light,
                         textAlign: 'center',
                         height: '100%',
                         lineHeight: 30,
                         fontWeight: '600'
-                    }}>完成</Text>
+                    }}>完成</ScalingNotAllowedText>
                 </Animated.View>
             </Pressable>
             <DateTimePickerModal

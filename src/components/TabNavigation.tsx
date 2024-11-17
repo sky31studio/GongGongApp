@@ -3,8 +3,9 @@ import Home from "./home/homePage.tsx";
 import InfoPage from "./info/InfoPage.tsx";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../basic/XMLResources.ts";
-import {Text} from "react-native";
-import {FontColor, FontSize} from "../config/globalStyleSheetConfig.ts";
+import {Pressable, Text, View} from "react-native";
+import {BackgroundColor, FontColor, FontSize} from "../config/globalStyleSheetConfig.ts";
+import React from "react";
 
 const TabNavigation = () => {
     const Tab = createBottomTabNavigator();
@@ -12,6 +13,7 @@ const TabNavigation = () => {
     return (
         <Tab.Navigator
             detachInactiveScreens={false}
+            tabBar={props => <MyTabBar {...props}/>}
         >
             <Tab.Screen name={'homePage'} component={Home} options={{
                 headerShown: false,
@@ -33,8 +35,6 @@ const TabNavigation = () => {
                         >首页</Text>
                     )
                 },
-                tabBarActiveTintColor: FontColor.primary,
-                tabBarInactiveTintColor: FontColor.grey,
             }}/>
             <Tab.Screen name={'infoPage'} component={InfoPage} options={{
                 headerShown: false,
@@ -56,10 +56,30 @@ const TabNavigation = () => {
                         >我的</Text>
                     )
                 },
-                tabBarActiveTintColor: FontColor.primary,
-                tabBarInactiveTintColor: FontColor.grey,
             }}/>
         </Tab.Navigator>
+    )
+}
+
+const MyTabBar = ({state, descriptors, navigation}: any) => {
+    return (
+        <View style={{display: 'flex', flexDirection: 'row', height: 45, backgroundColor: BackgroundColor.mainLight, paddingHorizontal: '10%'}}>
+            {state.routes.map((route: any, index: number) => {
+                const {options} = descriptors[route.key];
+                const focused = state.index === index;
+                const color = state.index === index ? FontColor.primary : FontColor.grey;
+                return (
+                    <Pressable
+                        key={index}
+                        style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
+                        onPress={() => navigation.navigate(route.name)}
+                    >
+                        {options.tabBarIcon({focused})}
+                        {options.tabBarLabel({color})}
+                    </Pressable>
+                )
+            })}
+        </View>
     )
 }
 

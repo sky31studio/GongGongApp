@@ -4,8 +4,8 @@ import {RootState} from "../store.ts";
 import {dealExams, generateID} from "../../utils/agendaUtils.ts";
 import {selectCurrentTime} from "./globalSlice.ts";
 
-export const fetchExamData = createAsyncThunk('exam/fetchExamData', async () => {
-    const data = await Resources.getExam();
+export const fetchExamData = createAsyncThunk('exam/fetchExamData', async (token: string) => {
+    const data = await Resources.getExam(token);
     return dealExams(data);
 })
 
@@ -16,7 +16,7 @@ export interface Agenda {
     startTime: string,
     endTime: string,
     location: string,
-    type: number,
+    type?: number,
     isCustom: boolean,
     isOnTop: boolean,
 }
@@ -60,20 +60,19 @@ const agendaSlice = createSlice({
         //         }
         //     }
         // },
-        // addSelfExam: (state, action) => {
-        //     const id = generateID(action.payload.name, action.payload.startTime, action.payload.endTime);
-        //     // 检查该项是否已经存在
-        //     for (let exam of state.selfList) {
-        //         // @ts-ignore
-        //         if (exam.id === id) {
-        //             return;
-        //         }
-        //     }
-        //
-        //     // @ts-ignore
-        //     state.selfList.push({id: id, ...action.payload});
-        //     state.selfList.sort(compare);
-        // },
+        addSelf: (state, action) => {
+            const id = generateID(action.payload.name, action.payload.startTime, action.payload.endTime);
+            // 检查该项是否已经存在
+            for (let exam of state.selfList) {
+                // @ts-ignore
+                if (exam.id === id) {
+                    return;
+                }
+            }
+
+            state.selfList.push({id: id, ...action.payload});
+            state.selfList.sort(compare);
+        },
 
         removeSelf: (state, action) => {
             for(let self of state.selfList) {
@@ -176,8 +175,8 @@ export const selectExamLength = (state: RootState) => state.exam.examList.length
 export const selectAgendaList = createSelector(
     [selectExamList, selectSelfList],
     (examList, selfList) => {
-        const res = examList.slice();
-        res.concat(selfList);
+        let res = examList.slice();
+        res = res.concat(selfList);
 
         res.sort(compare);
         return res;
@@ -187,8 +186,8 @@ export const selectAgendaList = createSelector(
 export const selectCurrentAgendaNumber = createSelector(
     [selectExamList, selectSelfList, selectCurrentTime],
     (examList, selfList, currentTime) => {
-        const list = examList.slice();
-        list.concat(selfList);
+        let list = examList.slice();
+        list = list.concat(selfList);
         list.sort(compare);
 
         let left = 0, right = list.length - 1;
@@ -231,6 +230,7 @@ export const selectOnlyExamList = createSelector(
 export const {
     showAddBoard,
     hideAddBoard,
+    addSelf,
     removeSelf,
     addExamToTop,
     removeExamFromTop,

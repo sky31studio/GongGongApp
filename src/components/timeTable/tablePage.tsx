@@ -1,7 +1,7 @@
-import {Modal, Pressable, StyleSheet, Text, View} from "react-native";
+import {Modal, Pressable, ScrollView, StyleSheet, Text, View} from "react-native";
 import React, {useRef, useState} from "react";
-import {useAppSelector} from "../../app/hooks.ts";
-import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
+import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
+import {BackgroundColor, BorderColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {selectTheWeek} from "../../app/slice/globalSlice.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
@@ -9,14 +9,24 @@ import Animated, {Easing, interpolate, useAnimatedStyle, useSharedValue, withTim
 import PagerView from "react-native-pager-view";
 import Schedule from "./schedule.tsx";
 import {NavigationProps} from "../home/homePage.tsx";
+import {
+    hideModal,
+    lockModal,
+    selectCurrentTimeCourses,
+    selectModalVisible,
+    unlockModal
+} from "../../app/slice/scheduleSlice.ts";
+import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
+import {ENToCNWeekDay} from "../../utils/enum.ts";
 
 export const TablePage = ({navigation}: NavigationProps) => {
+    const dispatch = useAppDispatch();
     const theWeek = useAppSelector(selectTheWeek);
-    const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
-    // const [pagerViewVisible, setPagerViewVisible] = useState<boolean>(true);
-    const pagerViewRef = useRef<PagerView>(null);
+    const modalVisible = useAppSelector(selectModalVisible);
+    const courseList = useAppSelector(selectCurrentTimeCourses);
 
-    const [modalVisible, steModalVisible] = useState<boolean>(false);
+    const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
+    const pagerViewRef = useRef<PagerView>(null);
 
     const dropWeekListValue = useSharedValue<number>(0);
     const arrowAnimatedStyle = useAnimatedStyle(() => {
@@ -45,10 +55,19 @@ export const TablePage = ({navigation}: NavigationProps) => {
         });
     }
 
-    // const handlePageSelected = (e: any) => {
-    //     const index= e.nativeEvent.position;
-    //     setCurrentWeek(index + 1);
-    // }
+    const handlePageSelected = (e: any) => {
+        const index= e.nativeEvent.position;
+        setCurrentWeek(index + 1);
+    }
+
+    // 防止在滑动时点开Modal
+    const handleScrollStateChanged = (event: any) => {
+        if(event.nativeEvent.pageScrollState === 'idle') {
+            dispatch(unlockModal());
+        } else {
+            dispatch(lockModal());
+        }
+    }
 
     const weekData = Array.from({length: 21}, (_, index) => {
         return {
@@ -119,7 +138,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
                         <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
                     </Pressable>
                     <View style={styleSheet.weekBox}>
-                        <View style={styleSheet.textBox}>
+                        <Pressable onPress={toggleWeekList} style={styleSheet.textBox}>
                             <Text style={{
                                 color: FontColor.light,
                                 height: 20,
@@ -141,14 +160,14 @@ export const TablePage = ({navigation}: NavigationProps) => {
                                     }
                                 ]}
                             >
-                                <Pressable onPress={toggleWeekList}>
+                                <View>
                                     <SvgXml
                                         xml={XMLResources.backArrow}
                                         width={14} height={14}
                                     />
-                                </Pressable>
+                                </View>
                             </Animated.View>
-                        </View>
+                        </Pressable>
                     </View>
                 </View>
                 <Animated.FlatList
@@ -160,52 +179,77 @@ export const TablePage = ({navigation}: NavigationProps) => {
                     keyExtractor={item => item.week.toString()}
                     removeClippedSubviews={false}
                 />
-                {/*{pagerViewVisible && <PagerView*/}
-                {/*    ref={pagerViewRef}*/}
-                {/*    style={[styleSheet.tableWrapper]}*/}
-                {/*    initialPage={currentWeek - 1}*/}
-                {/*    onPageSelected={handlePageSelected}*/}
-                {/*    offscreenPageLimit={1}*/}
-                {/*>*/}
-                {/*    {weekData.map((item, index) => {*/}
-                {/*       return (*/}
-                {/*           <View key={index} style={{flex: 1}}>*/}
-                {/*               <Schedule week={item.week}></Schedule>*/}
-                {/*           </View>*/}
-                {/*       )*/}
-                {/*    })}*/}
-                {/*</PagerView>}*/}
-                {/*<PagerView style={{flex: 1}}>*/}
-                {/*    <View><Text style={{color: 'black'}}>123</Text></View>*/}
-                {/*</PagerView>*/}
-                <Schedule week={currentWeek}></Schedule>
+                <PagerView
+                    ref={pagerViewRef}
+                    style={[styleSheet.tableWrapper]}
+                    initialPage={currentWeek - 1}
+                    onPageSelected={handlePageSelected}
+                    onPageScrollStateChanged={handleScrollStateChanged}
+                    offscreenPageLimit={1}
+                >
+                    {weekData.map((item, index) => {
+                       return (
+                           <View key={index} style={{flex: 1}}>
+                               <Schedule week={item.week}></Schedule>
+                           </View>
+                       )
+                    })}
+                </PagerView>
                 <Modal
-                    visible={false}
+                    visible={modalVisible}
                     transparent={true}
                     animationType={'fade'}
-                    onRequestClose={() => {
-                    }}
                 >
                     <View style={{
                         flex: 1,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: 'rgba(0, 0, 0, .2)'
+                        backgroundColor: BackgroundColor.modalShadow
                     }}>
-                        {/*<View*/}
-                        {/*    style={{*/}
-                        {/*        width: '100%',*/}
-                        {/*        paddingVertical: 15,*/}
-                        {/*        backgroundColor: BackgroundColor.mainLight,*/}
-                        {/*        borderTopLeftRadius: 15,*/}
-                        {/*        borderTopRightRadius: 15,*/}
-                        {/*        position: 'absolute',*/}
-                        {/*        bottom: 0,*/}
-                        {/*    }}*/}
-                        {/*>*/}
-
-                        {/*</View>*/}
-                        <View style={{width: 50, height: 50, backgroundColor: 'red'}}></View>
+                        <View style={styleSheet.modalContainer}>
+                            <View style={{width: '100%', height: 30, display: 'flex', alignItems: 'flex-end'}}>
+                                {/* 关闭按钮 */}
+                                <Pressable onPress={() => dispatch(hideModal())}>
+                                    <SvgXml xml={XMLResources.closeAddBoard} width="20" height="20"/>
+                                </Pressable>
+                            </View>
+                            <ScrollView style={{width: '100%', height: 400}}>
+                                {courseList &&
+                                    courseList.map((course, index) => {
+                                        const periodStart = course.placeInfo.periodStart;
+                                        const weekDay = ENToCNWeekDay[course.placeInfo.day as keyof typeof ENToCNWeekDay];
+                                        const periodText = `${weekDay} ${periodStart}-${periodStart + course.placeInfo.periodDuration - 1}节`;
+                                        let weekText = '';
+                                        for(let info of course.placeInfo.weekInfo) {
+                                            weekText = weekText.concat(`${info.weekStart}-${info.weekEnd},`);
+                                        }
+                                        weekText = weekText.slice(0, -1);
+                                        weekText = weekText.concat(' 周');
+                                        return (
+                                            <View key={index} style={{width: '100%', marginVertical: 15, borderBottomColor: BorderColor.grey, borderBottomWidth: .8}}>
+                                                <View style={{marginBottom: 15}}>
+                                                    <ScalingNotAllowedText style={{fontSize: FontSize.ll, color: FontColor.dark, fontWeight: '700'}}>{course.name}</ScalingNotAllowedText>
+                                                </View>
+                                                <View style={{display: 'flex', flexDirection: 'row'}}>
+                                                    <View style={{marginRight: 20}}>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubTitle}>教室</ScalingNotAllowedText>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubTitle}>周次</ScalingNotAllowedText>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubTitle}>节数</ScalingNotAllowedText>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubTitle}>老师</ScalingNotAllowedText>
+                                                    </View>
+                                                    <View>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubText}>{course.classroom}</ScalingNotAllowedText>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubText}>{weekText}</ScalingNotAllowedText>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubText}>{periodText}</ScalingNotAllowedText>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubText}>{course.teacher}</ScalingNotAllowedText>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        )
+                                    })
+                                }
+                            </ScrollView>
+                        </View>
                     </View>
                 </Modal>
             </View>
@@ -272,4 +316,29 @@ const styleSheet = StyleSheet.create({
         top: 50,
         left: 20,
     },
+
+    modalContainer: {
+        position: 'absolute',
+        bottom: 0,
+        width: '100%',
+        backgroundColor: BackgroundColor.mainLight,
+        borderTopLeftRadius: 15,
+        borderTopRightRadius: 15,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        display: 'flex',
+        flexDirection: 'column',
+    },
+
+    modalSubTitle: {
+        color: FontColor.grey,
+        fontSize: FontSize.s,
+        marginVertical: 10,
+    },
+
+    modalSubText: {
+        color: FontColor.dark,
+        fontSize: FontSize.s,
+        marginVertical: 10,
+    }
 })

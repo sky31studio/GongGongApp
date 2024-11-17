@@ -2,8 +2,8 @@ import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import Resources from "../../basic/Resources.ts";
 import {RootState} from "../store.ts";
 
-export const getInfo = createAsyncThunk('info/getInfo', async () => {
-    const originalData = await Resources.getInfo();
+export const getInfo = createAsyncThunk('info/getInfo', async (token: string) => {
+    const originalData = await Resources.getInfo(token);
 
     return {
         studentID: originalData.student_id || '',
@@ -18,7 +18,7 @@ interface InitialState {
     major: string;
 }
 
-const initialState = {
+const initialState: InitialState = {
     studentID: "",
     name: "",
     major: "",

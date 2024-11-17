@@ -16,8 +16,8 @@ const initialState: initialState = {
     averageScore: -1,
 }
 
-export const getScoreOverview = createAsyncThunk('score/getScore', async () => {
-    const originData = await Resources.getScoreOverview();
+export const getScoreOverview = createAsyncThunk('score/getScore', async (token: string) => {
+    const originData = await Resources.getScoreOverview(token);
 
     return {
         gpa: originData.gpa || -1,

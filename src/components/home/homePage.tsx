@@ -1,8 +1,7 @@
 import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
-import {Pressable, StyleSheet, useWindowDimensions, View} from "react-native";
+import {Modal, Pressable, StyleSheet, useWindowDimensions, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
-import {addOnValueChangedListener, getToken} from "../../storage.ts";
 import {AgendaList} from "./agenda/agendaList.tsx";
 import ClassList from "./course/classList.tsx";
 import XMLResources from "../../basic/XMLResources.ts";
@@ -15,6 +14,11 @@ import Animated, {
 } from "react-native-reanimated";
 import LinearGradient from "react-native-linear-gradient";
 import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
+import {useQuery} from "@realm/react";
+import GongUser from "../../dao/object/User.ts";
+import {useAppSelector} from "../../app/hooks.ts";
+import {selectShowAddBoard} from "../../app/slice/agendaSlice.ts";
+import AddBoard from "./agenda/addBoard.tsx";
 
 export interface NavigationProps {
     navigation: {
@@ -26,6 +30,7 @@ export interface NavigationProps {
 const Home = ({navigation}: NavigationProps) => {
     const functionBar = () => <FunctionBar navigation={navigation}/>;
     const marinBoard = () => <MainBoard/>;
+    const modalVisible = useAppSelector(selectShowAddBoard);
 
     return (
         <View style={styleSheet.homeContainer}>
@@ -35,6 +40,18 @@ const Home = ({navigation}: NavigationProps) => {
             <View style={styleSheet.mainBoardWrapper}>
                 {marinBoard()}
             </View>
+            {/* AddBoard模态 */}
+            <Modal
+                visible={modalVisible}
+                transparent={true}
+                animationType={'fade'}
+            >
+                <View style={{flex: 1, alignItems: 'center', backgroundColor: BackgroundColor.modalShadow}}>
+                    <View style={{position: 'absolute', bottom: 0, width: '100%'}}>
+                        <AddBoard/>
+                    </View>
+                </View>
+            </Modal>
         </View>
     )
 }
@@ -92,10 +109,11 @@ const HomeContext = createContext<HomeContextType>({
 });
 
 const MainBoard = () => {
+    const user = useQuery<GongUser>('GongUser');
     const classTableButton = <ShiftButton id={0} text='课程表' initFocus={true}/>;
     const countdownButton = <ShiftButton id={1} text='倒计时'/>;
 
-    const [hasToken, setHasToken] = useState(getToken() !== '');
+    const [hasToken, setHasToken] = useState(user !== undefined);
     const [choice, setChoice] = useState<number>(0);
     const winWidth = useWindowDimensions().width;
 
@@ -126,19 +144,6 @@ const MainBoard = () => {
     const handleChoice = (value: number) => {
         setChoice(value);
     }
-
-    useEffect(() => {
-        const listener = addOnValueChangedListener((changedKey) => {
-            if (changedKey === 'token') {
-                const newValue = getToken();
-                setHasToken(newValue !== '');
-            }
-        });
-
-        return () => {
-            listener.remove();
-        }
-    }, []);
 
     return (
         <View style={styleSheet.mainBoardContainer}>

@@ -1,5 +1,5 @@
 import {Pressable, ScrollView, StyleSheet, Text, ToastAndroid, useWindowDimensions, View} from "react-native";
-import React, {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, {memo, useEffect, useMemo, useRef, useState} from "react";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
@@ -80,22 +80,45 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
     const renderList = useMemo(() => {
         return agendaList
             .filter((agenda: Agenda) => {
-                let endDate = new Date(agenda.endTime);
+                // 如果没有时间
+                if(agenda.endTime === '' && agenda.startTime === '') {
+                    return true;
+                }
+                let endDate = new Date(agenda.endTime === '' ? agenda.startTime : agenda.endTime);
                 const countdown = Math.floor((endDate.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
                 // 说明该Agenda已经过期
                 return countdown >= 0;
             })
             .map((agenda: Agenda) => {
-                let endDate = new Date(agenda.endTime);
-                const countdown = Math.floor((endDate.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
+                let comparedDate;
+                let countdown;
+                if(agenda.endTime !== '') {
+                    comparedDate = new Date(agenda.endTime);
+                } else if(agenda.startTime !== '') {
+                    comparedDate = new Date(agenda.startTime);
+                }
+
+                if(comparedDate) {
+                    countdown = Math.floor((comparedDate.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
+                }
 
                 return (
-                    <View key={agenda.id}>
+                    <View key={agenda.id} style={{position: 'relative', height: 75, width: '100%'}}>
+                        {/* 分割线 */}
+                        <View
+                            style={{
+                                width: '90%',
+                                marginHorizontal: '5%',
+                                height: 1,
+                                backgroundColor: BackgroundColor.grey
+                            }}
+                        >
+                        </View>
                         <AgendaBox agenda={agenda} countdown={countdown}/>
                     </View>
                 )
             })
-    }, [lastTime])
+    }, [lastTime, agendaList])
 
     // 没有考试展示
     const noExam = (
@@ -123,26 +146,30 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
     );
 }
 
-const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) => {
+const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number | undefined}) => {
     const winWidth = useWindowDimensions().width;
     const dispatch = useAppDispatch();
 
     const swipeableRef = useRef<SwipeableMethods>(null);
     const isOnTop = agenda.isOnTop;
 
-    // yyyy/mm/dd mm:ss-mm:ss
+    // yyyy/mm/dd mm:ss-mm:ss or yyyy/mm/dd mm:ss
     let timeStr;
     let weekDay;
     let location = useMemo(() => agenda.location === '' ? '无地点' : agenda.location, [agenda.location]);
-    if (agenda.startTime === '') {
-        timeStr = '无时间';
-        weekDay = '';
-    } else {
-        const startTime = new Date(agenda.startTime);
-        const endTime = new Date(agenda.endTime);
-        weekDay = CNWeekDay[startTime.getDay()];
-        timeStr = convertDateToString(startTime, endTime);
-    }
+
+    useEffect(() => {
+        if (agenda.startTime === '') {
+            timeStr = '无时间';
+            weekDay = '';
+        } else {
+            const startTime = new Date(agenda.startTime);
+            const endTime = agenda.endTime !== '' ? new Date(agenda.endTime) : undefined;
+            weekDay = CNWeekDay[startTime.getDay()];
+            timeStr = convertDateToString(startTime, endTime);
+        }
+    }, [agenda.startTime, agenda.endTime]);
+
 
     // 标签渲染
     const typeTip = () => {
@@ -152,37 +179,38 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
                     fontSize: FontSize.ss,
                     color: FontColor.light,
                     lineHeight: 15
-                }}>{AgendaType[agenda.type]}</ScalingNotAllowedText>
+                }}>{AgendaType[agenda.type!]}</ScalingNotAllowedText>
+                <ScalingNotAllowedText>{agenda.isOnTop}</ScalingNotAllowedText>
             </View>
         )
     }
 
-    const handlePinToTop = useCallback(() => {
+    const handlePinToTop = () => {
         swipeableRef.current?.reset();
         if (agenda.isCustom) {
             dispatch(addSelfToTop(agenda.id));
         } else {
             dispatch(addExamToTop(agenda.id));
         }
-    }, [agenda.isCustom, dispatch, agenda.id]);
+    };
 
-    const handleUnpinToTop = useCallback(() => {
+    const handleUnpinToTop = () => {
         swipeableRef.current?.reset();
         if (agenda.isCustom) {
             dispatch(removeSelfFromTop(agenda.id));
         } else {
             dispatch(removeExamFromTop(agenda.id));
         }
-    }, [agenda.isCustom, dispatch, agenda.id]);
+    };
 
-    const handleDelete = useCallback(() => {
+    const handleDelete = () => {
         if (!agenda.isCustom) {
             ToastAndroid.showWithGravity('考试不可以删除!', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
             swipeableRef.current?.close();
         } else {
-            dispatch(removeSelf);
+            dispatch(removeSelf(agenda.id));
         }
-    }, [agenda.isCustom, dispatch]);
+    };
 
     const rightAction = () => {
         return (
@@ -219,12 +247,12 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
             overshootRight={false}
 
         >
-            <View style={[ss.agendaContainer]}>
+            <View style={[ss.agendaContainer, {backgroundColor: isOnTop ? '#eeeeee' : BackgroundColor.mainLight}]}>
                 <View style={ss.agendaNameContainer}>
                     <ScalingNotAllowedText numberOfLines={1} ellipsizeMode="tail"
                                            style={[ss.agendaName, {maxWidth: winWidth * .4}
                                            ]}>{agenda.name}</ScalingNotAllowedText>
-                    {typeTip()}
+                    {agenda.type !== undefined && typeTip()}
                 </View>
                 {agenda.text !== '' && <ScalingNotAllowedText
                     style={[ss.agendaText, {maxWidth: winWidth * .4}]}>{agenda.text}</ScalingNotAllowedText>}
@@ -241,7 +269,7 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
                     <SvgXml xml={XMLResources.location} width={9} height={9}/>
                     <ScalingNotAllowedText style={[ss.agendaInfoText]}>{location}</ScalingNotAllowedText>
                 </View>
-                {agenda.startTime !== '' && (
+                {countdown && (
                     <View style={ss.countdownContainer}>
                         <ScalingNotAllowedText style={ss.countdownText}>还剩</ScalingNotAllowedText>
                         <ScalingNotAllowedText style={ss.countdownDayText}>{countdown}</ScalingNotAllowedText>
@@ -255,7 +283,7 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number }) =
 
 const ss = StyleSheet.create({
     agendaComponentContainer: {
-        width: '90%',
+        width: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -312,14 +340,13 @@ const ss = StyleSheet.create({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        borderTopWidth: .8,
-        borderTopColor: '#EEEEEE',
-        paddingVertical: 10,
         paddingHorizontal: 25,
         backgroundColor: '#fff',
     },
 
     agendaNameContainer: {
+        paddingTop: 10,
+        paddingLeft: '5%',
         display: 'flex',
         flexDirection: 'row',
     },
@@ -331,6 +358,7 @@ const ss = StyleSheet.create({
     },
 
     agendaLocationAndTimeContainer: {
+        paddingLeft: '5%',
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
@@ -342,7 +370,7 @@ const ss = StyleSheet.create({
     countdownContainer: {
         position: 'absolute',
         top: 10,
-        right: 5,
+        right: '8%',
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',

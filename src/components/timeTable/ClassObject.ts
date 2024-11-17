@@ -7,6 +7,8 @@ export interface ClassObject {
     classroom?: string;
     color?: string;
     weeks?: string;
+    weekDay?: number;
+    periodStart?: number;
     period: number;
     isEmpty: boolean;
 }

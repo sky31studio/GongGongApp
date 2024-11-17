@@ -10,9 +10,12 @@ import SingleScore from "./SingleScore.tsx";
 import {useAppSelector} from "../../app/hooks.ts";
 import {selectAverageScore, selectClassRank, selectGpa, selectMajorRank} from "../../app/slice/scoreSlice.ts";
 import ScrollView = Animated.ScrollView;
+import {useQuery} from "@realm/react";
+import GongUser from "../../dao/object/User.ts";
 
 
 const ScorePage = ({navigation}: NavigationProps) => {
+    const user = useQuery<GongUser>('GongUser')[0];
     const [scoreList, setScoreList] = useState<SingleScoreList[]>([]);
     const averageScore = useAppSelector(selectAverageScore)
     const gpa = useAppSelector(selectGpa);
@@ -20,7 +23,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
     const majorRank = useAppSelector(selectMajorRank);
 
     useEffect(() => {
-        Resources.getScore().then((data) => {
+        Resources.getScore(user.token).then((data) => {
             setScoreList(dealScore(data));
         })
 

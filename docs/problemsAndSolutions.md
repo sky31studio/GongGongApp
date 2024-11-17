@@ -8,4 +8,8 @@ ScrollView和RNGH的pan等手势会冲突。在该项目的HomePage的AgendaComp
 触发滚动。之后发现RNGH官方提供了一个叫Swipeable的组件，该组件可以在提供水平滚动的情况下，又能防止其屏蔽外层ScrollView
 的垂直滚动(触发垂直滚动则不触发水平，同理水平滚动)，踩雷。
 
-##   
+## newArch=true引起react-native-pager-view错误
+
+## realm-js
+该项目在发现上一个问题前，使用的是react-native-mmkv作为数据持久化方案，但是因为mmkv的使用必须打开
+newArch=true才可以，因此使用realm-js作为数据存储的替代方案。

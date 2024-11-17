@@ -128,7 +128,7 @@ export const getClassList = (table: Record<string, Course[]>, weekNumber: number
         const end = getWeekEnd(course);
         for (let i = 0; i < start.length; i++) {
             if (start[i] <= weekNumber && end[i] >= weekNumber) {
-                const periodStart = getPeriodStart(course);
+                const periodStart = getPeriodStart(course)
                 if (periodStart > index) {
                     list.push({
                         period: periodStart - index,
@@ -144,6 +144,8 @@ export const getClassList = (table: Record<string, Course[]>, weekNumber: number
                     classroom: course.classroom,
                     color: course.color,
                     weeks: getWeekString(course),
+                    weekDay: weekDay,
+                    periodStart: periodStart,
                     period: getPeriodDuration(course),
                     isEmpty: false,
                 });
