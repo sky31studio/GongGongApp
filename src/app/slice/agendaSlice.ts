@@ -149,18 +149,19 @@ const agendaSlice = createSlice({
 })
 
 const compare = (a: Agenda, b: Agenda): number => {
-    const aStartTime = new Date(a.startTime) || undefined;
-    const bStartTime = new Date(b.startTime) || undefined;
     let aIsTop = a.isOnTop;
     let bIsTop = b.isOnTop;
 
-    if (!aStartTime || aIsTop && !bIsTop) {
+    if (b.startTime === '' || aIsTop && !bIsTop) {
         return -1;
     }
 
-    if (!bStartTime || !aIsTop && bIsTop) {
+    if (a.startTime === '' || !aIsTop && bIsTop) {
         return 1;
     }
+
+    const aStartTime = new Date(a.startTime);
+    const bStartTime = new Date(b.startTime);
 
     return aStartTime.getTime() - bStartTime.getTime();
 }

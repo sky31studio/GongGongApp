@@ -13,3 +13,5 @@ ScrollView和RNGH的pan等手势会冲突。在该项目的HomePage的AgendaComp
 ## realm-js
 该项目在发现上一个问题前，使用的是react-native-mmkv作为数据持久化方案，但是因为mmkv的使用必须打开
 newArch=true才可以，因此使用realm-js作为数据存储的替代方案。
+
+1. 一次只能展开单个agenda的置顶和删除

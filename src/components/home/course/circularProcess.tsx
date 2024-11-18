@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useMemo} from "react";
 import {StyleSheet, Text, View} from "react-native";
 import Svg, {Circle} from "react-native-svg";
 import Animated, {
@@ -22,7 +22,7 @@ let CircularProcess: React.ComponentType<ProcessProps>;
 CircularProcess = ({done, todo}) => {
     const innerRadius = 28;
     const circumference = 2 * Math.PI * innerRadius;
-    const completion = todo === 0 ? 1 : done / todo;
+    const completion = useMemo(() => todo === 0 ? 1 : done / todo, [todo, done]) ;
     const theta = useSharedValue(2 * Math.PI);
     const animateTo = useDerivedValue(() => theta.value * completion);
     const dashoffset = useSharedValue(circumference);

@@ -1,5 +1,5 @@
-import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
-import {Modal, Pressable, StyleSheet, useWindowDimensions, View} from "react-native";
+import React, {createContext, Suspense, useContext, useEffect, useMemo, useState} from "react";
+import {Modal, Pressable, StyleSheet, Text, useWindowDimensions, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
 import {AgendaList} from "./agenda/agendaList.tsx";
@@ -169,7 +169,12 @@ const MainBoard = () => {
                 </View>
             </HomeContext.Provider>
             <View style={styleSheet.mainWrapper}>
-                {choice === 0 ? classList : agendaList}
+                <View style={{ display: choice === 0 ? 'flex' : 'none' }}>
+                    {classList}
+                </View>
+                <View style={{ display: choice === 1 ? 'flex' : 'none' }}>
+                    {agendaList}
+                </View>
             </View>
         </View>
     );

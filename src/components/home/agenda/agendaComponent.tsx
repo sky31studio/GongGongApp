@@ -1,4 +1,4 @@
-import {Pressable, ScrollView, StyleSheet, Text, ToastAndroid, useWindowDimensions, View} from "react-native";
+import {Pressable, StyleSheet, Text, ToastAndroid, useWindowDimensions, View} from "react-native";
 import React, {memo, useEffect, useMemo, useRef, useState} from "react";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
@@ -17,7 +17,7 @@ import {
 } from "../../../app/slice/agendaSlice.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {AgendaType, CNWeekDay} from "../../../utils/enum.ts";
-import {GestureHandlerRootView} from "react-native-gesture-handler";
+import {GestureHandlerRootView, ScrollView} from "react-native-gesture-handler";
 import {convertDateToString} from "../../../utils/agendaUtils.ts";
 import Swipeable, {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
@@ -154,22 +154,24 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number | un
     const isOnTop = agenda.isOnTop;
 
     // yyyy/mm/dd mm:ss-mm:ss or yyyy/mm/dd mm:ss
-    let timeStr;
-    let weekDay;
-    let location = useMemo(() => agenda.location === '' ? '无地点' : agenda.location, [agenda.location]);
-
-    useEffect(() => {
-        if (agenda.startTime === '') {
-            timeStr = '无时间';
-            weekDay = '';
+    let timeStr = useMemo(() => {
+        if(agenda.startTime === '') {
+            return '无时间';
         } else {
             const startTime = new Date(agenda.startTime);
             const endTime = agenda.endTime !== '' ? new Date(agenda.endTime) : undefined;
-            weekDay = CNWeekDay[startTime.getDay()];
-            timeStr = convertDateToString(startTime, endTime);
+            return convertDateToString(startTime, endTime);
         }
     }, [agenda.startTime, agenda.endTime]);
-
+    let weekDay = useMemo(() => {
+        if(agenda.startTime === '') {
+            return '';
+        } else {
+            const startTime = new Date(agenda.startTime);
+            return CNWeekDay[startTime.getDay()];
+        }
+    }, [agenda.startTime, agenda.endTime])
+    let location = useMemo(() => agenda.location === '' ? '无地点' : agenda.location, [agenda.location]);
 
     // 标签渲染
     const typeTip = () => {
@@ -245,17 +247,18 @@ const AgendaBox = ({agenda, countdown}: { agenda: Agenda, countdown: number | un
             renderRightActions={rightAction}
             rightThreshold={40}
             overshootRight={false}
-
         >
             <View style={[ss.agendaContainer, {backgroundColor: isOnTop ? '#eeeeee' : BackgroundColor.mainLight}]}>
-                <View style={ss.agendaNameContainer}>
-                    <ScalingNotAllowedText numberOfLines={1} ellipsizeMode="tail"
-                                           style={[ss.agendaName, {maxWidth: winWidth * .4}
-                                           ]}>{agenda.name}</ScalingNotAllowedText>
-                    {agenda.type !== undefined && typeTip()}
+                <View>
+                    <View style={ss.agendaNameContainer}>
+                        <ScalingNotAllowedText numberOfLines={1} ellipsizeMode="tail"
+                                               style={[ss.agendaName, {maxWidth: winWidth * .4}
+                                               ]}>{agenda.name}</ScalingNotAllowedText>
+                        {agenda.type !== undefined && typeTip()}
+                    </View>
+                    {agenda.text !== '' && <ScalingNotAllowedText
+                        style={[ss.agendaText, {maxWidth: winWidth * .4, paddingLeft: '5%'}]}>{agenda.text}</ScalingNotAllowedText>}
                 </View>
-                {agenda.text !== '' && <ScalingNotAllowedText
-                    style={[ss.agendaText, {maxWidth: winWidth * .4}]}>{agenda.text}</ScalingNotAllowedText>}
                 <View style={ss.agendaLocationAndTimeContainer}>
                     <SvgXml xml={XMLResources.clock} width={9} height={9}/>
                     <ScalingNotAllowedText style={[ss.agendaInfoText]}>{timeStr}</ScalingNotAllowedText>
@@ -388,7 +391,7 @@ const ss = StyleSheet.create({
     },
 
     agendaText: {
-        fontSize: FontSize.m,
+        fontSize: FontSize.ss,
         color: FontColor.grey,
     },
 
