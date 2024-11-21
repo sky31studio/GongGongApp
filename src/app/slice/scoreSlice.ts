@@ -17,13 +17,13 @@ const initialState: initialState = {
 }
 
 export const getScoreOverview = createAsyncThunk('score/getScore', async (token: string) => {
-    const originData = await Resources.getScoreOverview(token);
+    const response = await Resources.getScoreOverview(token);
 
     return {
-        gpa: originData.gpa || -1,
-        classRank: originData.class_rank || -1,
-        majorRank: originData.major_rank || -1,
-        averageScore: originData.average_score || -1,
+        gpa: response.data.gpa,
+        classRank: response.data.class_rank,
+        majorRank: response.data.major_rank,
+        averageScore: response.data.average_score,
     }
 })
 
@@ -31,18 +31,17 @@ const scoreSlice = createSlice({
     name: 'score',
     initialState,
     reducers: {
-        setAll: (state, action) => {
-            console.log(action.payload)
-            state.gpa = action.payload.gpa;
-            state.classRank = action.payload.classRank;
-            state.majorRank = action.payload.majorRank;
-            state.averageScore = action.payload.averageScore;
+        setScoreOverview: (state, action) => {
+            state.gpa = action.payload.gpa || -1;
+            state.classRank = action.payload.class_rank || -1;
+            state.majorRank = action.payload.major_rank || -1;
+            state.averageScore = action.payload.average_score || -1;
         }
     },
     extraReducers: (builder) => {
         builder
             .addCase(getScoreOverview.fulfilled, (state, action: {payload: any, type: any}) => {
-                scoreSlice.caseReducers.setAll(state, {
+                scoreSlice.caseReducers.setScoreOverview(state, {
                     payload: action.payload,
                     type: action.type
                 });
@@ -54,5 +53,7 @@ export const selectAverageScore = (state: RootState) => state.score.averageScore
 export const selectGpa = (state: RootState) => state.score.gpa;
 export const selectClassRank = (state: RootState) => state.score.classRank;
 export const selectMajorRank = (state: RootState) => state.score.majorRank;
+
+export const {setScoreOverview}  = scoreSlice.actions;
 
 export default scoreSlice.reducer;

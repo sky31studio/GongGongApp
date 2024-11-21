@@ -10,8 +10,12 @@ import {selectStudentID, selectStudentMajor, selectStudentName} from "../../app/
 import {logoutSuccessful, selectIsLogin} from "../../app/slice/globalSlice.ts";
 import {NavigationProps} from "../home/homePage.tsx";
 import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
+import {useQuery, useRealm} from "@realm/react";
+import GongUser from "../../dao/object/User.ts";
 
 const InfoPage = ({navigation}: NavigationProps) => {
+    const realm = useRealm();
+    const user = useQuery<GongUser>('GongUser')[0];
     const dispatch = useAppDispatch();
     const agendaNumber = useAppSelector(selectCurrentAgendaNumber);
     const courseNumber = useAppSelector(selectCurrentCourseNumber);
@@ -27,6 +31,9 @@ const InfoPage = ({navigation}: NavigationProps) => {
 
     const handleReLogin = () => {
         closeModal();
+        realm.write(() => {
+            realm.delete(user);
+        })
         setTimeout(() => dispatch(logoutSuccessful()), 800);
     }
 

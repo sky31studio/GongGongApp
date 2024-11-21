@@ -51,7 +51,12 @@ const classroomSlice = createSlice({
     name: 'emptyClassroom',
     initialState,
     reducers: {
-
+        setTodayEmptyClassroomStatus(state, action) {
+            state.today = dealClassroomData(action.payload);
+        },
+        setTomorrowEmptyClassroomStatus(state, action) {
+            state.today = dealClassroomData(action.payload);
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -66,5 +71,7 @@ const classroomSlice = createSlice({
 
 export const selectTodayClassroomStatus = (state: RootState) => state.classroom.today;
 export const selectTomorrowClassroomStatus = (state: RootState) => state.classroom.tomorrow;
+
+export const {setTodayEmptyClassroomStatus, setTomorrowEmptyClassroomStatus} = classroomSlice.actions;
 
 export default classroomSlice.reducer;

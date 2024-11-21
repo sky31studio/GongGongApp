@@ -87,7 +87,6 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
 
     // FlatList的item渲染函数
     const itemRenderer = (data: any) => {
-        console.log(data.item);
         const fontWeight = data.index === currentIndex ? '700' : '400';
         return (
             <Pressable onPress={() => setCurrentIndex(data.index)} style={{width: 55, height: '100%', alignItems: 'center', justifyContent: 'center'}}>

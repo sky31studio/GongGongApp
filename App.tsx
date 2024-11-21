@@ -10,10 +10,17 @@ import {loginSuccessful, selectIsLogin} from "./src/app/slice/globalSlice.ts";
 import LoginNavigation from "./src/components/LoginNavigation.tsx";
 import {RealmProvider, useQuery} from "@realm/react";
 import GongUser from "./src/dao/object/User.ts";
+import {configureReanimatedLogger, ReanimatedLogLevel,} from 'react-native-reanimated';
+
+configureReanimatedLogger({
+    level: ReanimatedLogLevel.warn,
+    strict: false,
+});
 
 const {height: screenHeight} = Dimensions.get('window');
 
 function App(): React.JSX.Element {
+
     const isDarkMode = useColorScheme() === 'dark';
 
     const safeArea = () => <SafeArea/>
@@ -26,7 +33,7 @@ function App(): React.JSX.Element {
         <View style={{flex: 1}}>
             <NavigationContainer>
                 <Provider store={store}>
-                    <RealmProvider schema={[GongUser]}>
+                    <RealmProvider schema={[GongUser]} deleteRealmIfMigrationNeeded={true}>
                         <SafeAreaView style={[backgroundStyle, styles.fullScreen]}>
                             <StatusBar translucent backgroundColor="#ff6275"/>
                             {safeArea()}
@@ -40,7 +47,7 @@ function App(): React.JSX.Element {
 }
 
 const SafeArea = () => {
-    const user = useQuery<GongUser>('GongUser');
+    const user = useQuery<GongUser>('GongUser')[0];
     const dispatch = useAppDispatch();
     const isLogin = useAppSelector(selectIsLogin);
 

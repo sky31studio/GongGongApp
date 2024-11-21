@@ -4,7 +4,7 @@ import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
 import React, {useEffect, useState} from "react";
 import {NavigationProps} from "../home/homePage.tsx";
-import Resources from "../../basic/Resources.ts";
+import Resources, {ResourceMessage} from "../../basic/Resources.ts";
 import {dealScore, SingleScoreList} from "../../utils/scoreUtils.ts";
 import SingleScore from "./SingleScore.tsx";
 import {useAppSelector} from "../../app/hooks.ts";
@@ -12,6 +12,7 @@ import {selectAverageScore, selectClassRank, selectGpa, selectMajorRank} from ".
 import ScrollView = Animated.ScrollView;
 import {useQuery} from "@realm/react";
 import GongUser from "../../dao/object/User.ts";
+import {ResourceCode} from "../../utils/enum.ts";
 
 
 const ScorePage = ({navigation}: NavigationProps) => {
@@ -23,8 +24,10 @@ const ScorePage = ({navigation}: NavigationProps) => {
     const majorRank = useAppSelector(selectMajorRank);
 
     useEffect(() => {
-        Resources.getScore(user.token).then((data) => {
-            setScoreList(dealScore(data));
+        Resources.getScore(user.token).then((msg: ResourceMessage) => {
+            if(msg.code === ResourceCode.Successful) {
+                setScoreList(dealScore(msg.data));
+            }
         })
 
     }, []);

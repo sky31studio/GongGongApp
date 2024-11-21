@@ -5,8 +5,8 @@ import {dealExams, generateID} from "../../utils/agendaUtils.ts";
 import {selectCurrentTime} from "./globalSlice.ts";
 
 export const fetchExamData = createAsyncThunk('exam/fetchExamData', async (token: string) => {
-    const data = await Resources.getExam(token);
-    return dealExams(data);
+    const response = await Resources.getExam(token);
+    return response.data;
 })
 
 export interface Agenda {
@@ -130,20 +130,25 @@ const agendaSlice = createSlice({
         hideAddBoard: (state) => {
             state.showAddBoard = false;
         },
+
+        initExam: (state, action) => {
+            const processedData = dealExams(action.payload);
+            state.examList = processedData.map((exam: any) => {
+                const id = generateID(exam.name, exam.startTime, exam.endTime);
+                return {
+                    id: id,
+                    isCustom: false,
+                    isOnTop: false,
+                    ...exam
+                }
+            })
+            state.examList.sort(compare);
+        }
     },
     extraReducers: (builder) => {
         builder
             .addCase(fetchExamData.fulfilled, (state, action) => {
-                state.examList = action.payload.map((exam: any) => {
-                    const id = generateID(exam.name, exam.startTime, exam.endTime);
-                    return {
-                        id: id,
-                        isCustom: false,
-                        isOnTop: false,
-                        ...exam
-                    }
-                })
-                state.examList.sort(compare);
+                agendaSlice.caseReducers.initExam(state, action.payload)
             })
     },
 })
@@ -237,6 +242,7 @@ export const {
     removeExamFromTop,
     addSelfToTop,
     removeSelfFromTop,
+    initExam,
 } = agendaSlice.actions;
 export default agendaSlice.reducer;
 

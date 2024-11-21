@@ -1,6 +1,5 @@
-import {createAsyncThunk, createSelector, createSlice} from "@reduxjs/toolkit";
+import {createSelector, createSlice} from "@reduxjs/toolkit";
 import {RootState} from "../store.ts";
-import Resources from "../../basic/Resources.ts";
 import {diffDate} from "../../utils/tableUtils.ts";
 
 interface InitialState {
@@ -8,6 +7,7 @@ interface InitialState {
     termID: string,
     currentTime: string,
     isLogin: boolean,
+    tokenIsValid: boolean,
 }
 
 const initialState: InitialState = {
@@ -15,18 +15,16 @@ const initialState: InitialState = {
     termID: "",
     currentTime: (new Date()).toString(),
     isLogin: false,
+    tokenIsValid: false,
 }
-
-export const getFirstDate = createAsyncThunk('exam/getFirstDate', async (token: string) => {
-    return await Resources.getFirstDate(token);
-})
 
 const globalSlice = createSlice({
     name: 'global',
     initialState,
     reducers: {
         setDate: (state, action) => {
-            state.date = action.payload.date;
+            state.date = action.payload.start;
+            state.termID = action.payload.termID;
         },
         setTermID: (state, action) => {
             state.termID = action.payload.termID;
@@ -36,18 +34,13 @@ const globalSlice = createSlice({
         },
         loginSuccessful: (state) => {
             state.isLogin = true;
+            state.tokenIsValid = true;
         },
         logoutSuccessful: (state) => {
             state.isLogin = false;
+            state.tokenIsValid = false;
         }
     },
-    extraReducers: (builder) => {
-        builder
-            .addCase(getFirstDate.fulfilled, (state, action) => {
-                state.date = action.payload.start || '';
-                state.termID = action.payload.term_id || '';
-            })
-    }
 })
 
 export const selectFirstDate = (state: RootState) => state.global.date;

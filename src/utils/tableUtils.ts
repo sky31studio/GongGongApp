@@ -17,9 +17,7 @@ import {CourseColor} from "../config/globalStyleSheetConfig.ts";
  * @return Course[]
  */
 export function dealTable(data: any[]): Course[] {
-    if (data.length === 0) {
-        return [];
-    }
+    if(data.length === 0) return [];
 
     const courses: Course[] = [];
     let colorMap: Record<string, string> = {};

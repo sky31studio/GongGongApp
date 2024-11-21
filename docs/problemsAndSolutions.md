@@ -14,4 +14,8 @@ ScrollView和RNGH的pan等手势会冲突。在该项目的HomePage的AgendaComp
 该项目在发现上一个问题前，使用的是react-native-mmkv作为数据持久化方案，但是因为mmkv的使用必须打开
 newArch=true才可以，因此使用realm-js作为数据存储的替代方案。
 
-1. 一次只能展开单个agenda的置顶和删除
+> [!NOTE]
+>
+> 如果修改、添加或删除了schema的一些字段，realm是需要进行迁移的，但是我们在开发环境可能不想要总是手动进行迁移，所以我们可以设置deleteRealmIfMigrationNeeded为true，即自动删除数据库。
+>
+> 切勿将deleteRealmIfMigrationNeeded设置为true的情况下发布到应用环境。

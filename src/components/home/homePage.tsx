@@ -89,10 +89,10 @@ const FunctionBar: React.ComponentType<NavigationProps> = ({navigation}) => {
                     <ScalingNotAllowedText style={styleSheet.functionText}>课程表</ScalingNotAllowedText>
                 </View>
             </Pressable>
-            <View style={styleSheet.functionBox}>
-                <SvgXml xml={XMLResources.emptyScoreIcon} width="100%"/>
-                <ScalingNotAllowedText style={styleSheet.functionText}>多人空课</ScalingNotAllowedText>
-            </View>
+            {/*<View style={styleSheet.functionBox}>*/}
+            {/*    <SvgXml xml={XMLResources.emptyScoreIcon} width="100%"/>*/}
+            {/*    <ScalingNotAllowedText style={styleSheet.functionText}>多人空课</ScalingNotAllowedText>*/}
+            {/*</View>*/}
         </View>
     );
 }

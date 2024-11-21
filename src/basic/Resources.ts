@@ -1,35 +1,76 @@
 import axios from "axios";
 import {hostUrl} from "../config/UrlConfig.ts";
 import {sleep} from "../utils/globalUtils.ts";
+import {ResourceCode} from "../utils/enum.ts";
 
 const rootUrl = hostUrl;
 const MAX_ATTEMPTS = 5;
+
+export interface ResourceMessage {
+    code: number,
+    data?: any,
+    message?: string,
+}
 
 class Resources {
     /**
      * 获取课表数据
      */
-    public static async fetchClassData(token: string) {
+    private static async getData(url: string, token: string): Promise<ResourceMessage> {
         try {
             let count = 0;
-            while (true) {
-                const response = await axios(`${rootUrl}/courses`, {
+            while(true) {
+                const response = await axios.get(url, {
                     headers: {
                         'token': token
                     }
-                })
+                });
 
-                if (response.data.data) {
-                    return response.data.data;
+                if(response.status === 200) {
+                    if(response.data.code === -1) {
+                        return {
+                            code: ResourceCode.PermissionDenied,
+                        };
+                    }
+
+                    if(response.data.data) {
+                        return {
+                            code: ResourceCode.Successful,
+                            data: response.data.data
+                        }
+                    }
                 }
 
                 count++;
-                if (count >= MAX_ATTEMPTS) return [];
+                if(count >= MAX_ATTEMPTS) return {
+                    code: ResourceCode.LocalFailed,
+                    message: '网络连接超时'
+                }
 
                 await sleep(1000);
             }
-        } catch (error) {
-            console.log(`请求失败: ${error}`);
+
+        } catch(error) {
+            return {
+                code: ResourceCode.LocalFailed,
+                data: error
+            }
+        }
+    }
+
+    public static async getClassData(token: string): Promise<ResourceMessage> {
+        const response = await this.getData(`${rootUrl}/courses`, token);
+
+        if (response.code === ResourceCode.Successful) {
+            return {
+                code: ResourceCode.Successful,
+                data: response.data.courses
+            };
+        }
+
+        return {
+            code: response.code,
+            message: '获取课表失败'
         }
     }
 
@@ -79,174 +120,115 @@ class Resources {
         }
     }
 
-    public static async getExam(token: string) {
-        try {
-            let count = 0;
-            while (true) {
-                const response = await axios.get(`${rootUrl}/exams`, {
-                    headers: {
-                        'token': token
-                    }
-                });
+    public static async getExam(token: string): Promise<ResourceMessage> {
+        const response = await this.getData(`${rootUrl}/exams`, token);
 
-                if (response.data.data) {
-                    return response.data.data.exams;
-                }
+        if (response.code === ResourceCode.Successful) {
+            return {
+                code: ResourceCode.Successful,
+                data: response.data.exams,
+            };
+        }
 
-                count++;
-                if (count >= MAX_ATTEMPTS) return [];
-
-                await sleep(1000);
-            }
-        } catch (error) {
-            console.log(error);
+        return {
+            code: response.code,
+            message: '获取考试列表失败'
         }
     }
 
-    public static async getScore(token: string) {
-        try {
-            let count = 0;
-            while (true) {
-                const response = await axios.get(`${rootUrl}/scores`, {
-                    headers: {
-                        'token': token
-                    }
-                })
+    public static async getScore(token: string): Promise<ResourceMessage> {
+        const response = await this.getData(`${rootUrl}/scores`, token);
 
-                if (response.data.data) {
-                    return response.data.data.scores;
-                }
+        if (response.code === ResourceCode.Successful) {
+            return {
+                code: ResourceCode.Successful,
+                data: response.data.scores
+            };
+        }
 
-                count++;
-                if (count >= MAX_ATTEMPTS) return [];
-
-                await sleep(1000);
-            }
-        } catch (error) {
-            console.log(error);
+        return {
+            code: response.code,
+            message: '获取成绩表单失败'
         }
     }
 
-    public static async getScoreOverview(token: string) {
-        try {
-            let count = 0;
-            while (true) {
-                const response = await axios.get(`${rootUrl}/rank`, {
-                    headers: {
-                        'token': token
-                    }
-                })
+    public static async getScoreOverview(token: string): Promise<ResourceMessage> {
+        const response = await this.getData(`${rootUrl}/rank`, token);
 
-                if (response.data.data) {
-                    return response.data.data;
-                }
+        if (response.code === ResourceCode.Successful) {
+            return {
+                code: ResourceCode.Successful,
+                data: response.data
+            };
+        }
 
-                count++;
-                if (count >= MAX_ATTEMPTS) return null;
-
-                await sleep(1000);
-            }
-        } catch (error) {
-            console.log(error);
+        return {
+            code: response.code,
+            message: '获取成绩总概失败'
         }
     }
 
-    public static async getFirstDate(token: string) {
-        try {
-            let count = 0;
-            while (true) {
-                const response = await axios.get(`${rootUrl}/calendar`, {
-                    headers: {
-                        'token': token
-                    }
-                })
+    public static async getFirstDate(token: string): Promise<ResourceMessage> {
+        const response = await this.getData(`${rootUrl}/calendar`, token);
 
-                if (response.data.data) {
-                    return response.data.data;
-                }
+        if (response.code === ResourceCode.Successful) {
+            return {
+                code: ResourceCode.Successful,
+                data: response.data
+            };
+        }
 
-                count++;
-                if (count >= MAX_ATTEMPTS) return null;
-
-                await sleep(1000);
-            }
-        } catch (error) {
-            console.log(error);
+        return {
+            code: response.code,
+            message: '获取学期初时间失败'
         }
     }
 
-    public static async getInfo(token: string) {
-        try {
-            let count = 0;
+    public static async getInfo(token: string): Promise<ResourceMessage> {
+        const response = await this.getData(`${rootUrl}/info`, token);
 
-            while (true) {
-                const response = await axios.get(`${rootUrl}/info`, {
-                    headers: {
-                        'token': token
-                    }
-                })
+        if (response.code === ResourceCode.Successful) {
+            return {
+                code: ResourceCode.Successful,
+                data: response.data
+            };
+        }
 
-                if (response.data.data) {
-                    return response.data.data;
-                }
-
-                count++;
-                if (count >= MAX_ATTEMPTS) return null;
-
-                await sleep(1000);
-            }
-        } catch (error) {
-            console.log(error);
+        return {
+            code: response.code,
+            message: '获取个人信息失败'
         }
     }
 
-    public static async getTodayClassroomStatus(token: string) {
-        try {
-            let count = 0;
-            while (true) {
-                const response = await axios.get(`${rootUrl}/classroom/today`, {
-                    headers: {
-                        'token': token
-                    }
-                })
+    public static async getTodayClassroomStatus(token: string): Promise<ResourceMessage> {
+        const response = await this.getData(`${rootUrl}/classroom/today`, token);
 
-                if (response.data.data) {
-                    return response.data.data.classrooms;
-                }
+        if (response.code === ResourceCode.Successful) {
+            return {
+                code: ResourceCode.Successful,
+                data: response.data.classrooms
+            };
+        }
 
-                count++;
-                if (count >= MAX_ATTEMPTS) return null;
-
-                await sleep(1000);
-
-            }
-        } catch (error) {
-            console.log(error);
+        return {
+            code: response.code,
+            message: '获取今日空教室失败'
         }
     }
 
     public static async getTomorrowClassroomStatus(token: string) {
-        try {
-            let count = 0;
-            while (true) {
-                const response = await axios.get(`${rootUrl}/classroom/tomorrow`, {
-                    headers: {
-                        'token': token
-                    }
-                })
+        const response = await this.getData(`${rootUrl}/classroom/tomorrow`, token);
 
-                if (response.data.data) {
-                    return response.data.data.classrooms;
-                }
+        if (response.code === ResourceCode.Successful) {
+            return {
+                code: ResourceCode.Successful,
+                data: response.data.classrooms
+            };
+        }
 
-                count++;
-                if (count >= MAX_ATTEMPTS) return null;
-
-                await sleep(1000);
-
-            }
-        } catch (error) {
-            console.log(error);
+        return {
+            code: response.code,
+            message: '获取明日空教室失败'
         }
     }
 }

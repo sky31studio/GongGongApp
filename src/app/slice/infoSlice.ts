@@ -6,9 +6,9 @@ export const getInfo = createAsyncThunk('info/getInfo', async (token: string) =>
     const originalData = await Resources.getInfo(token);
 
     return {
-        studentID: originalData.student_id || '',
-        name: originalData.name || '',
-        major: originalData.major || '',
+        studentID: originalData.data.student_id || '',
+        name: originalData.data.name || '',
+        major: originalData.data.major || '',
     }
 })
 
@@ -27,7 +27,13 @@ const initialState: InitialState = {
 const infoSlice = createSlice({
     name: 'info',
     initialState,
-    reducers: {},
+    reducers: {
+        initInfo: (state, action) => {
+            state.studentID = action.payload.student_id;
+            state.name = action.payload.name;
+            state.major = action.payload.major;
+        }
+    },
     extraReducers: builder => {
         builder
             .addCase(getInfo.fulfilled, (state, action) => {
@@ -41,5 +47,7 @@ const infoSlice = createSlice({
 export const selectStudentID = (state: RootState) => state.info.studentID;
 export const selectStudentMajor = (state: RootState) => state.info.major;
 export const selectStudentName = (state: RootState) => state.info.name;
+
+export const {initInfo}  = infoSlice.actions;
 
 export default infoSlice.reducer;

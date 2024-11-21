@@ -59,3 +59,10 @@ export enum Term {
     "大四上",
     "大四下",
 }
+
+export enum ResourceCode {
+    LocalFailed,
+    RemoteFailed,
+    PermissionDenied,
+    Successful,
+}

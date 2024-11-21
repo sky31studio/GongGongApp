@@ -7,8 +7,8 @@ import {dealTable, getCourseCount} from "../../utils/tableUtils.ts";
 import {selectCurrentTime, selectTheWeek} from "./globalSlice.ts";
 
 export const fetchTable = createAsyncThunk('schedule/fetchTable', async (token: string) => {
-    const originData: any[] = await Resources.fetchClassData(token);
-    return dealTable(originData);
+    const response = await Resources.getClassData(token);
+    return dealTable(response.data);
 })
 
 /*
@@ -46,7 +46,7 @@ const scheduleSlice = createSlice({
     name: 'schedule',
     initialState,
     reducers: {
-        cleanTable: (state) => {
+        initTable: (state, action) => {
             state.table = {
                 'Monday': [],
                 'Tuesday': [],
@@ -56,9 +56,7 @@ const scheduleSlice = createSlice({
                 'Saturday': [],
                 'Sunday': []
             };
-        },
-        addSchedules: (state, action: { payload: Course[], type: any }) => {
-            for (let course of action.payload) {
+            for (let course of dealTable(action.payload)) {
                 const weekDay: string = getWeekDay(course);
                 state.table[weekDay].push(course);
             }
@@ -69,6 +67,7 @@ const scheduleSlice = createSlice({
                 })
             }
         },
+
         setModalTimePosition: (state, action: { payload: TimePosition }) => {
             state.modalTimePosition = action.payload;
         },
@@ -88,11 +87,7 @@ const scheduleSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchTable.fulfilled, (state, action) => {
-                scheduleSlice.caseReducers.cleanTable(state);
-                scheduleSlice.caseReducers.addSchedules(state, {
-                    payload: action.payload,
-                    type: 'schedule/addSchedules'
-                });
+                scheduleSlice.caseReducers.initTable(state, action);
             })
     }
 })
@@ -131,8 +126,7 @@ export const selectCurrentTimeCourses = createSelector(
 )
 
 export const {
-    cleanTable,
-    addSchedules,
+    initTable,
     setModalTimePosition,
     showModal,
     hideModal,
