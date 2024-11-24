@@ -1,5 +1,5 @@
 import {Pressable, StyleSheet, Text, ToastAndroid, useWindowDimensions, View} from "react-native";
-import React, {forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react";
+import React, {forwardRef, memo, useImperativeHandle, useMemo, useRef, useState} from "react";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
@@ -22,12 +22,15 @@ import {convertDateToString} from "../../../utils/agendaUtils.ts";
 import Swipeable, {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
 
+/**
+ * homePage > MainBoard 倒计时组件
+ */
 const agendaComponent = memo(() => {
     const dispatch = useAppDispatch();
 
     // 是否只展示exam
     const [onlyExam, setOnlyExam] = useState<boolean>(false);
-    const countdownList = <CountdownList onlyExam={onlyExam}/>
+    const countdownList = useMemo(() => <CountdownList onlyExam={onlyExam}/>, [onlyExam]);
 
     const handleOnlyExam = () => {
         setOnlyExam(!onlyExam);
@@ -66,17 +69,8 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
     const agendaList = onlyExam ? useAppSelector(selectOnlyExamList) : useAppSelector(selectAgendaList);
     const agendaListLength = useAppSelector(selectExamLength);
 
-    const [lastTime, setLastTime] = useState(new Date());
+    const [lastTime, _] = useState(new Date());
     const [openedIndex, setOpenedIndex] = useState<number | null>(null);
-    const intervalID = setInterval(() => {
-        setLastTime(new Date());
-    }, 8000);
-
-    useEffect(() => {
-        return () => {
-            clearInterval(intervalID);
-        }
-    })
 
     const swipeableListRef = useRef<Record<number, SwipeableMethods>>({})
 
@@ -151,18 +145,7 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
     }, [lastTime, agendaList])
 
     // 没有考试展示
-    const noExam = (
-        <View style={{marginTop: 20, display: 'flex', alignItems: 'center'}}>
-            <SvgXml xml={XMLResources.noAgendaOnlyExams} width={193} height={127}/>
-            <Text
-                style={{
-                    width: '100%',
-                    textAlign: 'center',
-                    color: FontColor.grey,
-                    marginTop: 20
-                }}>没有考试的日子也要好好学习哦~</Text>
-        </View>
-    )
+    const noExam = <NoExam/>
 
     return (
         <GestureHandlerRootView style={{width: '100%', flex: 1}}>
@@ -175,6 +158,21 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
                 {agendaListLength === 0 && onlyExam ? noExam : renderList}
             </ScrollView>
         </GestureHandlerRootView>
+    );
+}
+
+const NoExam = () => {
+    return (
+        <View style={{marginTop: 20, display: 'flex', alignItems: 'center'}}>
+            <SvgXml xml={XMLResources.noAgendaOnlyExams} width={193} height={127}/>
+            <Text
+                style={{
+                    width: '100%',
+                    textAlign: 'center',
+                    color: FontColor.grey,
+                    marginTop: 20
+                }}>没有考试的日子也要好好学习哦~</Text>
+        </View>
     );
 }
 

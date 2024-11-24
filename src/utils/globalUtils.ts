@@ -7,3 +7,7 @@ export const userDirectory = Platform.select({
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export const diffHour = (a: Date, b: Date): number => {
+    return (b.getTime() - a.getTime()) / (60 * 1000);
+}
+

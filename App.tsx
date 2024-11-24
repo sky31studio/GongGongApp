@@ -53,8 +53,10 @@ const SafeArea = () => {
 
     useEffect(() => {
         const checkIsLogin = async () => {
+            console.log('check whether login');
             if(user) {
                 dispatch(loginSuccessful());
+                console.log('isLogin = true');
             }
         }
 

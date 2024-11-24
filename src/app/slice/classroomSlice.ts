@@ -55,7 +55,7 @@ const classroomSlice = createSlice({
             state.today = dealClassroomData(action.payload);
         },
         setTomorrowEmptyClassroomStatus(state, action) {
-            state.today = dealClassroomData(action.payload);
+            state.tomorrow = dealClassroomData(action.payload);
         },
     },
     extraReducers: (builder) => {

@@ -15,127 +15,141 @@ import {setTodayEmptyClassroomStatus, setTomorrowEmptyClassroomStatus} from "../
 import {useQuery, useRealm} from "@realm/react";
 import GongUser from "../dao/object/User.ts";
 import Resources, {ResourceMessage} from "../basic/Resources.ts";
-import {open} from "realm";
 import {ResourceCode} from "../utils/enum.ts";
+import notifee from "../../node_modules/@notifee/react-native";
+import {AndroidImportance} from "@notifee/react-native";
 
 const HomeNavigation = () => {
     const realm = useRealm();
     const user = useQuery<GongUser>('GongUser')[0];
-    open({
-        schema: [GongUser],
-        deleteRealmIfMigrationNeeded: true,
-    })
 
     const dispatch = useAppDispatch();
 
     const Stack = createNativeStackNavigator();
 
-    useEffect(() => {
+    const createChannel = async () => {
+        await notifee.createChannel({
+            id: 'exam-notification',
+            name: 'exam-notification',
+            importance: AndroidImportance.HIGH
+        });
+    }
+
+    const fetchAllData = async () => {
         if(user) {
+            console.log('fetch data begin.......');
             if(!user.courses) {
-                Resources.getClassData(user.token)
-                    .then((msg: ResourceMessage) => {
-                        if(msg.code === ResourceCode.Successful) {
-                            dispatch(initTable(msg.data));
-                            realm.write(() => {
-                                user.courses = JSON.stringify(msg.data);
-                            });
-                        }
-                    })
+                const msg: ResourceMessage = await Resources.getClassData(user.token);
+                if(msg.code === ResourceCode.Successful) {
+                    dispatch(initTable(msg.data));
+                    console.log('writing courses in realm...');
+                    realm.write(() => {
+                        user.courses = JSON.stringify(msg.data);
+                    });
+                    console.log('courses is written!')
+                }
             } else {
                 dispatch(initTable(JSON.parse(user.courses)));
             }
 
             if(!user.info) {
-                Resources.getInfo(user.token)
-                    .then((msg: ResourceMessage) => {
-                        if(msg.code === ResourceCode.Successful) {
-                            dispatch(initInfo(msg.data));
-                            realm.write(() => {
-                                user.info = JSON.stringify(msg.data);
-                            })
-                        }
+                const msg: ResourceMessage = await Resources.getInfo(user.token)
+                if(msg.code === ResourceCode.Successful) {
+                    dispatch(initInfo(msg.data));
+                    console.log('writing userInfo in realm...');
+                    realm.write(() => {
+                        user.info = JSON.stringify(msg.data);
                     })
+                    console.log('userInfo is written!')
+                }
             } else {
                 dispatch(initInfo(JSON.parse(user.info)));
             }
 
             if(!user.todayClassroom) {
-                Resources.getTodayClassroomStatus(user.token)
-                    .then((msg: ResourceMessage) => {
-                        if(msg.code === ResourceCode.Successful) {
-                            dispatch(setTodayEmptyClassroomStatus(msg.data));
-                            realm.write(() => {
-                                user.todayClassroom = JSON.stringify(msg.data);
-                            })
-                        }
+                const msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token)
+                if(msg.code === ResourceCode.Successful) {
+                    dispatch(setTodayEmptyClassroomStatus(msg.data));
+                    console.log('writing todayClassroom in realm...');
+                    realm.write(() => {
+                        user.todayClassroom = JSON.stringify(msg.data);
                     })
+                    console.log('todayClassroom is written!');
+                }
             } else {
                 dispatch(setTodayEmptyClassroomStatus(JSON.parse(user.todayClassroom)));
             }
 
             if(!user.tomorrowClassroom) {
-                Resources.getTomorrowClassroomStatus(user.token)
-                    .then((msg: ResourceMessage) => {
-                        if(msg.code === ResourceCode.Successful) {
-                            dispatch(setTomorrowEmptyClassroomStatus(msg.data));
-                            realm.write(() => {
-                                user.tomorrowClassroom = JSON.stringify(msg.data);
-                            })
-                        }
+                const msg: ResourceMessage = await Resources.getTomorrowClassroomStatus(user.token)
+                if(msg.code === ResourceCode.Successful) {
+                    dispatch(setTomorrowEmptyClassroomStatus(msg.data));
+                    console.log('writing tomorrowClassroom in realm...');
+                    realm.write(() => {
+                        user.tomorrowClassroom = JSON.stringify(msg.data);
                     })
+                    console.log('tomorrowClassroom is written!');
+                }
             } else {
                 dispatch(setTomorrowEmptyClassroomStatus(JSON.parse(user.tomorrowClassroom)));
             }
 
             if(!user.exam) {
-                Resources.getExam(user.token)
-                    .then((msg: ResourceMessage) => {
-                        if(msg.code === ResourceCode.Successful) {
-                            dispatch(initExam(msg.data))
-                            realm.write(() => {
-                                user.exam = JSON.stringify(msg.data);
-                            })
-                        }
+                const msg: ResourceMessage = await Resources.getExam(user.token);
+                if(msg.code === ResourceCode.Successful) {
+                    dispatch(initExam(msg.data))
+                    console.log('writing examAgenda in realm...');
+                    realm.write(() => {
+                        user.exam = JSON.stringify(msg.data);
                     })
+                    console.log('examAgenda is written!');
+                }
             } else {
                 dispatch(initExam(JSON.parse(user.exam)));
             }
 
             if(!user.scoreOverview) {
-                Resources.getScoreOverview(user.token)
-                    .then((msg: ResourceMessage) => {
-                        if(msg.code === ResourceCode.Successful) {
-                            dispatch(setScoreOverview(msg.data));
-                            realm.write(() => {
-                                user.scoreOverview = JSON.stringify(msg.data);
-                            })
-                        }
+                const msg: ResourceMessage = await Resources.getScoreOverview(user.token)
+                if(msg.code === ResourceCode.Successful) {
+                    dispatch(setScoreOverview(msg.data));
+                    console.log('writing scoreOverview in realm...');
+                    realm.write(() => {
+                        user.scoreOverview = JSON.stringify(msg.data);
                     })
+                    console.log('scoreOverview is written!');
+                }
             } else {
                 dispatch(setScoreOverview(JSON.parse(user.scoreOverview)));
             }
 
             if(!user.firstDate) {
-                Resources.getFirstDate(user.token)
-                    .then((msg: ResourceMessage) => {
-                        if(msg.code === ResourceCode.Successful)  {
-                            dispatch(setDate(msg.data));
-                            realm.write(() => {
-                                user.firstDate = new Date(msg.data.start);
-                                user.termID = msg.data.termID;
-                            })
-                        }
+                const msg: ResourceMessage = await Resources.getFirstDate(user.token)
+                if(msg.code === ResourceCode.Successful)  {
+                    dispatch(setDate(msg.data));
+                    console.log('writing firstDate in realm...');
+                    realm.write(() => {
+                        user.firstDate = new Date(msg.data.start);
+                        user.termID = msg.data.termID;
                     })
+                    console.log('firstDate is written!');
+                }
             } else {
                 dispatch(setDate({
                     start: user.firstDate.toString(),
                     termID: user.termID,
                 }));
             }
+            console.log('fetch successful!');
         }
+    }
 
+    useEffect(() => {
         dispatch(resetCurrentTime());
+        createChannel()
+            .then(() => {
+                fetchAllData();
+            })
+
         // const intervalID = setInterval(() => {
         //     dispatch(resetCurrentTime());
         // }, 8000);

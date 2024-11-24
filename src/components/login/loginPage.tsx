@@ -80,11 +80,13 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
                 alertAnimation();
                 return;
             }
+            console.log('creating newUser');
             realm.write(() => {
                 realm.create('GongUser', {
                     token: res.token,
                 })
             })
+            console.log('newUser is created!');
 
             dispatch(loginSuccessful());
         }

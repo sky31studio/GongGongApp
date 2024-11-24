@@ -31,6 +31,7 @@ const AddBoard = () => {
     const [tip, setTip] = useState<string>('');
     const [dateVisibility, setDateVisibility] = useState<boolean>(false);
 
+    // '完成'按钮颜色变化
     const colorValue = useSharedValue(0);
     const buttonAnimatedStyle = useAnimatedStyle(() => {
         return {
@@ -38,9 +39,9 @@ const AddBoard = () => {
         }
     })
 
-    // name和location不为空时，完成按钮变为valid
+    // name不为空时，完成按钮变为valid
     useEffect(() => {
-        if (name !== '' && location !== '') {
+        if (name !== '') {
             colorValue.value = withTiming(1, {
                 duration: 300,
                 easing: Easing.ease,
@@ -53,11 +54,12 @@ const AddBoard = () => {
         }
     }, [name, location]);
 
-    // onChangeText监听函数
+    // 仅考试
     const handleOnlyExam = () => {
         setOnlyExam(!onlyExam);
     }
 
+    // onChangeText回调函数
     const handleName = (data: string) => {
         setName(data);
     }
@@ -76,6 +78,11 @@ const AddBoard = () => {
         setDateVisibility(true);
     }
 
+    const handleCancel = () => {
+        setDateVisibility(false);
+    }
+
+    // 添加倒计时回调函数
     const handleConfirm = (date: Date) => {
         if(date.getTime() <= new Date().getTime()) {
             ToastAndroid.showWithGravity('请选择未来的时间段！', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
@@ -83,21 +90,18 @@ const AddBoard = () => {
             return;
         }
 
+        setDate(date);
+
         const year = date.getFullYear();
         const month = date.getMonth() + 1;
         const day = date.getDate();
-        setDate(date);
         setDateStr(`${year}/${month < 10 ? `0${month}` : month}/${day < 10 ? `0${day}` : day}`);
-        setDateVisibility(false);
-    }
-
-    const handleCancel = () => {
         setDateVisibility(false);
     }
 
     // 添加agenda
     const handleAddAgenda = () => {
-        if(name === '' || location === '') {
+        if(name === '') {
             return;
         }
 

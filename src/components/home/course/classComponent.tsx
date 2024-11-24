@@ -1,6 +1,6 @@
 import {StyleSheet, useWindowDimensions, View} from "react-native";
 import CircularProcess from "./circularProcess";
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useMemo, useState} from "react";
 import {useAppSelector} from "../../../app/hooks.ts";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontFamily, FontSize} from "../../../config/globalStyleSheetConfig.ts";
@@ -19,7 +19,7 @@ const ClassComponent = () => {
     const winWidth = useWindowDimensions().width;
     const table = useAppSelector(selectTable);
     const currentWeek = useAppSelector(selectTheWeek);
-    const [lastTime, setLastTime] = useState(new Date());
+    const [lastTime, _] = useState(new Date());
     const weekDay = useMemo(() => lastTime.getDay(), [lastTime]);
     const month = useMemo(() => lastTime.getMonth() + 1, [lastTime]);
     const day = useMemo(() => lastTime.getDate(), [lastTime]);
@@ -149,16 +149,6 @@ const ClassComponent = () => {
     )
 
     const circleProcess = useMemo(() => <CircularProcess done={done} todo={courses.length}/>, [done, courses.length]);
-
-    const intervalId = setInterval(() => {
-        setLastTime(new Date());
-    }, 10000);
-
-    useEffect(() => {
-        return () => {
-            clearInterval(intervalId);
-        }
-    }, []);
 
     return (
         <View style={styleSheet.classContainer}>

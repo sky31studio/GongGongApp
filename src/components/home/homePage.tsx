@@ -1,5 +1,5 @@
-import React, {createContext, Suspense, useContext, useEffect, useMemo, useState} from "react";
-import {Modal, Pressable, StyleSheet, Text, useWindowDimensions, View} from "react-native";
+import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
+import {Modal, Pressable, StyleSheet, useWindowDimensions, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
 import {AgendaList} from "./agenda/agendaList.tsx";
@@ -40,7 +40,7 @@ const Home = ({navigation}: NavigationProps) => {
             <View style={styleSheet.mainBoardWrapper}>
                 {marinBoard()}
             </View>
-            {/* AddBoard模态 */}
+             {/*AddBoard模态*/}
             <Modal
                 visible={modalVisible}
                 transparent={true}
@@ -113,7 +113,7 @@ const MainBoard = () => {
     const classTableButton = <ShiftButton id={0} text='课程表' initFocus={true}/>;
     const countdownButton = <ShiftButton id={1} text='倒计时'/>;
 
-    const [hasToken, setHasToken] = useState(user !== undefined);
+    const [hasToken, _] = useState(user !== undefined);
     const [choice, setChoice] = useState<number>(0);
     const winWidth = useWindowDimensions().width;
 

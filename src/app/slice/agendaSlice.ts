@@ -3,6 +3,7 @@ import Resources from "../../basic/Resources.ts";
 import {RootState} from "../store.ts";
 import {dealExams, generateID} from "../../utils/agendaUtils.ts";
 import {selectCurrentTime} from "./globalSlice.ts";
+import {addExamNotification} from "../../utils/notificationUtils.ts";
 
 export const fetchExamData = createAsyncThunk('exam/fetchExamData', async (token: string) => {
     const response = await Resources.getExam(token);
@@ -72,6 +73,10 @@ const agendaSlice = createSlice({
 
             state.selfList.push({id: id, ...action.payload});
             state.selfList.sort(compare);
+
+            if(action.payload.startTime !== '') {
+                addExamNotification(new Date(action.payload.startTime), {id: id, title: '考试通知'});
+            }
         },
 
         removeSelf: (state, action) => {
@@ -133,15 +138,31 @@ const agendaSlice = createSlice({
 
         initExam: (state, action) => {
             const processedData = dealExams(action.payload);
-            state.examList = processedData.map((exam: any) => {
-                const id = generateID(exam.name, exam.startTime, exam.endTime);
-                return {
-                    id: id,
-                    isCustom: false,
-                    isOnTop: false,
-                    ...exam
-                }
-            })
+            state.examList = processedData
+                .filter((exam: any) => {
+                    if(exam.startTime !== '') {
+                        const currentTime = new Date(Date.now());
+                        const date = new Date(exam.startTime);
+
+                        if(currentTime.getTime() > date.getTime()) return false;
+                    }
+
+                    return true;
+                })
+                .map((exam: any) => {
+                    const id = generateID(exam.name, exam.startTime, exam.endTime);
+
+                    if(exam.startTime !== '') {
+                        addExamNotification(new Date(exam.startTime), {id: id, title: '考试通知'});
+                    }
+
+                    return {
+                        id: id,
+                        isCustom: false,
+                        isOnTop: false,
+                        ...exam
+                    }
+                })
             state.examList.sort(compare);
         }
     },
