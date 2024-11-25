@@ -29,12 +29,14 @@ interface InitialState {
     examList: Agenda[],
     selfList: Agenda[],
     showAddBoard: boolean,
+    showedAgenda: any,
 }
 
 const initialState: InitialState = {
     examList: [],
     selfList: [],
     showAddBoard: false,
+    showedAgenda: null,
 }
 
 const agendaSlice = createSlice({
@@ -62,6 +64,18 @@ const agendaSlice = createSlice({
         //     }
         // },
         addSelf: (state, action) => {
+            // 有id则update
+            if(action.payload.id !== null) {
+                for(let i = 0; i < state.selfList.length; i++) {
+                    if(state.selfList[i].id === action.payload.id) {
+                        state.selfList[i] = action.payload;
+                        return;
+                    }
+                }
+                return;
+            }
+
+            // 无id则添加
             const id = generateID(action.payload.name, action.payload.startTime, action.payload.endTime);
             // 检查该项是否已经存在
             for (let exam of state.selfList) {
@@ -71,7 +85,8 @@ const agendaSlice = createSlice({
                 }
             }
 
-            state.selfList.push({id: id, ...action.payload});
+            action.payload.id = id;
+            state.selfList.push({...action.payload});
             state.selfList.sort(compare);
 
             if(action.payload.startTime !== '') {
@@ -136,6 +151,10 @@ const agendaSlice = createSlice({
             state.showAddBoard = false;
         },
 
+        setShowedAgenda: (state, action) => {
+            state.showedAgenda = action.payload;
+        },
+
         initExam: (state, action) => {
             const processedData = dealExams(action.payload);
             state.examList = processedData
@@ -197,6 +216,7 @@ export const selectExamList = (state: RootState) => state.exam.examList;
 export const selectSelfList = (state: RootState) => state.exam.selfList;
 export const selectShowAddBoard = (state: RootState) => state.exam.showAddBoard;
 export const selectExamLength = (state: RootState) => state.exam.examList.length;
+export const selectShowedAgenda = (state: RootState) => state.exam.showedAgenda;
 
 // 返回exam+self的总表(已排序)
 export const selectAgendaList = createSelector(
@@ -264,6 +284,7 @@ export const {
     addSelfToTop,
     removeSelfFromTop,
     initExam,
+    setShowedAgenda,
 } = agendaSlice.actions;
 export default agendaSlice.reducer;
 

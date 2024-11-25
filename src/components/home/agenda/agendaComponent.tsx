@@ -12,7 +12,7 @@ import {
     removeSelfFromTop,
     selectAgendaList,
     selectExamLength,
-    selectOnlyExamList,
+    selectOnlyExamList, setShowedAgenda,
     showAddBoard
 } from "../../../app/slice/agendaSlice.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
@@ -37,6 +37,7 @@ const agendaComponent = memo(() => {
     }
 
     const openBoard = () => {
+        dispatch(setShowedAgenda(null));
         dispatch(showAddBoard());
     }
 
@@ -66,6 +67,7 @@ const agendaComponent = memo(() => {
  * Agenda列表部分
  */
 const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => {
+    const dispatch = useAppDispatch();
     const agendaList = onlyExam ? useAppSelector(selectOnlyExamList) : useAppSelector(selectAgendaList);
     const agendaListLength = useAppSelector(selectExamLength);
 
@@ -132,13 +134,20 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
                             }}
                         >
                         </View>
-                        <AgendaBox
-                            handleClose={closeOpenedSwipeable}
-                            index={index} agenda={agenda}
-                            countdown={countdown}
-                            ref={el => swipeableListRef.current[index] = el as SwipeableMethods}
-                            sendIndex={setIndex}
-                        />
+                        <Pressable
+                            style={{width: '100%'}}
+                            onPress={() => {
+                                dispatch(setShowedAgenda(agenda));
+                                dispatch(showAddBoard());
+                            }}>
+                            <AgendaBox
+                                handleClose={closeOpenedSwipeable}
+                                index={index} agenda={agenda}
+                                countdown={countdown}
+                                ref={el => swipeableListRef.current[index] = el as SwipeableMethods}
+                                sendIndex={setIndex}
+                            />
+                        </Pressable>
                     </View>
                 )
             })
@@ -325,7 +334,7 @@ const AgendaBox = forwardRef((
                         marginHorizontal: 5
                     }}></View>
                     <SvgXml xml={XMLResources.location} width={9} height={9}/>
-                    <ScalingNotAllowedText style={[ss.agendaInfoText]}>{location}</ScalingNotAllowedText>
+                    <ScalingNotAllowedText style={[ss.agendaInfoText, {maxWidth: winWidth * .3}]}>{location}</ScalingNotAllowedText>
                 </View>
                 {countdown && (
                     <View style={ss.countdownContainer}>

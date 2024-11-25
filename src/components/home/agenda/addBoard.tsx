@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {Pressable, StyleSheet, ToastAndroid, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../../basic/XMLResources.ts";
@@ -10,12 +10,12 @@ import Animated, {
     useSharedValue,
     withTiming
 } from "react-native-reanimated";
-import {useAppDispatch} from "../../../app/hooks.ts";
+import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
 import MyTextInput from "./myTextInput.tsx";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import {addSelf, hideAddBoard} from "../../../app/slice/agendaSlice.ts";
+import {addSelf, hideAddBoard, selectShowedAgenda} from "../../../app/slice/agendaSlice.ts";
 import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
-
+import {transTo2Digits} from "../../../utils/agendaUtils.ts";
 
 /**
  * 呼出倒计时添加
@@ -23,21 +23,69 @@ import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
  */
 const AddBoard = () => {
     const dispatch = useAppDispatch();
+    // 获取目前展示的Agenda
+    const agenda = useAppSelector(selectShowedAgenda);
+
     const [onlyExam, setOnlyExam] = useState<boolean>(false);
-    const [name, setName] = useState<string>('');
-    const [dateStr, setDateStr] = useState<string>('');
-    const [date, setDate] = useState<Date>(new Date());
-    const [location, setLocation] = useState<string>('');
-    const [tip, setTip] = useState<string>('');
-    const [dateVisibility, setDateVisibility] = useState<boolean>(false);
+    const editable = useMemo(() => agenda ? agenda.isCustom : true, [agenda]);
+
+    //  初始化设置名称、地点、tip、起止时间
+    const [name, setName] = useState<string>(agenda ? agenda.name : '');
+    const [location, setLocation] = useState<string>(agenda ? agenda.location : '');
+    const [tip, setTip] = useState<string>(agenda?.text ?? '');
+
+    const [theDate, setTheDate] = useState<Date | null>(agenda ? (agenda.startTime === '' ? null : new Date(agenda.startTime)) : null);
+    const dateStr = useMemo(() => {
+        if(theDate) {
+            return `${theDate.getFullYear()}/${transTo2Digits(theDate.getMonth() + 1)}/${transTo2Digits(theDate.getDate())}`;
+        }
+
+        return ''
+    }, [theDate]);
+
+    const [timePickerIndex, setTimePickerIndex] = useState<number | null>(null);
+    const [startTime, setStartTime] = useState<Date | null>(agenda ? (agenda.startTime === '' ? null : new Date(agenda.startTime)) : null);
+    const startTimeStr = useMemo(() => {
+        if(startTime) {
+            return `${transTo2Digits(startTime.getHours())}:${transTo2Digits(startTime.getMinutes())}`;
+        }
+
+        return '';
+    }, [startTime]);
+    const [endTime, setEndTime] = useState<Date | null>(agenda ? (agenda.endTime === '' ? null : new Date(agenda.endTime)) : null);
+    const endTimeStr = useMemo(() => {
+        if(endTime) {
+            return `${transTo2Digits(endTime.getHours())}:${transTo2Digits(endTime.getMinutes())}`;
+        }
+
+        return '';
+    }, [endTime]);
 
     // '完成'按钮颜色变化
-    const colorValue = useSharedValue(0);
+    const colorValue = useSharedValue(agenda ? 1 : 0);
     const buttonAnimatedStyle = useAnimatedStyle(() => {
         return {
             backgroundColor: interpolateColor(colorValue.value, [0, 1], [BackgroundColor.invalid, BackgroundColor.primary])
         }
     })
+
+    // 起止时间色块的背景色
+    const firstTimeColorValue = useSharedValue((agenda && agenda.startTime !== '') ? 1 : 0);
+    const secondTimeColorValue = useSharedValue((agenda && agenda.endTime !== '') ? 1 : 0);
+
+    const firstTimeAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            backgroundColor: interpolateColor(firstTimeColorValue.value, [0, 1], [BackgroundColor.grey, '#fff7f8'])
+        }
+    })
+    const secondTimeAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            backgroundColor: interpolateColor(secondTimeColorValue.value, [0, 1], [BackgroundColor.grey, '#fff7f8'])
+        }
+    })
+
+    const [datePickerVisible, setDatePickerVisible] = useState<boolean>(false);
+    const [timePickerVisible, setTimePickerVisible] = useState<boolean>(false);
 
     // name不为空时，完成按钮变为valid
     useEffect(() => {
@@ -75,40 +123,95 @@ const AddBoard = () => {
     // ----------------------
 
     const showDatePicker = () => {
-        setDateVisibility(true);
+        if(agenda && !agenda.isCustom) return;
+
+        setDatePickerVisible(true);
     }
 
-    const handleCancel = () => {
-        setDateVisibility(false);
+    const showFirstTimePicker = () => {
+        if(agenda && !agenda.isCustom) return;
+        if(firstTimeColorValue.value === 0) return;
+
+        setTimePickerIndex(0);
+        setTimePickerVisible(true);
+    }
+
+    const showSecondTimePicker = () => {
+        if(agenda && !agenda.isCustom) return;
+        if(secondTimeColorValue.value === 0) return;
+
+        setTimePickerIndex(1);
+        setTimePickerVisible(true);
+    }
+
+    const handleTimePickerCancel = () => {
+        setTimePickerIndex(null);
+        setTimePickerVisible(false);
+    }
+
+    const handleDatePickerCancel = () => {
+        setDatePickerVisible(false);
     }
 
     // 添加倒计时回调函数
-    const handleConfirm = (date: Date) => {
-        if(date.getTime() <= new Date().getTime()) {
-            ToastAndroid.showWithGravity('请选择未来的时间段！', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
-            setDateVisibility(false);
-            return;
+    const handleDateConfirm = (date: Date) => {
+        setTheDate(date);
+
+        if(firstTimeColorValue.value === 0) {
+            firstTimeColorValue.value = withTiming(1, {
+                duration: 300,
+                easing: Easing.ease
+            })
         }
 
-        setDate(date);
+        setDatePickerVisible(false);
+    }
 
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        setDateStr(`${year}/${month < 10 ? `0${month}` : month}/${day < 10 ? `0${day}` : day}`);
-        setDateVisibility(false);
+    const handleTimeConfirm = (date: Date) => {
+        date.setFullYear(theDate!.getFullYear());
+        date.setMonth(theDate!.getMonth());
+        date.setDate(theDate!.getDate());
+
+        if(timePickerIndex === 0) {
+            setStartTime(date);
+
+            if(endTime !== null && date.getTime() > endTime?.getTime()) {
+                setEndTime(null);
+            }
+
+            if(secondTimeColorValue.value === 0) {
+                secondTimeColorValue.value = withTiming(1, {
+                    duration: 300,
+                    easing: Easing.ease
+                })
+            }
+
+        } else {
+            if(startTime != null && date.getTime() < startTime.getTime()) {
+                ToastAndroid.showWithGravity('不能小于起始时间!', 2000, ToastAndroid.BOTTOM);
+                setTimePickerVisible(false);
+                return;
+            }
+
+            setEndTime(date);
+        }
+
+        setTimePickerVisible(false);
     }
 
     // 添加agenda
     const handleAddAgenda = () => {
-        if(name === '') {
+        if(agenda && !agenda.isCustom) {
+            dispatch(hideAddBoard());
             return;
         }
+        if(name === '') return;
 
-        let start = dateStr === '' ? '' : date.toString();
-        // TODO: 目前没有截止时间的选择
-        const end = '';
-        const agenda = {
+        let start = theDate === null ? '' : theDate.toString();
+        start = startTime === null ? start : startTime.toString();
+        let end = endTime === null ? '' : endTime.toString();
+        const res = {
+            id: agenda ? agenda.id : null,
             name: name,
             text: tip,
             startTime: start,
@@ -117,7 +220,7 @@ const AddBoard = () => {
             isCustom: true,
             isOnTop: false,
         }
-        dispatch(addSelf(agenda));
+        dispatch(addSelf(res));
         dispatch(hideAddBoard());
     }
 
@@ -135,25 +238,45 @@ const AddBoard = () => {
                     <SvgXml xml={onlyExam ? XMLResources.exam : XMLResources.notExam} width="16" height="16"/>
                     <ScalingNotAllowedText style={{marginLeft: 5, color: FontColor.grey, lineHeight: 17}}>仅考试</ScalingNotAllowedText>
                 </Pressable>
-                <MyTextInput placeholder={'如: 英语四级'} sendData={handleName}/>
+                <MyTextInput editable={editable} placeholder={'如: 英语四级'} initText={agenda ? agenda.name : ''} sendData={handleName}/>
             </View>
-            <View style={{display: 'flex', flexDirection: 'row', width: '100%', marginTop: 10}}>
+            {/* 时间选择 */}
+            <View style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 10}}>
                 <View style={{width: '40%'}}>
-                    <ScalingNotAllowedText style={ss.inputAgendaText}>时间</ScalingNotAllowedText>
-                    <Pressable style={ss.dateContainer} onPress={showDatePicker}>
-                        <ScalingNotAllowedText>{dateStr}</ScalingNotAllowedText>
+                    <ScalingNotAllowedText style={ss.inputAgendaText}>日期</ScalingNotAllowedText>
+                    <Pressable style={[ss.dateContainer, {backgroundColor: '#fff7f8'}]} onPress={showDatePicker}>
+                        <ScalingNotAllowedText style={{paddingLeft: 5}}>{dateStr}</ScalingNotAllowedText>
                     </Pressable>
                 </View>
-                <View style={{flex: 1, marginLeft: 10}}>
-                    <ScalingNotAllowedText style={ss.inputAgendaText}>地点</ScalingNotAllowedText>
-                    <MyTextInput placeholder={'(选填)'} sendData={handleLocation}/>
+                <View style={{width: '23%'}}>
+                    <ScalingNotAllowedText style={ss.inputAgendaText}>起始时间</ScalingNotAllowedText>
+                    <Animated.View style={[ss.dateContainer, firstTimeAnimatedStyle]}>
+                        <Pressable style={{flex: 1, justifyContent: 'center'}} onPress={showFirstTimePicker}>
+                            <ScalingNotAllowedText style={{paddingLeft: 5}}>{startTimeStr}</ScalingNotAllowedText>
+                        </Pressable>
+                    </Animated.View>
+                </View>
+                <View style={{width: '23%'}}>
+                    <ScalingNotAllowedText style={ss.inputAgendaText}>终止时间</ScalingNotAllowedText>
+                    <Animated.View style={[ss.dateContainer, secondTimeAnimatedStyle]}>
+                        <Pressable style={{flex: 1, justifyContent: 'center'}} onPress={showSecondTimePicker}>
+                            <ScalingNotAllowedText style={{paddingLeft: 5}}>{endTimeStr}</ScalingNotAllowedText>
+                        </Pressable>
+                    </Animated.View>
                 </View>
             </View>
             <View style={{marginTop: 10, width: '100%'}}>
-                <ScalingNotAllowedText style={ss.inputAgendaText}>备注</ScalingNotAllowedText>
-                <MyTextInput placeholder={'(选填)如: 四级500分一击必中!!!'} sendData={handleTip} multiline={true}
-                             height={90} alignCenter={false}/>
+                <ScalingNotAllowedText style={ss.inputAgendaText}>地点</ScalingNotAllowedText>
+                <MyTextInput editable={editable} placeholder={'(选填)'} initText={agenda ? agenda.location : ''} sendData={handleLocation}/>
             </View>
+
+            {editable && (
+                <View style={{marginTop: 10, width: '100%'}}>
+                    <ScalingNotAllowedText style={ss.inputAgendaText}>备注</ScalingNotAllowedText>
+                    <MyTextInput placeholder={'(选填)如: 四级500分一击必中!!!'} initText={agenda ? agenda.text : ''} sendData={handleTip} multiline={true}
+                                 height={90} alignCenter={false}/>
+                </View>
+            )}
             <Pressable onPress={handleAddAgenda} style={{marginTop: 25}}>
                 <Animated.View style={[ss.finishButton, buttonAnimatedStyle]}>
                     <ScalingNotAllowedText style={{
@@ -167,10 +290,17 @@ const AddBoard = () => {
                 </Animated.View>
             </Pressable>
             <DateTimePickerModal
-                isVisible={dateVisibility}
+                isVisible={datePickerVisible}
                 mode="date"
-                onConfirm={handleConfirm}
-                onCancel={handleCancel}
+                onConfirm={handleDateConfirm}
+                onCancel={handleDatePickerCancel}
+                minimumDate={new Date()}
+            ></DateTimePickerModal>
+            <DateTimePickerModal
+                isVisible={timePickerVisible}
+                mode="time"
+                onConfirm={handleTimeConfirm}
+                onCancel={handleTimePickerCancel}
             ></DateTimePickerModal>
         </View>
     )
@@ -179,7 +309,7 @@ const AddBoard = () => {
 const ss = StyleSheet.create({
     addAgendaContainer: {
         width: '100%',
-        height: 400,
+        paddingBottom: 25,
         borderTopLeftRadius: 15,
         borderTopRightRadius: 15,
         backgroundColor: 'white',
@@ -215,7 +345,8 @@ const ss = StyleSheet.create({
     dateContainer: {
         width: '100%',
         height: 34,
-        backgroundColor: '#ffcad1',
+        justifyContent: 'center',
+        borderRadius: 5,
     }
 })
 

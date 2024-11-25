@@ -99,9 +99,9 @@ const InfoPage = ({navigation}: NavigationProps) => {
 
                 {/* 更多信息 */}
                 <View style={[ss.infoContainer, {paddingTop: 5, paddingBottom: 40, paddingHorizontal: 0}]}>
-                    <NavigationBox title={'新功能'} handleNavigation={() => null}/>
-                    <NavigationBox title={'新手指南'} handleNavigation={() => null}/>
-                    <NavigationBox title={'关于拱拱'} handleNavigation={() => null}/>
+                    {/*<NavigationBox title={'新功能'} handleNavigation={() => null}/>*/}
+                    {/*<NavigationBox title={'新手指南'} handleNavigation={() => null}/>*/}
+                    {/*<NavigationBox title={'关于拱拱'} handleNavigation={() => null}/>*/}
                     <NavigationBox title={'联系我们'} handleNavigation={() => null}/>
                     <NavigationBox title={'用户协议'} handleNavigation={() => navigation.navigate('UserAgreementPage')}/>
                     <NavigationBox title={'隐私条款'} handleNavigation={() => navigation.navigate('PrivacyPolicyPage')}/>

@@ -144,7 +144,7 @@ const ClassComponent = () => {
                 textAlign: 'center',
                 color: FontColor.grey,
                 marginVertical: 10
-            }}>今天没有课哟，去Eatest瞅瞅吧~</ScalingNotAllowedText>
+            }}>今天没有课哟~</ScalingNotAllowedText>
         </View>
     )
 
