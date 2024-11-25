@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {Modal, Pressable, StyleSheet, Text, View} from "react-native";
-import {BackgroundColor, BorderColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
+import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
@@ -41,13 +41,13 @@ const InfoPage = ({navigation}: NavigationProps) => {
         <View style={{flex: 1}}>
             <View style={ss.titleBar}>
                 <Text style={ss.titleText}>我的</Text>
-                <Pressable style={{
-                    position: 'absolute',
-                    top: 46,
-                    right: 20,
-                }}>
-                    <SvgXml xml={XMLResources.more} width={35} height={35}/>
-                </Pressable>
+                {/*<Pressable style={{*/}
+                {/*    position: 'absolute',*/}
+                {/*    top: 46,*/}
+                {/*    right: 20,*/}
+                {/*}}>*/}
+                {/*    <SvgXml xml={XMLResources.more} width={35} height={35}/>*/}
+                {/*</Pressable>*/}
             </View>
             <View style={ss.mainContainer}>
                 {/* 个人信息 */}
@@ -63,14 +63,16 @@ const InfoPage = ({navigation}: NavigationProps) => {
                         <Pressable style={ss.editInfoButton}>
                             <Text
                                 style={{
-                                    color: FontColor.grey,
+                                    color: FontColor.dark,
                                     fontSize: FontSize.ss,
+                                    fontWeight: '700',
+                                    letterSpacing: 1,
                                     width: '100%',
                                     textAlign: 'center',
                                     height: '100%',
                                     lineHeight: 17,
                                 }}
-                            >编辑资料</Text>
+                            >{studentID}</Text>
                         </Pressable>
 
                     </View>
@@ -101,6 +103,9 @@ const InfoPage = ({navigation}: NavigationProps) => {
                     <NavigationBox title={'新手指南'} handleNavigation={() => null}/>
                     <NavigationBox title={'关于拱拱'} handleNavigation={() => null}/>
                     <NavigationBox title={'联系我们'} handleNavigation={() => null}/>
+                    <NavigationBox title={'用户协议'} handleNavigation={() => navigation.navigate('UserAgreementPage')}/>
+                    <NavigationBox title={'隐私条款'} handleNavigation={() => navigation.navigate('PrivacyPolicyPage')}/>
+                    <NavigationBox title={'社区规范'} handleNavigation={() => navigation.navigate('SpecificationPage')}/>
                 </View>
                 {/* 登录/退出登录 按钮 */}
                 <Pressable
@@ -219,7 +224,7 @@ const NavigationBox = ({title, handleNavigation}: {
                     color: FontColor.dark,
                 }}
             >{title}</Text>
-            <Pressable onPress={handleNavigation}>
+            <Pressable onPress={handleNavigation} hitSlop={{top: 8, bottom: 8, right: 15, left: 15}}>
                 <SvgXml xml={XMLResources.infoArrow} width={10} height={10}/>
             </Pressable>
         </View>
@@ -286,12 +291,11 @@ const ss = StyleSheet.create({
     },
 
     editInfoButton: {
-        borderWidth: 1,
-        borderColor: BorderColor.grey,
-        width: 60,
+        // borderWidth: 1,
+        // borderColor: BorderColor.grey,
         height: 20,
         paddingHorizontal: 5,
-        borderRadius: 10,
+        // borderRadius: 10,
     },
 })
 

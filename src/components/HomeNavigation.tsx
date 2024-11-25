@@ -18,6 +18,8 @@ import Resources, {ResourceMessage} from "../basic/Resources.ts";
 import {ResourceCode} from "../utils/enum.ts";
 import notifee from "../../node_modules/@notifee/react-native";
 import {AndroidImportance} from "@notifee/react-native";
+import UserAgreePage from "./info/UserAgreePage.tsx";
+import PrivacyPolicyPage from "./info/PrivacyPolicyPage.tsx";
 
 const HomeNavigation = () => {
     const realm = useRealm();
@@ -170,6 +172,8 @@ const HomeNavigation = () => {
             <Stack.Screen name={'ScorePage'} component={ScorePage}/>
             <Stack.Screen name={'TablePage'} component={TablePage}/>
             <Stack.Screen name={'SpecificationPage'} component={SpecificationPage}/>
+            <Stack.Screen name={'UserAgreementPage'} component={UserAgreePage}/>
+            <Stack.Screen name={'PrivacyPolicyPage'} component={PrivacyPolicyPage}/>
         </Stack.Navigator>
     )
 }

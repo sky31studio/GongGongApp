@@ -14,7 +14,7 @@ const UserAgreePage = ({navigation}: NavigationProps) => {
     }
 
     const handleGoBack = () => {
-        navigation.navigate('LoginPage');
+        navigation.goBack();
     }
 
     return (

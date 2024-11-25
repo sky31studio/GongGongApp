@@ -243,7 +243,7 @@ export const selectOnlyExamList = createSelector(
         const res = examList.slice();
 
         for (let i = 0; i < res.length; i++) {
-            if (res[i].isCustom) {
+            if (res[i].isCustom || res[i].type !== 0) {
                 res.splice(i, 1);
                 i--;
             }

@@ -38,7 +38,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
     return (
         <View style={{height: '100%'}}>
             <View style={ss.titleBar}>
-                <Pressable onPress={handleBack} style={ss.backButton}>
+                <Pressable onPress={handleBack} style={ss.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
                     <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
                 </Pressable>
 

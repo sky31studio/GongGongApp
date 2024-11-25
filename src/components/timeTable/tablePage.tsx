@@ -134,7 +134,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
                 flexDirection: 'column',
             }}>
                 <View style={styleSheet.guideBar}>
-                    <Pressable onPress={handleGoBack} style={styleSheet.backButton}>
+                    <Pressable onPress={handleGoBack} style={styleSheet.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
                         <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
                     </Pressable>
                     <View style={styleSheet.weekBox}>

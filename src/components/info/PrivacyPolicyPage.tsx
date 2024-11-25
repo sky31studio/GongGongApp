@@ -14,7 +14,7 @@ const PrivacyPolicyPage = ({navigation}: NavigationProps) => {
     }
 
     const handleGoBack = () => {
-        navigation.navigate('LoginPage');
+        navigation.goBack();
     }
 
     return (

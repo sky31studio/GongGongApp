@@ -131,7 +131,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                 >
                     <ScalingNotAllowedText style={ss.titleText}>空教室</ScalingNotAllowedText>
                 </View>
-                <Pressable onPress={handleBack} style={ss.backButton}>
+                <Pressable onPress={handleBack} style={ss.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
                     <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
                 </Pressable>
                 <View style={{width: '100%', height: 40, position: 'absolute', bottom: 0}}>

@@ -14,7 +14,7 @@ const SpecificationPage = ({navigation}: NavigationProps) => {
     }
 
     const handleGoBack = () => {
-        navigation.navigate('TabNavigation');
+        navigation.goBack();
     }
 
     return (
