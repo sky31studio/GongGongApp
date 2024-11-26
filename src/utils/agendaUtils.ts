@@ -29,7 +29,7 @@ export const dealExams = (data: any[]) => {
     return res;
 }
 
-export const convertDateToString = (startDate: Date, endDate: Date | undefined) => {
+export const convertDateToString = (startDate: Date, endDate: Date | undefined): string => {
     const startYear = startDate.getFullYear();
     const startMonth = startDate.getMonth() + 1;
     const startDay = startDate.getDate();

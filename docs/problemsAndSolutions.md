@@ -19,3 +19,8 @@ newArch=true才可以，因此使用realm-js作为数据存储的替代方案。
 > 如果修改、添加或删除了schema的一些字段，realm是需要进行迁移的，但是我们在开发环境可能不想要总是手动进行迁移，所以我们可以设置deleteRealmIfMigrationNeeded为true，即自动删除数据库。
 >
 > 切勿将deleteRealmIfMigrationNeeded设置为true的情况下发布到应用环境。
+
+
+## text out of Text component
+明明只要是文本的都放在Text中，为什么还是会报错？  
+建议将 {visible && <View></View>}这样的写法替换成{visible ? <View></View> : null}

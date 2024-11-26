@@ -5,10 +5,10 @@ import {TablePage} from "./timeTable/tablePage.tsx";
 import EmptyClassroomPage from "./emptyClassroom/EmptyClassroomPage.tsx";
 import {useEffect} from "react";
 import {initTable} from "../app/slice/scheduleSlice.ts";
-import {initExam} from "../app/slice/agendaSlice.ts";
+import {initExam, selectChangedCount, selectSelfList, writeSelfAgendaList} from "../app/slice/agendaSlice.ts";
 import {resetCurrentTime, setDate} from "../app/slice/globalSlice.ts";
 import {setScoreOverview} from "../app/slice/scoreSlice.ts";
-import {useAppDispatch} from "../app/hooks.ts";
+import {useAppDispatch, useAppSelector} from "../app/hooks.ts";
 import {initInfo} from "../app/slice/infoSlice.ts";
 import SpecificationPage from "./info/SpecificationPage.tsx";
 import {setTodayEmptyClassroomStatus, setTomorrowEmptyClassroomStatus} from "../app/slice/classroomSlice.ts";
@@ -26,6 +26,8 @@ const HomeNavigation = () => {
     const user = useQuery<GongUser>('GongUser')[0];
 
     const dispatch = useAppDispatch();
+    const selfList = useAppSelector(selectSelfList);
+    const changedCount = useAppSelector(selectChangedCount);
 
     const Stack = createNativeStackNavigator();
 
@@ -141,6 +143,13 @@ const HomeNavigation = () => {
                     termID: user.termID,
                 }));
             }
+
+            if(user.selfAgendaList) {
+                console.log('initializing selfAgendaList..............');
+                dispatch(writeSelfAgendaList(JSON.parse(user.selfAgendaList)));
+                console.log('selfAgendaList is initialized!');
+            }
+
             console.log('fetch successful!');
         }
     }
@@ -149,17 +158,29 @@ const HomeNavigation = () => {
         dispatch(resetCurrentTime());
         createChannel()
             .then(() => {
-                fetchAllData();
+                fetchAllData().then();
             })
-
-        // const intervalID = setInterval(() => {
-        //     dispatch(resetCurrentTime());
-        // }, 8000);
-        //
-        // return () => {
-        //     clearInterval(intervalID);
-        // }
     }, []);
+
+    // 错误案例: 这样的话会在组件刚挂载时执行，导致空的selfList表格会先写覆盖user.selfAgendaList。
+    // useEffect(() => {
+    //     if(selfList.length === 0) return;
+    //     console.log('start to write selfAgendaList into realm!');
+    //     realm.write(() => {
+    //         user.selfAgendaList = JSON.stringify(selfList);
+    //     })
+    //     console.log('write selfAgendaList into realm!');
+    //     console.log('result:')
+    //     console.log(user.selfAgendaList);
+    // }, [selfList]);
+
+    useEffect(() => {
+        if(changedCount === 0) return;
+        console.log(selfList);
+        realm.write(() => {
+            user.selfAgendaList = JSON.stringify(selfList);
+        })
+    }, [selfList]);
 
     return (
         <Stack.Navigator

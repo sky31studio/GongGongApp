@@ -12,7 +12,8 @@ import {
     removeSelfFromTop,
     selectAgendaList,
     selectExamLength,
-    selectOnlyExamList, setShowedAgenda,
+    selectOnlyExamList,
+    setShowedAgenda,
     showAddBoard
 } from "../../../app/slice/agendaSlice.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
@@ -221,6 +222,7 @@ const AgendaBox = forwardRef((
         } else {
             const startTime = new Date(agenda.startTime);
             const endTime = agenda.endTime !== '' ? new Date(agenda.endTime) : undefined;
+
             return convertDateToString(startTime, endTime);
         }
     }, [agenda.startTime, agenda.endTime]);
@@ -315,12 +317,19 @@ const AgendaBox = forwardRef((
             <View style={[ss.agendaContainer, {backgroundColor: isOnTop ? '#eeeeee' : BackgroundColor.mainLight}]}>
                 <View>
                     <View style={ss.agendaNameContainer}>
-                        <ScalingNotAllowedText numberOfLines={1} ellipsizeMode="tail"
-                                               style={[ss.agendaName, {maxWidth: winWidth * .4}
-                                               ]}>{agenda.name}</ScalingNotAllowedText>
+                        <ScalingNotAllowedText
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            style={
+                                [ss.agendaName, {maxWidth: winWidth * .4}]
+                            }
+                        >
+                            {agenda.name}
+                        </ScalingNotAllowedText>
                         {agenda.type !== undefined && typeTip()}
                     </View>
                     {agenda.text !== '' && <ScalingNotAllowedText
+                        numberOfLines={1} ellipsizeMode="tail"
                         style={[ss.agendaText, {maxWidth: winWidth * .4, paddingLeft: '5%'}]}>{agenda.text}</ScalingNotAllowedText>}
                 </View>
                 <View style={ss.agendaLocationAndTimeContainer}>
@@ -334,15 +343,15 @@ const AgendaBox = forwardRef((
                         marginHorizontal: 5
                     }}></View>
                     <SvgXml xml={XMLResources.location} width={9} height={9}/>
-                    <ScalingNotAllowedText style={[ss.agendaInfoText, {maxWidth: winWidth * .3}]}>{location}</ScalingNotAllowedText>
+                    <ScalingNotAllowedText numberOfLines={1} ellipsizeMode="tail" style={[ss.agendaInfoText, {maxWidth: winWidth * .3}]}>{location}</ScalingNotAllowedText>
                 </View>
-                {countdown && (
+                {countdown ? (
                     <View style={ss.countdownContainer}>
                         <ScalingNotAllowedText style={ss.countdownText}>还剩</ScalingNotAllowedText>
                         <ScalingNotAllowedText style={ss.countdownDayText}>{countdown}</ScalingNotAllowedText>
                         <ScalingNotAllowedText style={ss.countdownText}>天</ScalingNotAllowedText>
                     </View>
-                )}
+                ) : null}
             </View>
         </Swipeable>
     )

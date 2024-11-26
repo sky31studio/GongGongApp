@@ -30,6 +30,7 @@ interface InitialState {
     selfList: Agenda[],
     showAddBoard: boolean,
     showedAgenda: any,
+    changedCount: number,
 }
 
 const initialState: InitialState = {
@@ -37,6 +38,7 @@ const initialState: InitialState = {
     selfList: [],
     showAddBoard: false,
     showedAgenda: null,
+    changedCount: 0,
 }
 
 const agendaSlice = createSlice({
@@ -63,19 +65,19 @@ const agendaSlice = createSlice({
         //         }
         //     }
         // },
-        addSelf: (state, action) => {
-            // 有id则update
-            if(action.payload.id !== null) {
-                for(let i = 0; i < state.selfList.length; i++) {
-                    if(state.selfList[i].id === action.payload.id) {
-                        state.selfList[i] = action.payload;
-                        return;
-                    }
-                }
-                return;
-            }
 
-            // 无id则添加
+        // AddBoard更新Agenda
+        updateSelf: (state, action) => {
+            for(let i = 0; i < state.selfList.length; i++) {
+                if(state.selfList[i].id === action.payload.id) {
+                    state.selfList[i] = action.payload;
+                    return;
+                }
+            }
+        },
+
+        // AddBoard添加Agenda
+        addSelf: (state, action) => {
             const id = generateID(action.payload.name, action.payload.startTime, action.payload.endTime);
             // 检查该项是否已经存在
             for (let exam of state.selfList) {
@@ -183,7 +185,16 @@ const agendaSlice = createSlice({
                     }
                 })
             state.examList.sort(compare);
-        }
+        },
+
+        writeSelfAgendaList: (state, action) => {
+            state.selfList = action.payload;
+        },
+
+        // 修改次数自增
+        changedCountIncrement: (state) => {
+            state.changedCount += 1;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -217,6 +228,7 @@ export const selectSelfList = (state: RootState) => state.exam.selfList;
 export const selectShowAddBoard = (state: RootState) => state.exam.showAddBoard;
 export const selectExamLength = (state: RootState) => state.exam.examList.length;
 export const selectShowedAgenda = (state: RootState) => state.exam.showedAgenda;
+export const selectChangedCount = (state: RootState) => state.exam.changedCount;
 
 // 返回exam+self的总表(已排序)
 export const selectAgendaList = createSelector(
@@ -259,11 +271,12 @@ export const selectCurrentAgendaNumber = createSelector(
 // 返回exam中只有考试标签的列表
 export const selectOnlyExamList = createSelector(
     [selectExamList, selectSelfList],
-    (examList) => {
-        const res = examList.slice();
+    (examList, selfList) => {
+        let res = examList.slice().concat(selfList);
+        res.sort(compare);
 
         for (let i = 0; i < res.length; i++) {
-            if (res[i].isCustom || res[i].type !== 0) {
+            if (res[i].type !== 0) {
                 res.splice(i, 1);
                 i--;
             }
@@ -277,6 +290,7 @@ export const selectOnlyExamList = createSelector(
 export const {
     showAddBoard,
     hideAddBoard,
+    updateSelf,
     addSelf,
     removeSelf,
     addExamToTop,
@@ -285,6 +299,8 @@ export const {
     removeSelfFromTop,
     initExam,
     setShowedAgenda,
+    writeSelfAgendaList,
+    changedCountIncrement,
 } = agendaSlice.actions;
 export default agendaSlice.reducer;
 

@@ -9,6 +9,7 @@ class GongUser extends Realm.Object<GongUser>{
     todayClassroom?: string;
     tomorrowClassroom?: string;
     exam?: string;
+    selfAgendaList?: string;
     scoreOverview?: string;
     firstDate?: Date;
     termID?: string;
@@ -24,6 +25,7 @@ class GongUser extends Realm.Object<GongUser>{
             todayClassroom: 'string?',
             tomorrowClassroom: 'string?',
             exam: 'string?',
+            selfAgendaList: 'string?',
             scoreOverview: 'string?',
             firstDate: 'date?',
             termID: 'string?',

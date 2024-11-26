@@ -53,7 +53,7 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
                 easing: Easing.inOut(Easing.quad),
                 reduceMotion: ReduceMotion.System,
             }),
-            withDelay(5000, withTiming(-10, {
+            withDelay(3000, withTiming(-10, {
                 duration: 1000,
                 easing: Easing.inOut(Easing.quad),
                 reduceMotion: ReduceMotion.System,
@@ -282,6 +282,13 @@ const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visiblePro
 }
 
 const ButtonSection = ({handleLogin, navigation}: { handleLogin: any, navigation: any}) => {
+    const [disabled, setDisabled] = useState<boolean>(false);
+    const onLogin = async () => {
+        setDisabled(true);
+        await handleLogin();
+        setDisabled(false);
+    }
+
     return (
         <View style={buttonStyleSheet.buttonContainer}>
             <View style={{display: 'flex', flexDirection: 'row', marginVertical: 10}}>
@@ -294,7 +301,7 @@ const ButtonSection = ({handleLogin, navigation}: { handleLogin: any, navigation
                     <Text style={[buttonStyleSheet.introText, buttonStyleSheet.infoText]}>隐私条款</Text>
                 </Pressable>
             </View>
-            <Pressable style={buttonStyleSheet.loginButton} onPress={handleLogin}>
+            <Pressable style={buttonStyleSheet.loginButton} onPress={onLogin} disabled={disabled}>
                 <Text style={{color: '#fff', fontWeight: '600', fontSize: 15}}>登录</Text>
             </Pressable>
         </View>

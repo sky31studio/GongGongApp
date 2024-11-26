@@ -13,9 +13,18 @@ import Animated, {
 import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
 import MyTextInput from "./myTextInput.tsx";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import {addSelf, hideAddBoard, selectShowedAgenda} from "../../../app/slice/agendaSlice.ts";
+import {
+    addSelf,
+    changedCountIncrement,
+    hideAddBoard,
+    selectSelfList,
+    selectShowedAgenda,
+    updateSelf
+} from "../../../app/slice/agendaSlice.ts";
 import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
 import {transTo2Digits} from "../../../utils/agendaUtils.ts";
+import {useQuery, useRealm} from "@realm/react";
+import GongUser from "../../../dao/object/User.ts";
 
 /**
  * 呼出倒计时添加
@@ -26,7 +35,7 @@ const AddBoard = () => {
     // 获取目前展示的Agenda
     const agenda = useAppSelector(selectShowedAgenda);
 
-    const [onlyExam, setOnlyExam] = useState<boolean>(false);
+    const [onlyExam, setOnlyExam] = useState<boolean>(agenda ? (agenda.type === 0) : false);
     const editable = useMemo(() => agenda ? agenda.isCustom : true, [agenda]);
 
     //  初始化设置名称、地点、tip、起止时间
@@ -104,6 +113,7 @@ const AddBoard = () => {
 
     // 仅考试
     const handleOnlyExam = () => {
+        if(agenda && !agenda.isCustom) return;
         setOnlyExam(!onlyExam);
     }
 
@@ -217,10 +227,19 @@ const AddBoard = () => {
             startTime: start,
             endTime: end,
             location: location,
+            type: onlyExam ? 0 : undefined,
             isCustom: true,
             isOnTop: false,
         }
-        dispatch(addSelf(res));
+
+        if(agenda && agenda.isCustom) {
+            dispatch(updateSelf(res));
+        }
+        else if(!agenda){
+            dispatch(changedCountIncrement());
+            dispatch(addSelf(res));
+        }
+
         dispatch(hideAddBoard());
     }
 
@@ -236,11 +255,10 @@ const AddBoard = () => {
                 <Pressable onPress={handleOnlyExam}
                            style={{display: 'flex', flexDirection: 'row', position: 'absolute', top: 0, right: 0}}>
                     <SvgXml xml={onlyExam ? XMLResources.exam : XMLResources.notExam} width="16" height="16"/>
-                    <ScalingNotAllowedText style={{marginLeft: 5, color: FontColor.grey, lineHeight: 17}}>仅考试</ScalingNotAllowedText>
+                    <ScalingNotAllowedText style={{marginLeft: 5, color: FontColor.grey, lineHeight: 17}}>考试</ScalingNotAllowedText>
                 </Pressable>
                 <MyTextInput editable={editable} placeholder={'如: 英语四级'} initText={agenda ? agenda.name : ''} sendData={handleName}/>
             </View>
-            {/* 时间选择 */}
             <View style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 10}}>
                 <View style={{width: '40%'}}>
                     <ScalingNotAllowedText style={ss.inputAgendaText}>日期</ScalingNotAllowedText>
@@ -270,13 +288,13 @@ const AddBoard = () => {
                 <MyTextInput editable={editable} placeholder={'(选填)'} initText={agenda ? agenda.location : ''} sendData={handleLocation}/>
             </View>
 
-            {editable && (
+            {editable ? (
                 <View style={{marginTop: 10, width: '100%'}}>
                     <ScalingNotAllowedText style={ss.inputAgendaText}>备注</ScalingNotAllowedText>
                     <MyTextInput placeholder={'(选填)如: 四级500分一击必中!!!'} initText={agenda ? agenda.text : ''} sendData={handleTip} multiline={true}
                                  height={90} alignCenter={false}/>
                 </View>
-            )}
+            ) : null}
             <Pressable onPress={handleAddAgenda} style={{marginTop: 25}}>
                 <Animated.View style={[ss.finishButton, buttonAnimatedStyle]}>
                     <ScalingNotAllowedText style={{

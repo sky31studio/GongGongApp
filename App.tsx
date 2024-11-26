@@ -33,7 +33,7 @@ function App(): React.JSX.Element {
         <View style={{flex: 1}}>
             <NavigationContainer>
                 <Provider store={store}>
-                    <RealmProvider schema={[GongUser]} deleteRealmIfMigrationNeeded={true}>
+                    <RealmProvider schema={[GongUser]}>
                         <SafeAreaView style={[backgroundStyle, styles.fullScreen]}>
                             <StatusBar translucent backgroundColor="#ff6275"/>
                             {safeArea()}
