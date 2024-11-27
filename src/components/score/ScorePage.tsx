@@ -2,35 +2,25 @@ import {Animated, Pressable, StyleSheet, Text, View} from "react-native";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {NavigationProps} from "../home/homePage.tsx";
-import Resources, {ResourceMessage} from "../../basic/Resources.ts";
-import {dealScore, SingleScoreList} from "../../utils/scoreUtils.ts";
 import SingleScore from "./SingleScore.tsx";
 import {useAppSelector} from "../../app/hooks.ts";
-import {selectAverageScore, selectClassRank, selectGpa, selectMajorRank} from "../../app/slice/scoreSlice.ts";
+import {
+    selectAverageScore,
+    selectClassRank,
+    selectGpa,
+    selectMajorRank,
+    selectScoreList
+} from "../../app/slice/scoreSlice.ts";
 import ScrollView = Animated.ScrollView;
-import {useQuery} from "@realm/react";
-import GongUser from "../../dao/object/User.ts";
-import {ResourceCode} from "../../utils/enum.ts";
-
 
 const ScorePage = ({navigation}: NavigationProps) => {
-    const user = useQuery<GongUser>('GongUser')[0];
-    const [scoreList, setScoreList] = useState<SingleScoreList[]>([]);
+    const scoreList = useAppSelector(selectScoreList);
     const averageScore = useAppSelector(selectAverageScore)
     const gpa = useAppSelector(selectGpa);
     const classRank = useAppSelector(selectClassRank);
     const majorRank = useAppSelector(selectMajorRank);
-
-    useEffect(() => {
-        Resources.getScore(user.token).then((msg: ResourceMessage) => {
-            if(msg.code === ResourceCode.Successful) {
-                setScoreList(dealScore(msg.data));
-            }
-        })
-
-    }, []);
 
     const handleBack = () => {
         navigation.navigate('TabNavigation');

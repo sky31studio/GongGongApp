@@ -1,12 +1,14 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import Resources from "../../basic/Resources.ts";
 import {RootState} from "../store.ts";
+import {dealScore, SingleScoreList} from "../../utils/scoreUtils.ts";
 
 interface initialState {
     gpa: number;
     classRank: number;
     majorRank: number;
     averageScore: number;
+    scoreList: SingleScoreList[];
 }
 
 const initialState: initialState = {
@@ -14,6 +16,7 @@ const initialState: initialState = {
     classRank: -1,
     majorRank: -1,
     averageScore: -1,
+    scoreList: [],
 }
 
 export const getScoreOverview = createAsyncThunk('score/getScore', async (token: string) => {
@@ -36,6 +39,10 @@ const scoreSlice = createSlice({
             state.classRank = action.payload.class_rank || -1;
             state.majorRank = action.payload.major_rank || -1;
             state.averageScore = action.payload.average_score || -1;
+        },
+
+        initScoreList: (state, action) => {
+            state.scoreList = dealScore(action.payload);
         }
     },
     extraReducers: (builder) => {
@@ -53,7 +60,8 @@ export const selectAverageScore = (state: RootState) => state.score.averageScore
 export const selectGpa = (state: RootState) => state.score.gpa;
 export const selectClassRank = (state: RootState) => state.score.classRank;
 export const selectMajorRank = (state: RootState) => state.score.majorRank;
+export const selectScoreList = (state: RootState) => state.score.scoreList;
 
-export const {setScoreOverview}  = scoreSlice.actions;
+export const {setScoreOverview, initScoreList}  = scoreSlice.actions;
 
 export default scoreSlice.reducer;

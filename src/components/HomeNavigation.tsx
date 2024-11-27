@@ -16,7 +16,7 @@ import {
     writeSelfAgendaList
 } from "../app/slice/agendaSlice.ts";
 import {resetCurrentTime, setDate} from "../app/slice/globalSlice.ts";
-import {setScoreOverview} from "../app/slice/scoreSlice.ts";
+import {initScoreList, setScoreOverview} from "../app/slice/scoreSlice.ts";
 import {useAppDispatch, useAppSelector} from "../app/hooks.ts";
 import {initInfo} from "../app/slice/infoSlice.ts";
 import SpecificationPage from "./info/SpecificationPage.tsx";
@@ -68,7 +68,7 @@ const HomeNavigation = () => {
             }
 
             if(!user.info) {
-                const msg: ResourceMessage = await Resources.getInfo(user.token)
+                const msg: ResourceMessage = await Resources.getInfo(user.token);
                 if(msg.code === ResourceCode.Successful) {
                     dispatch(initInfo(msg.data));
                     console.log('writing userInfo in realm...');
@@ -82,7 +82,7 @@ const HomeNavigation = () => {
             }
 
             if(!user.todayClassroom) {
-                const msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token)
+                const msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token);
                 if(msg.code === ResourceCode.Successful) {
                     dispatch(setTodayEmptyClassroomStatus(msg.data));
                     console.log('writing todayClassroom in realm...');
@@ -96,7 +96,7 @@ const HomeNavigation = () => {
             }
 
             if(!user.tomorrowClassroom) {
-                const msg: ResourceMessage = await Resources.getTomorrowClassroomStatus(user.token)
+                const msg: ResourceMessage = await Resources.getTomorrowClassroomStatus(user.token);
                 if(msg.code === ResourceCode.Successful) {
                     dispatch(setTomorrowEmptyClassroomStatus(msg.data));
                     console.log('writing tomorrowClassroom in realm...');
@@ -122,7 +122,7 @@ const HomeNavigation = () => {
             }
 
             if(!user.scoreOverview) {
-                const msg: ResourceMessage = await Resources.getScoreOverview(user.token)
+                const msg: ResourceMessage = await Resources.getScoreOverview(user.token);
                 if(msg.code === ResourceCode.Successful) {
                     dispatch(setScoreOverview(msg.data));
                     console.log('writing scoreOverview in realm...');
@@ -135,8 +135,22 @@ const HomeNavigation = () => {
                 dispatch(setScoreOverview(JSON.parse(user.scoreOverview)));
             }
 
+            if(!user.scoreList) {
+                const msg: ResourceMessage = await Resources.getScore(user.token);
+                if(msg.code === ResourceCode.Successful) {
+                    dispatch(initScoreList(msg.data));
+                    console.log('writing scoreList in realm...');
+                    realm.write(() => {
+                        user.scoreList = JSON.stringify(msg.data);
+                    })
+                    console.log('scoreList is written!');
+                }
+            } else {
+                dispatch(initScoreList(JSON.parse(user.scoreList)));
+            }
+
             if(!user.firstDate) {
-                const msg: ResourceMessage = await Resources.getFirstDate(user.token)
+                const msg: ResourceMessage = await Resources.getFirstDate(user.token);
                 if(msg.code === ResourceCode.Successful)  {
                     dispatch(setDate(msg.data));
                     console.log('writing firstDate in realm...');
