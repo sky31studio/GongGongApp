@@ -15,16 +15,13 @@ import MyTextInput from "./myTextInput.tsx";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import {
     addSelf,
-    changedCountIncrement,
     hideAddBoard,
-    selectSelfList,
     selectShowedAgenda,
+    selfChangedCountIncrement,
     updateSelf
 } from "../../../app/slice/agendaSlice.ts";
 import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
 import {transTo2Digits} from "../../../utils/agendaUtils.ts";
-import {useQuery, useRealm} from "@realm/react";
-import GongUser from "../../../dao/object/User.ts";
 
 /**
  * 呼出倒计时添加
@@ -236,7 +233,7 @@ const AddBoard = () => {
             dispatch(updateSelf(res));
         }
         else if(!agenda){
-            dispatch(changedCountIncrement());
+            dispatch(selfChangedCountIncrement());
             dispatch(addSelf(res));
         }
 

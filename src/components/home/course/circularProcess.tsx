@@ -2,6 +2,7 @@ import React, {useEffect, useMemo} from "react";
 import {StyleSheet, Text, View} from "react-native";
 import Svg, {Circle} from "react-native-svg";
 import Animated, {
+    cancelAnimation,
     useAnimatedProps,
     useDerivedValue,
     useSharedValue,
@@ -34,6 +35,8 @@ CircularProcess = ({done, todo}) => {
     })
 
     useEffect(() => {
+        cancelAnimation(dashoffset);
+        dashoffset.value = circumference;
         dashoffset.value = withDelay(
             200,
             withTiming(circumference - animateTo.value * innerRadius, {

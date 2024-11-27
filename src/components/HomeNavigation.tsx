@@ -5,7 +5,16 @@ import {TablePage} from "./timeTable/tablePage.tsx";
 import EmptyClassroomPage from "./emptyClassroom/EmptyClassroomPage.tsx";
 import {useEffect} from "react";
 import {initTable} from "../app/slice/scheduleSlice.ts";
-import {initExam, selectChangedCount, selectSelfList, writeSelfAgendaList} from "../app/slice/agendaSlice.ts";
+import {
+    examChangedCountIncrement,
+    initExam,
+    selectExamChangedCount,
+    selectExamList,
+    selectSelfChangedCount,
+    selectSelfList,
+    writeExamAgendaList,
+    writeSelfAgendaList
+} from "../app/slice/agendaSlice.ts";
 import {resetCurrentTime, setDate} from "../app/slice/globalSlice.ts";
 import {setScoreOverview} from "../app/slice/scoreSlice.ts";
 import {useAppDispatch, useAppSelector} from "../app/hooks.ts";
@@ -27,7 +36,9 @@ const HomeNavigation = () => {
 
     const dispatch = useAppDispatch();
     const selfList = useAppSelector(selectSelfList);
-    const changedCount = useAppSelector(selectChangedCount);
+    const examList = useAppSelector(selectExamList);
+    const selfChangedCount = useAppSelector(selectSelfChangedCount);
+    const examChangedCount = useAppSelector(selectExamChangedCount);
 
     const Stack = createNativeStackNavigator();
 
@@ -98,18 +109,16 @@ const HomeNavigation = () => {
                 dispatch(setTomorrowEmptyClassroomStatus(JSON.parse(user.tomorrowClassroom)));
             }
 
-            if(!user.exam) {
+            if(!user.examAgendaList) {
                 const msg: ResourceMessage = await Resources.getExam(user.token);
                 if(msg.code === ResourceCode.Successful) {
+                    dispatch(examChangedCountIncrement());
                     dispatch(initExam(msg.data))
                     console.log('writing examAgenda in realm...');
-                    realm.write(() => {
-                        user.exam = JSON.stringify(msg.data);
-                    })
                     console.log('examAgenda is written!');
                 }
             } else {
-                dispatch(initExam(JSON.parse(user.exam)));
+                dispatch(writeExamAgendaList(JSON.parse(user.examAgendaList)));
             }
 
             if(!user.scoreOverview) {
@@ -175,12 +184,20 @@ const HomeNavigation = () => {
     // }, [selfList]);
 
     useEffect(() => {
-        if(changedCount === 0) return;
+        if(selfChangedCount === 0) return;
         console.log(selfList);
         realm.write(() => {
             user.selfAgendaList = JSON.stringify(selfList);
         })
     }, [selfList]);
+
+    useEffect(() => {
+        if(examChangedCount === 0) return;
+        console.log(examList);
+        realm.write(() => {
+            user.examAgendaList = JSON.stringify(examList);
+        })
+    }, [examList]);
 
     return (
         <Stack.Navigator

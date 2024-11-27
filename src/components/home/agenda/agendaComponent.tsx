@@ -6,13 +6,13 @@ import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
 import {
     addExamToTop,
     addSelfToTop,
-    Agenda,
+    Agenda, examChangedCountIncrement,
     removeExamFromTop,
     removeSelf,
     removeSelfFromTop,
     selectAgendaList,
     selectExamLength,
-    selectOnlyExamList,
+    selectOnlyExamList, selfChangedCountIncrement,
     setShowedAgenda,
     showAddBoard
 } from "../../../app/slice/agendaSlice.ts";
@@ -253,8 +253,10 @@ const AgendaBox = forwardRef((
     const handlePinToTop = () => {
         swipeableRef.current?.reset();
         if (agenda.isCustom) {
+            dispatch(selfChangedCountIncrement());
             dispatch(addSelfToTop(agenda.id));
         } else {
+            dispatch(examChangedCountIncrement());
             dispatch(addExamToTop(agenda.id));
         }
     };
@@ -262,8 +264,10 @@ const AgendaBox = forwardRef((
     const handleUnpinToTop = () => {
         swipeableRef.current?.reset();
         if (agenda.isCustom) {
+            dispatch(selfChangedCountIncrement());
             dispatch(removeSelfFromTop(agenda.id));
         } else {
+            dispatch(examChangedCountIncrement());
             dispatch(removeExamFromTop(agenda.id));
         }
     };
@@ -273,6 +277,7 @@ const AgendaBox = forwardRef((
             ToastAndroid.showWithGravity('考试不可以删除!', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
             swipeableRef.current?.close();
         } else {
+            dispatch(selfChangedCountIncrement());
             dispatch(removeSelf(agenda.id));
         }
     };
@@ -345,7 +350,7 @@ const AgendaBox = forwardRef((
                     <SvgXml xml={XMLResources.location} width={9} height={9}/>
                     <ScalingNotAllowedText numberOfLines={1} ellipsizeMode="tail" style={[ss.agendaInfoText, {maxWidth: winWidth * .3}]}>{location}</ScalingNotAllowedText>
                 </View>
-                {countdown ? (
+                {(countdown !== undefined && countdown >= 0) ? (
                     <View style={ss.countdownContainer}>
                         <ScalingNotAllowedText style={ss.countdownText}>还剩</ScalingNotAllowedText>
                         <ScalingNotAllowedText style={ss.countdownDayText}>{countdown}</ScalingNotAllowedText>

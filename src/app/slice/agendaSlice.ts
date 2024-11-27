@@ -3,7 +3,7 @@ import Resources from "../../basic/Resources.ts";
 import {RootState} from "../store.ts";
 import {dealExams, generateID} from "../../utils/agendaUtils.ts";
 import {selectCurrentTime} from "./globalSlice.ts";
-import {addExamNotification} from "../../utils/notificationUtils.ts";
+import {addExamNotification, removeNotification} from "../../utils/notificationUtils.ts";
 
 export const fetchExamData = createAsyncThunk('exam/fetchExamData', async (token: string) => {
     const response = await Resources.getExam(token);
@@ -30,7 +30,8 @@ interface InitialState {
     selfList: Agenda[],
     showAddBoard: boolean,
     showedAgenda: any,
-    changedCount: number,
+    selfChangedCount: number,
+    examChangedCount: number,
 }
 
 const initialState: InitialState = {
@@ -38,7 +39,8 @@ const initialState: InitialState = {
     selfList: [],
     showAddBoard: false,
     showedAgenda: null,
-    changedCount: 0,
+    selfChangedCount: 0,
+    examChangedCount: 0,
 }
 
 const agendaSlice = createSlice({
@@ -99,6 +101,8 @@ const agendaSlice = createSlice({
         removeSelf: (state, action) => {
             for(let self of state.selfList) {
                 if(self.id === action.payload) {
+                    if(self.startTime !== '') removeNotification(self.id).then();
+
                     state.selfList.splice(state.selfList.indexOf(self), 1);
                     return;
                 }
@@ -187,13 +191,21 @@ const agendaSlice = createSlice({
             state.examList.sort(compare);
         },
 
+        writeExamAgendaList: (state, action) => {
+            state.examList = action.payload;
+        },
+
         writeSelfAgendaList: (state, action) => {
             state.selfList = action.payload;
         },
 
         // 修改次数自增
-        changedCountIncrement: (state) => {
-            state.changedCount += 1;
+        selfChangedCountIncrement: (state) => {
+            state.selfChangedCount += 1;
+        },
+
+        examChangedCountIncrement: (state) => {
+            state.examChangedCount += 1;
         },
     },
     extraReducers: (builder) => {
@@ -228,7 +240,8 @@ export const selectSelfList = (state: RootState) => state.exam.selfList;
 export const selectShowAddBoard = (state: RootState) => state.exam.showAddBoard;
 export const selectExamLength = (state: RootState) => state.exam.examList.length;
 export const selectShowedAgenda = (state: RootState) => state.exam.showedAgenda;
-export const selectChangedCount = (state: RootState) => state.exam.changedCount;
+export const selectSelfChangedCount = (state: RootState) => state.exam.selfChangedCount;
+export const selectExamChangedCount = (state: RootState) => state.exam.examChangedCount;
 
 // 返回exam+self的总表(已排序)
 export const selectAgendaList = createSelector(
@@ -257,12 +270,12 @@ export const selectCurrentAgendaNumber = createSelector(
             }
         }
 
-        for(let i = list.length - 1; i >= 0; i--) {
-            if(list[i].startTime !== '') {
-                right = i;
-                break;
-            }
-        }
+        // for(let i = list.length - 1; i >= 0; i--) {
+        //     if(list[i].startTime !== '') {
+        //         right = i;
+        //         break;
+        //     }
+        // }
 
         return right - left + 1;
     }
@@ -299,8 +312,10 @@ export const {
     removeSelfFromTop,
     initExam,
     setShowedAgenda,
+    writeExamAgendaList,
     writeSelfAgendaList,
-    changedCountIncrement,
+    selfChangedCountIncrement,
+    examChangedCountIncrement,
 } = agendaSlice.actions;
 export default agendaSlice.reducer;
 

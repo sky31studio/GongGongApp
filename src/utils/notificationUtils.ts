@@ -42,3 +42,7 @@ export const addExamNotification = (date: Date, config: any) => {
         createTriggerNotification();
     }
 }
+
+export const removeNotification = async (id: string) => {
+    await notifee.cancelNotification(id);
+}
