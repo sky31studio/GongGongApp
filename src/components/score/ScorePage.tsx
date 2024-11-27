@@ -2,48 +2,33 @@ import {Animated, Pressable, StyleSheet, Text, View} from "react-native";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {NavigationProps} from "../home/homePage.tsx";
-import Resources from "../../basic/Resources.ts";
-import {dealScore, SingleScoreList} from "../../utils/scoreUtils.ts";
 import SingleScore from "./SingleScore.tsx";
+import {useAppSelector} from "../../app/hooks.ts";
+import {
+    selectAverageScore,
+    selectClassRank,
+    selectGpa,
+    selectMajorRank,
+    selectScoreList
+} from "../../app/slice/scoreSlice.ts";
 import ScrollView = Animated.ScrollView;
 
-
 const ScorePage = ({navigation}: NavigationProps) => {
-    const [scoreList, setScoreList] = useState<SingleScoreList[]>([]);
-    const [averageScore, setAverageScore] = useState<string>('');
-    const [gpa, setGpa] = useState<string>('');
-    const [classRank, setClassRank] = useState<number>(0);
-    const [majorRank, setMajorRank] = useState<number>(0);
-
-
-    useEffect(() => {
-        Resources.getScore().then((data) => {
-            setScoreList(dealScore(data));
-        })
-
-        Resources.getRank().then((data) => {
-            setAverageScore(data.average_score);
-            setGpa(data.gpa);
-            setClassRank(data.class_rank);
-            setMajorRank(data.major_rank);
-        })
-    }, []);
-
-    const renderList = scoreList.map((singleScore, index) => {
-        return (
-            <SingleScore key={index} scoreList={singleScore} term={singleScore.term}/>
-        )
-    })
+    const scoreList = useAppSelector(selectScoreList);
+    const averageScore = useAppSelector(selectAverageScore)
+    const gpa = useAppSelector(selectGpa);
+    const classRank = useAppSelector(selectClassRank);
+    const majorRank = useAppSelector(selectMajorRank);
 
     const handleBack = () => {
-        navigation.navigate('HomePage');
+        navigation.navigate('TabNavigation');
     }
     return (
         <View style={{height: '100%'}}>
             <View style={ss.titleBar}>
-                <Pressable onPress={handleBack} style={ss.backButton}>
+                <Pressable onPress={handleBack} style={ss.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
                     <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
                 </Pressable>
 
@@ -52,23 +37,34 @@ const ScorePage = ({navigation}: NavigationProps) => {
             <View style={ss.mainContainer}>
                 <View style={ss.totalContainer}>
                     <ScoreBox score={gpa} text={'平均绩点'}/>
-                    <ScoreBox score={classRank.toString()} text={'班级排名'}/>
-                    <ScoreBox score={majorRank.toString()} text={'年级排名'}/>
+                    <ScoreBox score={classRank} text={'班级排名'}/>
+                    <ScoreBox score={majorRank} text={'年级排名'}/>
                     <ScoreBox score={averageScore} text={'平均成绩'}/>
                 </View>
                 <ScrollView style={ss.scoreListContainer}>
-                    {renderList}
+                    {
+                        scoreList.map((singleScore, index) => {
+                            return <SingleScore scoreList={singleScore} term={singleScore.term} key={index}/>
+                        })
+                    }
                 </ScrollView>
             </View>
         </View>
     )
 }
 
-const ScoreBox = ({score, text}: { score: string, text: string }) => {
+/**
+ * 总概中的单个内容框
+ * @param score 对应分数
+ * @param text 底部文字
+ * @constructor
+ */
+const ScoreBox = ({score, text}: { score: number, text: string }) => {
+    const currentScore = score === -1 ? '--' : score;
 
     return (
         <View style={ss.scoreBoxContainer}>
-            <Text style={{color: FontColor.primary, fontSize: FontSize.xxl, fontWeight: '400'}}>{score}</Text>
+            <Text style={{color: FontColor.primary, fontSize: FontSize.xxl, fontWeight: '400'}}>{currentScore}</Text>
             <Text style={{color: FontColor.dark, fontSize: FontSize.xxs}}>{text}</Text>
         </View>
     )

@@ -1,26 +1,30 @@
-import {StyleSheet, Text, View} from "react-native";
+import {StyleSheet, useWindowDimensions, View} from "react-native";
 import CircularProcess from "./circularProcess";
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useMemo, useState} from "react";
 import {useAppSelector} from "../../../app/hooks.ts";
 import {SvgXml} from "react-native-svg";
-import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
+import {BackgroundColor, FontColor, FontFamily, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {ENWeekDay} from "../../../utils/enum.ts";
 import {getCoursesByWeekAndWeekDay} from "../../../utils/tableUtils.ts";
 import {selectTable} from "../../../app/slice/scheduleSlice.ts";
+import {selectTheWeek} from "../../../app/slice/globalSlice.ts";
+import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
 
 const tagText = ['已结束', '上课中', '即将上课', ''];
-const tagColor = ['#EEEEEE', '#8FB5FB', '#FFAA69', '#'];
+const tagColor = [BackgroundColor.grey, BackgroundColor.iconPrimaryBackground, BackgroundColor.tertiary, '#'];
 const tagFontColor = ['#A6A6A6', '#FFFFFF', '#FFFFFF', '#'];
 
 const ClassComponent = () => {
+    const winWidth = useWindowDimensions().width;
     const table = useAppSelector(selectTable);
-    const [lastTime, setLastTime] = useState(new Date());
+    const currentWeek = useAppSelector(selectTheWeek);
+    const [lastTime, _] = useState(new Date());
     const weekDay = useMemo(() => lastTime.getDay(), [lastTime]);
-    const month = lastTime.getMonth() + 1;
-    const day = lastTime.getDate();
+    const month = useMemo(() => lastTime.getMonth() + 1, [lastTime]);
+    const day = useMemo(() => lastTime.getDate(), [lastTime]);
 
-    let courses: any[] = useMemo(() => getCoursesByWeekAndWeekDay(table, 8, weekDay === 0 ? 7 : weekDay), [table]);
+    let courses: any[] = useMemo(() => getCoursesByWeekAndWeekDay(table, currentWeek, weekDay === 0 ? 7 : weekDay), [table, currentWeek, weekDay]);
     let done = useMemo(() => {
         for (let i = 0; i < courses.length; i++) {
 
@@ -47,13 +51,13 @@ const ClassComponent = () => {
             }
         }
         return courses.length;
-    }, [lastTime]);
+    }, [lastTime, courses]);
 
 
     let classTimeline;
     classTimeline = courses.map((course, index) => {
         // 课程状态标签 0--已结束 1--上课中 2--即将上课 3--未开始
-        let isDeprecated = 2;
+        let isDeprecated;
 
         const currentHour = lastTime.getHours();
         const currentMinute = lastTime.getMinutes();
@@ -85,25 +89,26 @@ const ClassComponent = () => {
                 backgroundColor: tagColor[isDeprecated],
                 borderRadius: 20
             }}>
-                <Text style={[styleSheet.tagText, {color: tagFontColor[isDeprecated]}]}>{tagText[isDeprecated]}</Text>
+                <ScalingNotAllowedText
+                    style={[styleSheet.tagText, {color: tagFontColor[isDeprecated]}]}>{tagText[isDeprecated]}</ScalingNotAllowedText>
             </View>
         )
 
         return (
             <View style={styleSheet.courseContainer} key={index}>
                 <View style={styleSheet.periodContainer}>
-                    <Text
-                        style={styleSheet.periodText}>{course.periodStart < 10 ? `0${course.periodStart}` : `${course.periodStart}`}</Text>
+                    <ScalingNotAllowedText
+                        style={styleSheet.periodText}>{course.periodStart < 10 ? `0${course.periodStart}` : `${course.periodStart}`}</ScalingNotAllowedText>
                     <View style={styleSheet.periodLine}></View>
-                    <Text
-                        style={styleSheet.periodText}>{course.periodEnd < 10 ? `0${course.periodEnd}` : `${course.periodEnd}`}</Text>
+                    <ScalingNotAllowedText
+                        style={styleSheet.periodText}>{course.periodEnd < 10 ? `0${course.periodEnd}` : `${course.periodEnd}`}</ScalingNotAllowedText>
                 </View>
                 <View style={styleSheet.classInfoContainer}>
-                    <Text numberOfLines={1} ellipsizeMode="tail"
-                          style={[styleSheet.className, isDeprecated >= 1 ? styleSheet.notDeprecated : styleSheet.deprecated]}>{course.name}</Text>
+                    <ScalingNotAllowedText numberOfLines={1} ellipsizeMode="tail"
+                                           style={[styleSheet.className, isDeprecated >= 1 ? styleSheet.notDeprecated : styleSheet.deprecated, {maxWidth: winWidth * .4}]}>{course.name}</ScalingNotAllowedText>
                     <View style={styleSheet.classroomContainer}>
                         <SvgXml xml={XMLResources.location} width={9} height={9}/>
-                        <Text style={styleSheet.classroom}>{course.classroom}</Text>
+                        <ScalingNotAllowedText style={styleSheet.classroom}>{course.classroom}</ScalingNotAllowedText>
                     </View>
                 </View>
                 <View style={styleSheet.timeInfoContainer}>
@@ -112,9 +117,9 @@ const ClassComponent = () => {
                     </View>
                     <View style={styleSheet.timeContainer}>
                         <SvgXml xml={XMLResources.clock} width={9} height={9}/>
-                        <Text style={styleSheet.timeInfo}>{course.time.start}</Text>
+                        <ScalingNotAllowedText style={styleSheet.timeInfo}>{course.time.start}</ScalingNotAllowedText>
                         <View style={{width: 8, height: 1, backgroundColor: '#A6A6A6', marginHorizontal: 2}}></View>
-                        <Text style={styleSheet.timeInfo}>{course.time.end}</Text>
+                        <ScalingNotAllowedText style={styleSheet.timeInfo}>{course.time.end}</ScalingNotAllowedText>
                     </View>
                 </View>
             </View>
@@ -135,25 +140,15 @@ const ClassComponent = () => {
             }}
         >
             <SvgXml xml={XMLResources.noCourse} width={191} height={128}/>
-            <Text style={{
+            <ScalingNotAllowedText style={{
                 textAlign: 'center',
                 color: FontColor.grey,
                 marginVertical: 10
-            }}>今天没有课哟，去Eatest瞅瞅吧~</Text>
+            }}>今天没有课哟~</ScalingNotAllowedText>
         </View>
     )
 
-    const circleProcess = useMemo(() => <CircularProcess done={done} todo={courses.length}/>, [done, courses]);
-
-    const intervalId = setInterval(() => {
-        setLastTime(new Date());
-    }, 10000);
-
-    useEffect(() => {
-        return () => {
-            clearInterval(intervalId);
-        }
-    }, []);
+    const circleProcess = useMemo(() => <CircularProcess done={done} todo={courses.length}/>, [done, courses.length]);
 
     return (
         <View style={styleSheet.classContainer}>
@@ -162,12 +157,13 @@ const ClassComponent = () => {
                     {circleProcess}
                 </View>
                 <View style={styleSheet.weekDay}>
-                    <Text style={styleSheet.weekDayText}>{ENWeekDay[weekDay]}</Text>
-                    <Text>今日共{courses.length}节课</Text>
+                    <ScalingNotAllowedText style={styleSheet.weekDayText}>{ENWeekDay[weekDay]}</ScalingNotAllowedText>
+                    <ScalingNotAllowedText>今日共{courses.length}节课</ScalingNotAllowedText>
                 </View>
                 <View style={styleSheet.date}>
-                    <Text>{lastTime.getFullYear()}/{month < 10 ? `0${month}` : month}/{day < 10 ? `0${day}` : day}</Text>
-                    <Text style={styleSheet.weekText}>第十七周</Text>
+                    <ScalingNotAllowedText>{lastTime.getFullYear()}/{month < 10 ? `0${month}` : month}/{day < 10 ? `0${day}` : day}</ScalingNotAllowedText>
+                    <ScalingNotAllowedText
+                        style={styleSheet.weekText}>第{currentWeek === -1 ? '---' : currentWeek}周</ScalingNotAllowedText>
                 </View>
             </View>
             <View style={styleSheet.timelineContainer}>
@@ -214,6 +210,7 @@ const styleSheet = StyleSheet.create({
         fontSize: 18,
         color: BackgroundColor.secondary,
         fontWeight: '900',
+        fontFamily: FontFamily.main
     },
 
     date: {
@@ -230,6 +227,7 @@ const styleSheet = StyleSheet.create({
         fontSize: 14,
         fontWeight: '700',
         color: FontColor.grey,
+        fontFamily: FontFamily.main,
     },
 
     courseContainer: {
@@ -272,9 +270,8 @@ const styleSheet = StyleSheet.create({
     },
 
     className: {
-        maxWidth: 140,
         fontSize: FontSize.m,
-        fontWeight: '600',
+        fontWeight: '800',
     },
 
     notDeprecated: {

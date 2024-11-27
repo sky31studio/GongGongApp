@@ -9,6 +9,7 @@ import Course, {
     getWeekString
 } from "../components/timeTable/course.ts";
 import {ClassObject} from "../components/timeTable/ClassObject.ts";
+import {CourseColor} from "../config/globalStyleSheetConfig.ts";
 
 /**
  * 将接口返回的数据转换为Course对象数组
@@ -16,13 +17,22 @@ import {ClassObject} from "../components/timeTable/ClassObject.ts";
  * @return Course[]
  */
 export function dealTable(data: any[]): Course[] {
-    const courses: Course[] = [];
+    if(data.length === 0) return [];
 
-    data.forEach((course, index) => {
+    const courses: Course[] = [];
+    let colorMap: Record<string, string> = {};
+    let index = Math.abs(stringHashcode(data[0].name)) % 7;
+
+    data.forEach((course) => {
+        if (!(course.name in colorMap)) {
+            colorMap[course.name] = CourseColor[index];
+        }
+
         const model: Course = {
             name: course.name,
             teacher: course.teacher,
             classroom: course.classroom,
+            color: colorMap[course.name],
             placeInfo: {
                 periodStart: course.start_time,
                 periodDuration: course.duration,
@@ -31,6 +41,7 @@ export function dealTable(data: any[]): Course[] {
             }
         }
         courses.push(model);
+        index = (index + 1) % 7;
     })
 
     return courses;
@@ -76,7 +87,7 @@ export const getCoursesByWeekAndWeekDay = (table: Record<string, Course[]>, week
     const res: any[] = [];
     const list = table[ScheduleWeekDay[weekDay]];
 
-    list.forEach((course, index) => {
+    list.forEach((course) => {
         const start = getWeekStart(course);
         const end = getWeekEnd(course);
         const periodStart = getPeriodStart(course);
@@ -115,7 +126,7 @@ export const getClassList = (table: Record<string, Course[]>, weekNumber: number
         const end = getWeekEnd(course);
         for (let i = 0; i < start.length; i++) {
             if (start[i] <= weekNumber && end[i] >= weekNumber) {
-                const periodStart = getPeriodStart(course);
+                const periodStart = getPeriodStart(course)
                 if (periodStart > index) {
                     list.push({
                         period: periodStart - index,
@@ -129,7 +140,10 @@ export const getClassList = (table: Record<string, Course[]>, weekNumber: number
                     name: course.name,
                     teacher: course.teacher,
                     classroom: course.classroom,
+                    color: course.color,
                     weeks: getWeekString(course),
+                    weekDay: weekDay,
+                    periodStart: periodStart,
                     period: getPeriodDuration(course),
                     isEmpty: false,
                 });
@@ -157,9 +171,39 @@ export const getClassList = (table: Record<string, Course[]>, weekNumber: number
  */
 export const getAllCoursesByWeek = (table: Record<string, Course[]>, week: number): ClassObject[][] => {
     const res: ClassObject[][] = [];
-    for (let i = 1; i < 7; i++) {
+    for (let i = 1; i <= 7; i++) {
         res.push(getClassList(table, week, i));
     }
 
     return res;
+}
+
+export const getCourseCount = (table: Record<string, Course[]>, week: number, weekDay: number) => {
+    let ans = 0;
+    for(let course of table[ScheduleWeekDay[weekDay]]) {
+        const start = getWeekStart(course);
+        const end = getWeekEnd(course);
+        for (let i = 0; i < start.length; i++) {
+            if (start[i] <= week && end[i] >= week) {
+                ans++;
+            }
+        }
+    }
+
+    return ans;
+}
+
+export const diffDate = (earlier: Date, later: Date) => {
+    return Math.floor((later.getTime() - earlier.getTime()) / (1000 * 3600 * 24));
+}
+
+export const stringHashcode = (str: string) => {
+    let hash = 0;
+    if (str.length === 0) return hash;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash;
 }

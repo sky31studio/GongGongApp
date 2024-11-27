@@ -22,14 +22,18 @@ import Animated, {
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import Resources from "../../basic/Resources.ts";
-import {NavigationProps} from "../home/homePage.tsx";
 import XMLResources from "../../basic/XMLResources.ts";
+import {useAppDispatch} from "../../app/hooks.ts";
+import {loginSuccessful} from "../../app/slice/globalSlice.ts";
+import {NavigationProps} from "../home/homePage.tsx";
+import {useRealm} from "@realm/react";
 
 /**
  * 登录主界面
- * @param navigation 路由
  */
 const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
+    const dispatch = useAppDispatch();
+    const realm = useRealm();
     let handleUsername, handlePassword, handleLogin;
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -49,7 +53,7 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
                 easing: Easing.inOut(Easing.quad),
                 reduceMotion: ReduceMotion.System,
             }),
-            withDelay(5000, withTiming(-10, {
+            withDelay(3000, withTiming(-10, {
                 duration: 1000,
                 easing: Easing.inOut(Easing.quad),
                 reduceMotion: ReduceMotion.System,
@@ -69,14 +73,22 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
             setShowAlert(true);
             alertAnimation();
         } else {
-            const code = await Resources.login(username, password);
-            if (code !== 200) {
-                setAlertText('登录失败，请确认账号密码后重新登录');
+            const res = await Resources.login(username, password);
+            if (res.code === 0) {
+                setAlertText(res.message);
                 setShowAlert(true);
                 alertAnimation();
                 return;
             }
-            navigation.navigate('HomePage');
+            console.log('creating newUser');
+            realm.write(() => {
+                realm.create('GongUser', {
+                    token: res.token,
+                })
+            })
+            console.log('newUser is created!');
+
+            dispatch(loginSuccessful());
         }
     }
 
@@ -91,7 +103,7 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
         </Animated.View>
     )
 
-    const buttonSection = <ButtonSection handleLogin={handleLogin}/>
+    const buttonSection = <ButtonSection handleLogin={handleLogin} navigation={navigation}/>
 
     const keyboardDismiss = () => {
         Keyboard.dismiss();
@@ -269,16 +281,27 @@ const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visiblePro
     );
 }
 
-const ButtonSection = ({handleLogin}: { handleLogin: any }) => {
+const ButtonSection = ({handleLogin, navigation}: { handleLogin: any, navigation: any}) => {
+    const [disabled, setDisabled] = useState<boolean>(false);
+    const onLogin = async () => {
+        setDisabled(true);
+        await handleLogin();
+        setDisabled(false);
+    }
+
     return (
         <View style={buttonStyleSheet.buttonContainer}>
             <View style={{display: 'flex', flexDirection: 'row', marginVertical: 10}}>
                 <Text style={buttonStyleSheet.introText}>登录代表你已同意</Text>
-                <Text style={[buttonStyleSheet.introText, buttonStyleSheet.infoText]}>用户协议</Text>
+                <Pressable onPress={() => navigation.navigate('UserAgreementPage')}>
+                    <Text style={[buttonStyleSheet.introText, buttonStyleSheet.infoText]}>用户协议</Text>
+                </Pressable>
                 <Text style={buttonStyleSheet.introText}>和</Text>
-                <Text style={[buttonStyleSheet.introText, buttonStyleSheet.infoText]}>隐私条款</Text>
+                <Pressable onPress={() => navigation.navigate('PrivacyPolicyPage')}>
+                    <Text style={[buttonStyleSheet.introText, buttonStyleSheet.infoText]}>隐私条款</Text>
+                </Pressable>
             </View>
-            <Pressable style={buttonStyleSheet.loginButton} onPress={handleLogin}>
+            <Pressable style={buttonStyleSheet.loginButton} onPress={onLogin} disabled={disabled}>
                 <Text style={{color: '#fff', fontWeight: '600', fontSize: 15}}>登录</Text>
             </Pressable>
         </View>

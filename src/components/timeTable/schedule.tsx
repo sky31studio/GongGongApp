@@ -5,12 +5,34 @@ import TimeTableConfig from "../../config/TimeTableConfig";
 import {getAllCoursesByWeek} from "../../utils/tableUtils.ts";
 import {useAppSelector} from "../../app/hooks.ts";
 import {selectTable} from "../../app/slice/scheduleSlice.ts";
-
-const weekTime = ['01-01', '01-02', '01-03', '01-04', '01-05', '01-06', '01-07'];
+import {selectFirstDate} from "../../app/slice/globalSlice.ts";
+import {transTo2Digits} from "../../utils/agendaUtils.ts";
+import Animated from "react-native-reanimated";
+import {FontSize} from "../../config/globalStyleSheetConfig.ts";
 
 const weekdayCNName = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
-export default function Schedule(): React.JSX.Element {
+export default function Schedule({week}: { week: number }): React.JSX.Element {
+    const date = useAppSelector(selectFirstDate);
+    const firstDate = useMemo(() => {
+        if (date !== '') {
+            const tmpDate = new Date(date);
+
+            tmpDate.setDate(tmpDate.getDate() + (week - 1) * 7);
+            return tmpDate;
+        }
+
+        return '';
+    }, [date, week]);
+
+    const currentMonth = useMemo(() => {
+        if (firstDate !== '') {
+            return firstDate.getMonth() + 1;
+        }
+
+        return '--';
+    }, [firstDate])
+
     let timeInterval;
     timeInterval = TimeTableConfig.getTimeInterval(new Date());
     // 左侧时间表
@@ -25,7 +47,7 @@ export default function Schedule(): React.JSX.Element {
         }
 
         const view = (
-            <View style={ss}>
+            <View style={ss} key={index}>
                 <Text style={styleSheet.tItemBoldText}>{index + 1}</Text>
                 <Text style={styleSheet.tItemSlimText}>{item.start}</Text>
                 <Text style={styleSheet.tItemSlimText}>{item.end}</Text>
@@ -44,21 +66,31 @@ export default function Schedule(): React.JSX.Element {
     // 左上角表示月份的单元格
     const monthItem = (
         <View style={styleSheet.monthItem}>
-            <Text style={styleSheet.monthText}>1月</Text>
+            <Text style={styleSheet.monthText}>{currentMonth}</Text>
+            <Text style={styleSheet.monthText}>月</Text>
         </View>
     );
     timeListWithGap = [monthItem, ...timeListWithGap];
 
     const table = useAppSelector(selectTable);
-    const courses = useMemo(() => getAllCoursesByWeek(table, 6), [table]);
+    const courses = useMemo(() => getAllCoursesByWeek(table, week), [table, week]);
 
     const classList = () => {
         return courses.map((item, index) => {
+            let showText = '--';
+            if (firstDate !== '') {
+                const showDate = new Date(firstDate);
+                showDate.setDate(showDate.getDate() + index);
+
+                showText = `${transTo2Digits(showDate.getMonth() + 1)}-${transTo2Digits(showDate.getDate())}`;
+            }
+
             const weekDayItem = (
                 <View style={styleSheet.weekdayItemWrapper}>
                     <View style={styleSheet.weekdayItem}>
                         <Text style={styleSheet.wItemBoldText}>{weekdayCNName[index]}</Text>
-                        <Text style={styleSheet.wItemSlimText}>{weekTime[index]}</Text>
+                        <Text
+                            style={styleSheet.wItemSlimText}>{showText}</Text>
                     </View>
                 </View>
             );
@@ -126,19 +158,23 @@ export default function Schedule(): React.JSX.Element {
             return (
                 <View key={index} style={styleSheet.weekdayContainer}>
                     {weekDayItem}
-                    {classItemList}
+                    {classItemList.map((item) => (
+                        item
+                    ))}
                 </View>
             )
         });
     }
 
     return (
-        <View style={styleSheet.scheduleContainer}>
+        <Animated.View style={styleSheet.scheduleContainer}>
             <View style={styleSheet.timeContainer}>
-                {timeListWithGap}
+                {timeListWithGap.map((item) => (
+                    item
+                ))}
             </View>
             {classList()}
-        </View>
+        </Animated.View>
     );
 }
 
@@ -159,11 +195,11 @@ const styleSheet = StyleSheet.create({
 
     tItemBoldText: {
         width: '100%',
-        height: 30,
+        height: 25,
         textAlign: 'center',
         lineHeight: 30,
         fontWeight: '600',
-        paddingBottom: 6,
+        paddingBottom: 4,
         color: '#000',
     },
 
@@ -185,8 +221,7 @@ const styleSheet = StyleSheet.create({
     },
 
     monthText: {
-        width: 13,
-        height: '100%',
+        width: '100%',
         textAlign: 'center',
         textAlignVertical: 'center',
         color: '#000',
@@ -244,6 +279,7 @@ const styleSheet = StyleSheet.create({
         width: '100%',
         fontWeight: '200',
         textAlign: 'center',
+        fontSize: FontSize.s,
         textAlignVertical: 'center',
     },
 

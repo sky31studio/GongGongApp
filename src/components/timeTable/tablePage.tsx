@@ -1,20 +1,125 @@
-import {Image, Pressable, StyleSheet, Text, View} from "react-native";
-import React, {useEffect} from "react";
-import Schedule from "./schedule";
+import {Modal, Pressable, ScrollView, StyleSheet, Text, View} from "react-native";
+import React, {useRef, useState} from "react";
+import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
+import {BackgroundColor, BorderColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
+import {selectTheWeek} from "../../app/slice/globalSlice.ts";
+import {SvgXml} from "react-native-svg";
+import XMLResources from "../../basic/XMLResources.ts";
+import Animated, {Easing, interpolate, useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
+import PagerView from "react-native-pager-view";
+import Schedule from "./schedule.tsx";
 import {NavigationProps} from "../home/homePage.tsx";
-import {useAppDispatch} from "../../app/hooks.ts";
-import {BackgroundColor} from "../../config/globalStyleSheetConfig.ts";
-import {fetchTable} from "../../app/slice/scheduleSlice.ts";
+import {
+    hideModal,
+    lockModal,
+    selectCurrentTimeCourses,
+    selectModalVisible,
+    unlockModal
+} from "../../app/slice/scheduleSlice.ts";
+import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
+import {ENToCNWeekDay} from "../../utils/enum.ts";
 
 export const TablePage = ({navigation}: NavigationProps) => {
-
     const dispatch = useAppDispatch();
-    useEffect(() => {
-        dispatch(fetchTable());
-    }, [dispatch]);
+    const theWeek = useAppSelector(selectTheWeek);
+    const modalVisible = useAppSelector(selectModalVisible);
+    const courseList = useAppSelector(selectCurrentTimeCourses);
+
+    const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
+    const pagerViewRef = useRef<PagerView>(null);
+
+    const dropWeekListValue = useSharedValue<number>(0);
+    const arrowAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{
+                rotate: `${interpolate(dropWeekListValue.value, [0, 1], [-90, 90])}deg`
+            }]
+        }
+    })
+
+    const weekListAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            maxHeight: interpolate(dropWeekListValue.value, [0, 1], [0, 50])
+        }
+    })
 
     const handleGoBack = () => {
-        navigation.goBack();
+        navigation.navigate('TabNavigation');
+    }
+
+    const toggleWeekList = () => {
+
+        dropWeekListValue.value = withTiming(dropWeekListValue.value === 0 ? 1 : 0, {
+            duration: 300,
+            easing: Easing.ease,
+        });
+    }
+
+    const handlePageSelected = (e: any) => {
+        const index= e.nativeEvent.position;
+        setCurrentWeek(index + 1);
+    }
+
+    // 防止在滑动时点开Modal
+    const handleScrollStateChanged = (event: any) => {
+        if(event.nativeEvent.pageScrollState === 'idle') {
+            dispatch(unlockModal());
+        } else {
+            dispatch(lockModal());
+        }
+    }
+
+    const weekData = Array.from({length: 21}, (_, index) => {
+        return {
+            week: index + 1,
+        }
+    });
+
+
+    const weekListRenderItem = (data: any) => {
+        const color = currentWeek === data.item.week ? FontColor.secondary : FontColor.grey;
+        let backgroundColor = 'transparent';
+        if (theWeek === data.item.week) backgroundColor = BackgroundColor.grey;
+        if (currentWeek === data.item.week) backgroundColor = BackgroundColor.focused;
+
+        // TODO: 滚动
+        const handleClick = () => {
+            setCurrentWeek(data.item.week);
+            pagerViewRef.current?.setPage(data.item.week - 1);
+        }
+
+        return (
+            <Pressable
+                onPress={handleClick}
+                style={{
+                    height: 44,
+                    width: 65,
+                    backgroundColor: backgroundColor,
+                    borderRadius: 4,
+                    paddingHorizontal: 4,
+                    paddingVertical: 8,
+                    marginVertical: 3,
+                    marginHorizontal: 5,
+                    display: 'flex',
+                    flexDirection: 'column',
+                }}
+            >
+                <View
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Text style={{fontSize: FontSize.m, color: color}}>第</Text>
+                    <Text style={{fontSize: FontSize.l, letterSpacing: 4, color: color, fontWeight: 600}}>{data.item.week}</Text>
+                    <Text style={{fontSize: FontSize.m, color: color}}>周</Text>
+                </View>
+                {theWeek === data.item.week && <Text style={{fontSize: FontSize.xxs, color: color, textAlign: 'center'}}>(本周)</Text>}
+
+            </Pressable>
+        )
     }
 
     return (
@@ -29,58 +134,124 @@ export const TablePage = ({navigation}: NavigationProps) => {
                 flexDirection: 'column',
             }}>
                 <View style={styleSheet.guideBar}>
-                    <Pressable onPress={handleGoBack}>
-                        <Image
-                            source={require('../../assets/png/leftArrow.png')}
-                            style={{
-                                width: 30,
-                                height: 30,
-                                position: 'absolute',
-                                left: 5,
-                                bottom: '40%',
-                            }}></Image>
+                    <Pressable onPress={handleGoBack} style={styleSheet.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
+                        <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
                     </Pressable>
-
                     <View style={styleSheet.weekBox}>
-                        <View style={styleSheet.textBox}>
+                        <Pressable onPress={toggleWeekList} style={styleSheet.textBox}>
                             <Text style={{
-                                color: 'black',
+                                color: FontColor.light,
                                 height: 20,
                                 lineHeight: 20,
                                 fontSize: 18,
                                 fontWeight: '600'
-                            }}>第5周</Text>
-                            <Text style={{color: 'black', fontSize: 12}}>本周</Text>
-                            <Image
-                                source={require('../../assets/png/leftArrow.png')}
-                                style={{
-                                    width: 18,
-                                    height: 18,
-                                    transform: [
-                                        {rotate: '-90deg'}
-                                    ],
-                                    position: 'absolute',
-                                    right: -20,
-                                    top: 0,
-                                }}
-                            ></Image>
+                            }}>第{currentWeek}周</Text>
+                            <Text style={{
+                                color: FontColor.light,
+                                fontSize: 12
+                            }}>{theWeek === currentWeek ? '本周' : '非本周'}</Text>
+                            <Animated.View
+                                style={[
+                                    arrowAnimatedStyle,
+                                    {
+                                        position: 'absolute',
+                                        right: -20,
+                                        top: 0,
+                                    }
+                                ]}
+                            >
+                                <View>
+                                    <SvgXml
+                                        xml={XMLResources.backArrow}
+                                        width={14} height={14}
+                                    />
+                                </View>
+                            </Animated.View>
+                        </Pressable>
+                    </View>
+                </View>
+                <Animated.FlatList
+                    showsHorizontalScrollIndicator={false}
+                    style={[weekListAnimatedStyle]}
+                    data={weekData}
+                    renderItem={weekListRenderItem}
+                    horizontal={true}
+                    keyExtractor={item => item.week.toString()}
+                    removeClippedSubviews={false}
+                />
+                <PagerView
+                    ref={pagerViewRef}
+                    style={[styleSheet.tableWrapper]}
+                    initialPage={currentWeek - 1}
+                    onPageSelected={handlePageSelected}
+                    onPageScrollStateChanged={handleScrollStateChanged}
+                    offscreenPageLimit={1}
+                >
+                    {weekData.map((item, index) => {
+                       return (
+                           <View key={index} style={{flex: 1}}>
+                               <Schedule week={item.week}></Schedule>
+                           </View>
+                       )
+                    })}
+                </PagerView>
+                <Modal
+                    visible={modalVisible}
+                    transparent={true}
+                    animationType={'fade'}
+                >
+                    <View style={{
+                        flex: 1,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: BackgroundColor.modalShadow
+                    }}>
+                        <View style={styleSheet.modalContainer}>
+                            <View style={{width: '100%', height: 30, display: 'flex', alignItems: 'flex-end'}}>
+                                {/* 关闭按钮 */}
+                                <Pressable onPress={() => dispatch(hideModal())}>
+                                    <SvgXml xml={XMLResources.closeAddBoard} width="20" height="20"/>
+                                </Pressable>
+                            </View>
+                            <ScrollView style={{width: '100%', height: 400}}>
+                                {courseList &&
+                                    courseList.map((course, index) => {
+                                        const periodStart = course.placeInfo.periodStart;
+                                        const weekDay = ENToCNWeekDay[course.placeInfo.day as keyof typeof ENToCNWeekDay];
+                                        const periodText = `${weekDay} ${periodStart}-${periodStart + course.placeInfo.periodDuration - 1}节`;
+                                        let weekText = '';
+                                        for(let info of course.placeInfo.weekInfo) {
+                                            weekText = weekText.concat(`${info.weekStart}-${info.weekEnd},`);
+                                        }
+                                        weekText = weekText.slice(0, -1);
+                                        weekText = weekText.concat(' 周');
+                                        return (
+                                            <View key={index} style={{width: '100%', marginVertical: 15, borderBottomColor: BorderColor.grey, borderBottomWidth: .8}}>
+                                                <View style={{marginBottom: 15}}>
+                                                    <ScalingNotAllowedText style={{fontSize: FontSize.ll, color: FontColor.dark, fontWeight: '700'}}>{course.name}</ScalingNotAllowedText>
+                                                </View>
+                                                <View style={{display: 'flex', flexDirection: 'row'}}>
+                                                    <View style={{marginRight: 20}}>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubTitle}>教室</ScalingNotAllowedText>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubTitle}>周次</ScalingNotAllowedText>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubTitle}>节数</ScalingNotAllowedText>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubTitle}>老师</ScalingNotAllowedText>
+                                                    </View>
+                                                    <View>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubText}>{course.classroom}</ScalingNotAllowedText>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubText}>{weekText}</ScalingNotAllowedText>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubText}>{periodText}</ScalingNotAllowedText>
+                                                        <ScalingNotAllowedText style={styleSheet.modalSubText}>{course.teacher}</ScalingNotAllowedText>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        )
+                                    })
+                                }
+                            </ScrollView>
                         </View>
                     </View>
-
-                    <Image
-                        source={require('../../assets/png/reload.png')}
-                        style={{
-                            width: 26,
-                            height: 26,
-                            position: 'absolute',
-                            right: 10,
-                            bottom: '40%'
-                        }}
-                    ></Image>
-                </View>
-                <View style={styleSheet.tableWrapper}>
-                    <Schedule></Schedule>
-                </View>
+                </Modal>
             </View>
         </View>
     );
@@ -109,7 +280,6 @@ const styleSheet = StyleSheet.create({
     },
 
     textBox: {
-        maxWidth: 50,
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
@@ -117,7 +287,6 @@ const styleSheet = StyleSheet.create({
     },
 
     tableWrapper: {
-        width: '100%',
         flex: 1,
     },
 
@@ -135,5 +304,41 @@ const styleSheet = StyleSheet.create({
         flex: 1,
         display: 'flex',
         flexDirection: 'column'
+    },
+
+    backButton: {
+        height: 24,
+        width: 20,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute',
+        top: 50,
+        left: 20,
+    },
+
+    modalContainer: {
+        position: 'absolute',
+        bottom: 0,
+        width: '100%',
+        backgroundColor: BackgroundColor.mainLight,
+        borderTopLeftRadius: 15,
+        borderTopRightRadius: 15,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        display: 'flex',
+        flexDirection: 'column',
+    },
+
+    modalSubTitle: {
+        color: FontColor.grey,
+        fontSize: FontSize.s,
+        marginVertical: 10,
+    },
+
+    modalSubText: {
+        color: FontColor.dark,
+        fontSize: FontSize.s,
+        marginVertical: 10,
     }
 })

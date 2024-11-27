@@ -1,13 +1,9 @@
-import React, {createContext, useContext, useEffect, useState} from "react";
-import {Pressable, StyleSheet, Text, View} from "react-native";
+import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
+import {Modal, Pressable, StyleSheet, useWindowDimensions, View} from "react-native";
 import {SvgXml} from "react-native-svg";
-import {useAppDispatch} from "../../app/hooks.ts";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
-import {addOnValueChangedListener, getToken} from "../../storage.ts";
 import {AgendaList} from "./agenda/agendaList.tsx";
 import ClassList from "./course/classList.tsx";
-import {fetchTable} from "../../app/slice/scheduleSlice.ts";
-import {fetchExamData} from "../../app/slice/agendaSlice.ts";
 import XMLResources from "../../basic/XMLResources.ts";
 import Animated, {
     Easing,
@@ -17,6 +13,12 @@ import Animated, {
     withTiming
 } from "react-native-reanimated";
 import LinearGradient from "react-native-linear-gradient";
+import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
+import {useQuery} from "@realm/react";
+import GongUser from "../../dao/object/User.ts";
+import {useAppSelector} from "../../app/hooks.ts";
+import {selectShowAddBoard} from "../../app/slice/agendaSlice.ts";
+import AddBoard from "./agenda/addBoard.tsx";
 
 export interface NavigationProps {
     navigation: {
@@ -25,17 +27,11 @@ export interface NavigationProps {
     };
 }
 
-const HomePage = ({navigation}: NavigationProps) => {
-    const dispatch = useAppDispatch();
-
-    // 登录成功，一次性请求全部数据
-    useEffect(() => {
-        dispatch(fetchTable());
-        dispatch(fetchExamData());
-    }, []);
-
+const Home = ({navigation}: NavigationProps) => {
     const functionBar = () => <FunctionBar navigation={navigation}/>;
     const marinBoard = () => <MainBoard/>;
+    const modalVisible = useAppSelector(selectShowAddBoard);
+
     return (
         <View style={styleSheet.homeContainer}>
             <View style={{width: '100%', height: '18%'}}>
@@ -44,8 +40,20 @@ const HomePage = ({navigation}: NavigationProps) => {
             <View style={styleSheet.mainBoardWrapper}>
                 {marinBoard()}
             </View>
+             {/*AddBoard模态*/}
+            <Modal
+                visible={modalVisible}
+                transparent={true}
+                animationType={'fade'}
+            >
+                <View style={{flex: 1, alignItems: 'center', backgroundColor: BackgroundColor.modalShadow}}>
+                    <View style={{position: 'absolute', bottom: 0, width: '100%'}}>
+                        <AddBoard/>
+                    </View>
+                </View>
+            </Modal>
         </View>
-    );
+    )
 }
 
 const FunctionBar: React.ComponentType<NavigationProps> = ({navigation}) => {
@@ -66,25 +74,25 @@ const FunctionBar: React.ComponentType<NavigationProps> = ({navigation}) => {
             <Pressable onPress={toEmptyClassroomPage}>
                 <View style={styleSheet.functionBox}>
                     <SvgXml xml={XMLResources.emptyClassroomIcon} width="100%"/>
-                    <Text style={styleSheet.functionText}>空教室</Text>
+                    <ScalingNotAllowedText style={styleSheet.functionText}>空教室</ScalingNotAllowedText>
                 </View>
             </Pressable>
             <Pressable onPress={toScorePage}>
                 <View style={styleSheet.functionBox}>
                     <SvgXml xml={XMLResources.scoreIcon} width="100%"/>
-                    <Text style={styleSheet.functionText}>查成绩</Text>
+                    <ScalingNotAllowedText style={styleSheet.functionText}>查成绩</ScalingNotAllowedText>
                 </View>
             </Pressable>
             <Pressable onPress={toTablePage}>
                 <View style={styleSheet.functionBox}>
                     <SvgXml xml={XMLResources.courseIcon} width="100%"/>
-                    <Text style={styleSheet.functionText}>课程表</Text>
+                    <ScalingNotAllowedText style={styleSheet.functionText}>课程表</ScalingNotAllowedText>
                 </View>
             </Pressable>
-            <View style={styleSheet.functionBox}>
-                <SvgXml xml={XMLResources.emptyScoreIcon} width="100%"/>
-                <Text style={styleSheet.functionText}>多人空课</Text>
-            </View>
+            {/*<View style={styleSheet.functionBox}>*/}
+            {/*    <SvgXml xml={XMLResources.emptyScoreIcon} width="100%"/>*/}
+            {/*    <ScalingNotAllowedText style={styleSheet.functionText}>多人空课</ScalingNotAllowedText>*/}
+            {/*</View>*/}
         </View>
     );
 }
@@ -96,18 +104,23 @@ interface HomeContextType {
 
 const HomeContext = createContext<HomeContextType>({
     choice: 0,
-    shiftChoice: (value: number) => {
+    shiftChoice: () => {
     }
 });
 
 const MainBoard = () => {
+    const user = useQuery<GongUser>('GongUser');
     const classTableButton = <ShiftButton id={0} text='课程表' initFocus={true}/>;
     const countdownButton = <ShiftButton id={1} text='倒计时'/>;
 
-    const [hasToken, setHasToken] = useState(getToken() !== '');
-    const [choice, setChoice] = useState(0);
+    const [hasToken, _] = useState(user !== undefined);
+    const [choice, setChoice] = useState<number>(0);
+    const winWidth = useWindowDimensions().width;
 
-    const translateX = useSharedValue(-50);
+    const classList = useMemo(() => <ClassList hasToken={hasToken}/>, [hasToken]);
+    const agendaList = useMemo(() => <AgendaList hasToken={hasToken}/>, [hasToken]);
+
+    const translateX = useSharedValue(-winWidth * 0.12);
     const animatedStyle = useAnimatedStyle(() => {
         return {
             transform: [{translateX: translateX.value}]
@@ -116,12 +129,12 @@ const MainBoard = () => {
 
     useEffect(() => {
         if (choice === 0) {
-            translateX.value = withTiming(-50, {
+            translateX.value = withTiming(-winWidth * 0.12, {
                 duration: 200,
                 easing: Easing.ease
             })
         } else if (choice === 1) {
-            translateX.value = withTiming(50, {
+            translateX.value = withTiming(winWidth * 0.12, {
                 duration: 200,
                 easing: Easing.ease
             })
@@ -131,19 +144,6 @@ const MainBoard = () => {
     const handleChoice = (value: number) => {
         setChoice(value);
     }
-
-    useEffect(() => {
-        const listener = addOnValueChangedListener((changedKey) => {
-            if (changedKey === 'token') {
-                const newValue = getToken();
-                setHasToken(newValue !== '');
-            }
-        });
-
-        return () => {
-            listener.remove();
-        }
-    }, []);
 
     return (
         <View style={styleSheet.mainBoardContainer}>
@@ -156,7 +156,7 @@ const MainBoard = () => {
                     <View style={styleSheet.shiftButton}>
                         {countdownButton}
                     </View>
-                    <Animated.View style={[animatedStyle, {position: 'absolute', bottom: 7}]}>
+                    <Animated.View style={[animatedStyle, {position: 'absolute', bottom: 8}]}>
                         <LinearGradient
                             colors={[BackgroundColor.primary, BackgroundColor.primaryGradient]} // 定义渐变颜色
                             start={{x: 0, y: 0}} // 渐变开始的位置
@@ -169,7 +169,12 @@ const MainBoard = () => {
                 </View>
             </HomeContext.Provider>
             <View style={styleSheet.mainWrapper}>
-                {choice === 0 ? <ClassList hasToken={hasToken}/> : <AgendaList hasToken={hasToken}/>}
+                <View style={{ display: choice === 0 ? 'flex' : 'none' }}>
+                    {classList}
+                </View>
+                <View style={{ display: choice === 1 ? 'flex' : 'none' }}>
+                    {agendaList}
+                </View>
             </View>
         </View>
     );
@@ -184,7 +189,7 @@ interface ButtonProps {
 const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus = false}): React.JSX.Element => {
     const {choice, shiftChoice}: HomeContextType = useContext(HomeContext);
 
-    const colorValue = useSharedValue(0);
+    const colorValue = useSharedValue(initFocus ? 1 : 0);
     const animatedStyle = useAnimatedStyle(() => {
         return {
             color: interpolateColor(colorValue.value, [0, 1], [FontColor.grey, FontColor.dark])
@@ -209,6 +214,10 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
         }
     }, [choice])
 
+    useEffect(() => {
+        colorValue.value = initFocus ? 1 : 0;
+    }, []);
+
     return (
         <Pressable onPress={handleClick}>
             <View style={styleSheet.shiftBox}>
@@ -224,7 +233,6 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
 
 const styleSheet = StyleSheet.create({
     homeContainer: {
-        width: '100%',
         flex: 1,
     },
 
@@ -259,7 +267,6 @@ const styleSheet = StyleSheet.create({
     },
 
     mainBoardWrapper: {
-        width: '100%',
         paddingTop: 50,
         flex: 1,
     },
@@ -303,7 +310,6 @@ const styleSheet = StyleSheet.create({
         width: 50,
         fontSize: 15,
         textAlign: 'center',
-        zIndex: 10,
     },
     initBox: {
         width: 50,
@@ -327,4 +333,4 @@ const styleSheet = StyleSheet.create({
     },
 });
 
-export default HomePage;
+export default Home;

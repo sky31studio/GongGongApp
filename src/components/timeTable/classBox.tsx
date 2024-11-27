@@ -1,6 +1,8 @@
 import React from "react";
-import {StyleSheet, Text, View} from "react-native";
+import {Pressable, StyleSheet, Text, View} from "react-native";
 import {ClassObject} from "./ClassObject.ts";
+import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
+import {selectModalLocked, setModalTimePosition, showModal} from "../../app/slice/scheduleSlice.ts";
 
 interface ClassBoxProps {
     color?: string,
@@ -13,18 +15,33 @@ interface ClassBoxProps {
  * @param course 课程信息来源
  */
 let ClassBox: React.ComponentType<ClassBoxProps>;
-ClassBox = ({course, color = '#1cb128'}) => {
-    const {name, classroom} = course;
+ClassBox = ({course}) => {
+    const dispatch = useAppDispatch();
+    const modalLocked = useAppSelector(selectModalLocked);
+    const {name, classroom, color} = course;
+
+    // 详细信息展开
+    const handleClick = () => {
+        if(!modalLocked) {
+            dispatch(setModalTimePosition({
+                weekDay: course.weekDay!,
+                periodStart: course.periodStart!,
+                periodEnd: course.periodStart! + course.period - 1
+            }));
+
+            dispatch(showModal());
+        }
+    }
 
     return (
-        <View style={{...styleSheet.boxContainer, backgroundColor: color}}>
+        <Pressable onPress={handleClick} style={{...styleSheet.boxContainer, backgroundColor: color}}>
             <View style={styleSheet.classBoxTextWrapper}>
                 <Text style={styleSheet.classBoxText}>{name}</Text>
             </View>
             <View style={{...styleSheet.classBoxTextWrapper, position: 'absolute', bottom: 5}}>
                 <Text style={styleSheet.classBoxText}>{classroom}</Text>
             </View>
-        </View>
+        </Pressable>
     );
 };
 

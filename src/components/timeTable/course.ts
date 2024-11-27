@@ -4,6 +4,7 @@ export default interface Course {
     name: string;
     teacher: string;
     classroom: string;
+    color: string;
     placeInfo: TimePlace;
 }
 

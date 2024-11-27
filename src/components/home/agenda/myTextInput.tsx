@@ -3,20 +3,22 @@ import {useRef, useState} from "react";
 import {FontSize} from "../../../config/globalStyleSheetConfig.ts";
 
 
-const MyTextInput = ({placeholder, sendData, multiline = false, height = 34, alignCenter = true}: {
+const MyTextInput = ({placeholder, initText = '', editable = true, sendData, multiline = false, height = 34, alignCenter = true}: {
     placeholder: string,
+    editable?: boolean,
+    initText?: string,
     sendData: any,
     multiline?: boolean,
     height?: number,
     alignCenter?: boolean
 }) => {
     const textInputRef = useRef<TextInput>(null);
-    const [content, setContent] = useState<string>('');
-    const [isEmpty, setIsEmpty] = useState<boolean>(true);
+    const [content, setContent] = useState<string>(initText);
+    const [isEmpty, setIsEmpty] = useState<boolean>(initText === '');
 
     const handleChange = (value: string) => {
         setContent(value);
-        sendData(content);
+        sendData(value);
     }
 
     const handleBlur = () => {
@@ -44,7 +46,7 @@ const MyTextInput = ({placeholder, sendData, multiline = false, height = 34, ali
                 </Pressable>
             )}
             <View style={{position: 'absolute', height: '100%', width: '100%', backgroundColor: '#fff7f8'}}></View>
-            <TextInput textAlignVertical={alignCenter ? 'center' : 'top'} multiline={multiline} ref={textInputRef}
+            <TextInput value={content} editable={editable} textAlignVertical={alignCenter ? 'center' : 'top'} multiline={multiline} ref={textInputRef}
                        style={ss.myTextInput} onChangeText={handleChange} onBlur={handleBlur} onFocus={handleFocus}/>
         </View>
     )

@@ -27,7 +27,6 @@ export enum ENWeekDay {
 export enum AgendaType {
     "考试" = 0,
     "考查",
-    "置顶",
 }
 
 export enum ScheduleWeekDay {
@@ -40,6 +39,16 @@ export enum ScheduleWeekDay {
     Sunday,
 }
 
+export enum ENToCNWeekDay {
+    'Monday' = "周一",
+    'Tuesday' = "周二",
+    'Wednesday' = "周三",
+    'Thursday' = "周四",
+    'Friday' = "周五",
+    'Saturday' = "周六",
+    'Sunday' = "周日"
+}
+
 export enum Term {
     "大一上" = 1,
     "大一下",
@@ -49,4 +58,11 @@ export enum Term {
     "大三下",
     "大四上",
     "大四下",
+}
+
+export enum ResourceCode {
+    LocalFailed,
+    RemoteFailed,
+    PermissionDenied,
+    Successful,
 }
