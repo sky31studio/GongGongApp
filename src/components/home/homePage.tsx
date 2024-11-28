@@ -29,7 +29,6 @@ export interface NavigationProps {
 
 const Home = ({navigation}: NavigationProps) => {
     const functionBar = () => <FunctionBar navigation={navigation}/>;
-    const marinBoard = () => <MainBoard/>;
     const modalVisible = useAppSelector(selectShowAddBoard);
 
     return (
@@ -38,9 +37,9 @@ const Home = ({navigation}: NavigationProps) => {
                 {functionBar()}
             </View>
             <View style={styleSheet.mainBoardWrapper}>
-                {marinBoard()}
+                <MainBoard/>
             </View>
-             {/*AddBoard模态*/}
+            {/*AddBoard模态*/}
             <Modal
                 visible={modalVisible}
                 transparent={true}

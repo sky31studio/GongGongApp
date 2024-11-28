@@ -1,5 +1,5 @@
 import {Modal, Pressable, ScrollView, StyleSheet, Text, View} from "react-native";
-import React, {useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {BackgroundColor, BorderColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {selectTheWeek} from "../../app/slice/globalSlice.ts";
@@ -24,6 +24,14 @@ export const TablePage = ({navigation}: NavigationProps) => {
     const theWeek = useAppSelector(selectTheWeek);
     const modalVisible = useAppSelector(selectModalVisible);
     const courseList = useAppSelector(selectCurrentTimeCourses);
+
+    const [isLazyLoaded, setIsLazyLoaded] = useState<boolean>(false);
+
+    useEffect(() => {
+        setTimeout(() => {
+            setIsLazyLoaded(true);
+        }, 500);
+    }, []);
 
     const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
     const pagerViewRef = useRef<PagerView>(null);
@@ -179,22 +187,24 @@ export const TablePage = ({navigation}: NavigationProps) => {
                     keyExtractor={item => item.week.toString()}
                     removeClippedSubviews={false}
                 />
-                <PagerView
-                    ref={pagerViewRef}
-                    style={[styleSheet.tableWrapper]}
-                    initialPage={currentWeek - 1}
-                    onPageSelected={handlePageSelected}
-                    onPageScrollStateChanged={handleScrollStateChanged}
-                    offscreenPageLimit={1}
-                >
-                    {weekData.map((item, index) => {
-                       return (
-                           <View key={index} style={{flex: 1}}>
-                               <Schedule week={item.week}></Schedule>
-                           </View>
-                       )
-                    })}
-                </PagerView>
+                {isLazyLoaded ?
+                    <PagerView
+                        ref={pagerViewRef}
+                        style={[styleSheet.tableWrapper]}
+                        initialPage={currentWeek - 1}
+                        onPageSelected={handlePageSelected}
+                        onPageScrollStateChanged={handleScrollStateChanged}
+                        offscreenPageLimit={1}
+                    >
+                        {weekData.map((item, index) => {
+                            return (
+                                <View key={index} style={{flex: 1}}>
+                                    <Schedule week={item.week}></Schedule>
+                                </View>
+                            )
+                        })}
+                    </PagerView> : null
+                }
                 <Modal
                     visible={modalVisible}
                     transparent={true}
