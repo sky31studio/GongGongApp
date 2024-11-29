@@ -4,8 +4,8 @@ import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleShee
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
-import {selectCurrentAgendaNumber} from "../../app/slice/agendaSlice.ts";
-import {selectCurrentCourseNumber} from "../../app/slice/scheduleSlice.ts";
+import {agendaResetAll, selectCurrentAgendaNumber} from "../../app/slice/agendaSlice.ts";
+import {resetSchedule, selectCurrentCourseNumber} from "../../app/slice/scheduleSlice.ts";
 import {selectStudentID, selectStudentMajor, selectStudentName} from "../../app/slice/infoSlice.ts";
 import {logoutSuccessful, selectIsLogin} from "../../app/slice/globalSlice.ts";
 import {NavigationProps} from "../home/homePage.tsx";
@@ -31,6 +31,8 @@ const InfoPage = ({navigation}: NavigationProps) => {
 
     const handleReLogin = () => {
         closeModal();
+        dispatch(agendaResetAll());
+        dispatch(resetSchedule());
         realm.write(() => {
             realm.delete(user);
         })
@@ -102,7 +104,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                     {/*<NavigationBox title={'新功能'} handleNavigation={() => null}/>*/}
                     {/*<NavigationBox title={'新手指南'} handleNavigation={() => null}/>*/}
                     {/*<NavigationBox title={'关于拱拱'} handleNavigation={() => null}/>*/}
-                    <NavigationBox title={'联系我们'} handleNavigation={() => null}/>
+                    <NavigationBox title={'联系我们'} handleNavigation={() => navigation.navigate('FeedbackPage')}/>
                     <NavigationBox title={'用户协议'} handleNavigation={() => navigation.navigate('UserAgreementPage')}/>
                     <NavigationBox title={'隐私条款'} handleNavigation={() => navigation.navigate('PrivacyPolicyPage')}/>
                     <NavigationBox title={'社区规范'} handleNavigation={() => navigation.navigate('SpecificationPage')}/>

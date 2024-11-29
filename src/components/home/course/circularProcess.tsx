@@ -4,8 +4,8 @@ import Svg, {Circle} from "react-native-svg";
 import Animated, {
     Easing,
     useAnimatedProps,
-    useDerivedValue,
     useSharedValue,
+    withDelay,
     withSequence,
     withTiming
 } from "react-native-reanimated";
@@ -24,8 +24,6 @@ CircularProcess = ({done, todo}) => {
     const innerRadius = 28;
     const circumference = 2 * Math.PI * innerRadius;
     const completion = useMemo(() => todo === 0 ? 0 : done / todo, [todo, done]) ;
-    const theta = useSharedValue(2 * Math.PI);
-    const animateTo = useDerivedValue(() => theta.value * completion);
     const dashoffset = useSharedValue(circumference);
 
     const animatedProps = useAnimatedProps(() => {
@@ -36,17 +34,26 @@ CircularProcess = ({done, todo}) => {
 
     useEffect(() => {
         if(todo === 0) return;
+        dashoffset.value = circumference;
 
+        console.log(`done = ${done}`);
+        console.log(`todo = ${todo}`);
+        console.log(`completion = ${completion}`);
+        console.log(dashoffset.value);
         dashoffset.value = withSequence(
-            withTiming(circumference, {duration: 0}),
-            withTiming(
-                circumference - animateTo.value * innerRadius,
-                {
-                    duration: 1000,
-                    easing: Easing.ease
-                })
+            withDelay(500,
+                withTiming(
+                    circumference - 2 * Math.PI * completion * innerRadius,
+                    {
+                        duration: 1000,
+                        easing: Easing.ease
+                    })
+            )
         );
-    }, [todo, done]);
+        setTimeout(() => {
+            console.log(dashoffset.value);
+        }, 1000);
+    }, [completion]);
 
     return (
         <View style={styleSheet.circularProcessContainer}>

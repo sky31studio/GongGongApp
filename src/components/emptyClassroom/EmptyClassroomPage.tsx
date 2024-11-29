@@ -1,4 +1,4 @@
-import {FlatList, Pressable, ScrollView, StyleSheet, View} from "react-native";
+import {FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, ToastAndroid, View} from "react-native";
 import {BackgroundColor, FontColor, FontFamily, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import React, {useMemo, useState} from "react";
 import {SvgXml} from "react-native-svg";
@@ -6,9 +6,17 @@ import XMLResources from "../../basic/XMLResources.ts";
 import {NavigationProps} from "../home/homePage.tsx";
 import {produce} from "immer";
 import Animated, {runOnJS, useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
-import {useAppSelector} from "../../app/hooks.ts";
-import {selectTodayClassroomStatus, selectTomorrowClassroomStatus} from "../../app/slice/classroomSlice.ts";
+import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
+import {
+    selectTodayClassroomStatus,
+    selectTomorrowClassroomStatus,
+    setTodayEmptyClassroomStatus, setTomorrowEmptyClassroomStatus
+} from "../../app/slice/classroomSlice.ts";
 import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
+import {useQuery, useRealm} from "@realm/react";
+import GongUser from "../../dao/object/User.ts";
+import Resources, {ResourceMessage} from "../../basic/Resources.ts";
+import {ResourceCode} from "../../utils/enum.ts";
 
 const location = ['逸夫楼', '兴湘C栋', '兴湘B栋', '一教', '北山', '南山', '文新院', '尚美楼', '土木楼', '图书馆南', '外语楼', '行远楼', '其他'];
 const remoteLocationName = ['逸夫楼', '兴教楼C', '兴教楼B', '一教楼', '北山阶梯', '南山阶梯', '文科楼', '尚美楼', '土木楼', '图书馆南', '外语楼', '行远楼', '其他'];
@@ -20,6 +28,12 @@ const periods = ['1-2', '3-4', '5-6', '7-8', '9-11'];
  * @constructor
  */
 const EmptyClassroomPage = ({navigation}: NavigationProps) => {
+    const dispatch = useAppDispatch();
+    // 数据库查询
+    const realm = useRealm();
+    const user = useQuery<GongUser>('GongUser')[0];
+    // 列表刷新状态
+    const [refreshing, setRefreshing] = useState<boolean>(false);
     // 选中地点下标
     const [currentIndex, setCurrentIndex] = useState<number>(0);
     // 是否是今天
@@ -74,8 +88,36 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
         currentIndex={currentIndex}
     />
 
+    // 返回键回调函数
     const handleBack = () => {
         navigation.navigate('TabNavigation');
+    }
+
+    // 刷新获取数据
+    const onRefresh = () => {
+        setRefreshing(true);
+
+        const fetchData = async () => {
+            let msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token);
+            if(msg.code === ResourceCode.Successful) {
+                dispatch(setTodayEmptyClassroomStatus(msg.data));
+                realm.write(() => {
+                    user.todayClassroom = JSON.stringify(msg.data);
+                })
+            }
+
+            msg = await Resources.getTodayClassroomStatus(user.token);
+            if(msg.code === ResourceCode.Successful) {
+                dispatch(setTomorrowEmptyClassroomStatus(msg.data));
+                realm.write(() => {
+                    user.tomorrowClassroom = JSON.stringify(msg.data);
+                })
+            } else {
+                ToastAndroid.showWithGravity('空教室信息获取失败！', 1500, ToastAndroid.BOTTOM);
+            }
+        }
+
+        fetchData().then(() => setRefreshing(false));
     }
 
     // FlatList渲染需要使用的数据
@@ -121,82 +163,90 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
     })
 
     return (
-        <View style={{height: '100%', width: '100%', backgroundColor: BackgroundColor.primary}}>
-            <View style={ss.titleBar}>
-                <View
-                    style={{
-                        justifyContent: 'center',
-                        flexDirection: 'row',
-                    }}
-                >
-                    <ScalingNotAllowedText style={ss.titleText}>空教室</ScalingNotAllowedText>
-                </View>
-                <Pressable onPress={handleBack} style={ss.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
-                    <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
-                </Pressable>
-                <View style={{width: '100%', height: 40, position: 'absolute', bottom: 0}}>
-                    <FlatList
-                        data={listData}
-                        renderItem={itemRenderer}
-                        style={{flex: 1}}
-                        horizontal={true}
-                        showsHorizontalScrollIndicator={false}
-                        removeClippedSubviews={false}
-                    />
-                </View>
-            </View>
-            <View style={ss.mainContainer}>
-                {functionField()}
-                <View style={ss.mainInfoContainer}>
-                    <View style={{width: '100%', height: 40, display: 'flex', flexDirection: 'row'}}>
-                        <View style={{width: 50, height: '100%'}}></View>
-                        <View style={{flex: 1, height: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-                            {periodList.map((item) => (
-                                item
-                            ))}
-                        </View>
+        <ScrollView
+            contentContainerStyle={{flex: 1}}
+            nestedScrollEnabled={true}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[BackgroundColor.primary]}/>
+            }
+        >
+            <View style={{height: '100%', width: '100%', backgroundColor: BackgroundColor.primary}}>
+                <View style={ss.titleBar}>
+                    <View
+                        style={{
+                            justifyContent: 'center',
+                            flexDirection: 'row',
+                        }}
+                    >
+                        <ScalingNotAllowedText style={ss.titleText}>空教室</ScalingNotAllowedText>
                     </View>
-                    <ScrollView showsVerticalScrollIndicator={false}>
-                        {/* 有数据 */}
-                        {locationData.length !== 0 && locationData.map((location, index) => {
-                            return (
-                                <View key={index} style={{width: '100%', height: 30, display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
-                                    <View style={{width: 50, height: '100%', justifyContent: 'center'}}>
-                                        <ScalingNotAllowedText
-                                            style={{color: FontColor.grey}}>{location.name}</ScalingNotAllowedText>
-                                    </View>
-                                    <View
-                                        style={{flex: 1, height: '25%', display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}
-                                    >
-                                        <View style={ss.periodBackgroundBlock}></View>
-                                        {location.status.map((status: boolean, index: number) => {
-                                            const backgroundColor = status ? BackgroundColor.iconPrimary : 'transparent';
-                                            return (
-                                                <View key={index} style={{flex: 1, alignItems: 'center'}}>
-                                                    <View style={[ss.periodItem, {backgroundColor: backgroundColor}]}></View>
-                                                </View>
-                                            )
-                                        })}
-                                    </View>
-                                </View>
-                            )
-                        })}
-                        {/* 无数据 */}
-                        {locationData.length === 0 &&
-                            <View style={{width: '100%', alignItems: 'center', marginTop: 70}}>
-                                <SvgXml xml={XMLResources.noClassroomAvailable} width={248} height={176}/>
+                    <Pressable onPress={handleBack} style={ss.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
+                        <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
+                    </Pressable>
+                    <View style={{width: '100%', height: 40, position: 'absolute', bottom: 0}}>
+                        <FlatList
+                            data={listData}
+                            renderItem={itemRenderer}
+                            style={{flex: 1}}
+                            horizontal={true}
+                            showsHorizontalScrollIndicator={false}
+                            removeClippedSubviews={false}
+                        />
+                    </View>
+                </View>
+                <View style={ss.mainContainer}>
+                    {functionField()}
+                    <View style={ss.mainInfoContainer}>
+                        <View style={{width: '100%', height: 40, display: 'flex', flexDirection: 'row'}}>
+                            <View style={{width: 50, height: '100%'}}></View>
+                            <View style={{flex: 1, height: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                                {periodList.map((item) => (
+                                    item
+                                ))}
                             </View>
-                        }
-                        <View style={{width: '100%', alignItems: 'center', marginTop: 25}}>
-                            <ScalingNotAllowedText style={{
-                                fontSize: FontSize.s,
-                                color: FontColor.grey
-                            }}>{locationData.length !== 0 ? '到底了哟 (´▽｀)~' : '没有找到诶＞︿＜，去其他地方看看吧~'}</ScalingNotAllowedText>
                         </View>
-                    </ScrollView>
+                        <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+                            {/* 有数据 */}
+                            {locationData.length !== 0 && locationData.map((location, index) => {
+                                return (
+                                    <View key={index} style={{width: '100%', height: 30, display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+                                        <View style={{width: 50, height: '100%', justifyContent: 'center'}}>
+                                            <ScalingNotAllowedText
+                                                style={{color: FontColor.grey}}>{location.name}</ScalingNotAllowedText>
+                                        </View>
+                                        <View
+                                            style={{flex: 1, height: '25%', display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}
+                                        >
+                                            <View style={ss.periodBackgroundBlock}></View>
+                                            {location.status.map((status: boolean, index: number) => {
+                                                const backgroundColor = status ? BackgroundColor.iconPrimary : 'transparent';
+                                                return (
+                                                    <View key={index} style={{flex: 1, alignItems: 'center'}}>
+                                                        <View style={[ss.periodItem, {backgroundColor: backgroundColor}]}></View>
+                                                    </View>
+                                                )
+                                            })}
+                                        </View>
+                                    </View>
+                                )
+                            })}
+                            {/* 无数据 */}
+                            {locationData.length === 0 &&
+                                <View style={{width: '100%', alignItems: 'center', marginTop: 70}}>
+                                    <SvgXml xml={XMLResources.noClassroomAvailable} width={248} height={176}/>
+                                </View>
+                            }
+                            <View style={{width: '100%', alignItems: 'center', marginTop: 25}}>
+                                <ScalingNotAllowedText style={{
+                                    fontSize: FontSize.s,
+                                    color: FontColor.grey
+                                }}>{locationData.length !== 0 ? '到底了哟 (´▽｀)~' : '没有找到诶＞︿＜，去其他地方看看吧~'}</ScalingNotAllowedText>
+                            </View>
+                        </ScrollView>
+                    </View>
                 </View>
             </View>
-        </View>
+        </ScrollView>
     )
 }
 

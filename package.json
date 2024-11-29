@@ -34,6 +34,7 @@
     "react-native-safe-area-context": "^4.11.0",
     "react-native-screens": "^3.34.0",
     "react-native-svg": "^15.7.1",
+    "react-native-webview": "11.25.0",
     "react-redux": "^9.1.2",
     "realm": "^12.14.0"
   },

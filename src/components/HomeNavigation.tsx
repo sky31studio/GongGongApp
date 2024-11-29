@@ -3,7 +3,7 @@ import TabNavigation from "./TabNavigation.tsx";
 import ScorePage from "./score/ScorePage.tsx";
 import {TablePage} from "./timeTable/tablePage.tsx";
 import EmptyClassroomPage from "./emptyClassroom/EmptyClassroomPage.tsx";
-import {useEffect} from "react";
+import React, {useEffect} from "react";
 import {initTable} from "../app/slice/scheduleSlice.ts";
 import {
     examChangedCountIncrement,
@@ -29,12 +29,17 @@ import notifee from "../../node_modules/@notifee/react-native";
 import {AndroidImportance} from "@notifee/react-native";
 import UserAgreePage from "./info/UserAgreePage.tsx";
 import PrivacyPolicyPage from "./info/PrivacyPolicyPage.tsx";
+import FeedbackPage from "./info/FeedbackPage.tsx";
+import {View} from "react-native";
+import {GestureHandlerRootView} from "react-native-gesture-handler";
 
 const HomeNavigation = () => {
     const realm = useRealm();
     const user = useQuery<GongUser>('GongUser')[0];
 
     const dispatch = useAppDispatch();
+
+    // 更新数据库selfList和examList需要的依赖项
     const selfList = useAppSelector(selectSelfList);
     const examList = useAppSelector(selectExamList);
     const selfChangedCount = useAppSelector(selectSelfChangedCount);
@@ -42,6 +47,7 @@ const HomeNavigation = () => {
 
     const Stack = createNativeStackNavigator();
 
+    // 首次挂载创建通知通道
     const createChannel = async () => {
         await notifee.createChannel({
             id: 'exam-notification',
@@ -50,6 +56,7 @@ const HomeNavigation = () => {
         });
     }
 
+    // 首次挂载获取全局数据
     const fetchAllData = async () => {
         if(user) {
             console.log('fetch data begin.......');
@@ -114,8 +121,6 @@ const HomeNavigation = () => {
                 if(msg.code === ResourceCode.Successful) {
                     dispatch(examChangedCountIncrement());
                     dispatch(initExam(msg.data))
-                    console.log('writing examAgenda in realm...');
-                    console.log('examAgenda is written!');
                 }
             } else {
                 dispatch(writeExamAgendaList(JSON.parse(user.examAgendaList)));
@@ -199,7 +204,6 @@ const HomeNavigation = () => {
 
     useEffect(() => {
         if(selfChangedCount === 0) return;
-        console.log(selfList);
         realm.write(() => {
             user.selfAgendaList = JSON.stringify(selfList);
         })
@@ -207,26 +211,34 @@ const HomeNavigation = () => {
 
     useEffect(() => {
         if(examChangedCount === 0) return;
-        console.log(examList);
         realm.write(() => {
             user.examAgendaList = JSON.stringify(examList);
         })
     }, [examList]);
 
     return (
-        <Stack.Navigator
-            screenOptions={{
-                headerShown: false,
-            }}
-        >
-            <Stack.Screen name={'TabNavigation'} component={TabNavigation}/>
-            <Stack.Screen name={'EmptyClassroomPage'} component={EmptyClassroomPage}/>
-            <Stack.Screen name={'ScorePage'} component={ScorePage}/>
-            <Stack.Screen name={'TablePage'} component={TablePage}/>
-            <Stack.Screen name={'SpecificationPage'} component={SpecificationPage}/>
-            <Stack.Screen name={'UserAgreementPage'} component={UserAgreePage}/>
-            <Stack.Screen name={'PrivacyPolicyPage'} component={PrivacyPolicyPage}/>
-        </Stack.Navigator>
+        <View style={{flex: 1, paddingTop: 10}}>
+            <GestureHandlerRootView style={{width: '100%', flex: 1}}>
+                <Stack.Navigator
+                    screenOptions={{
+                        headerShown: false,
+                        gestureEnabled: true,
+                        animationDuration: 400,
+                        animation: 'default',
+                        animationTypeForReplace: 'push',
+                    }}
+                >
+                    <Stack.Screen name={'TabNavigation'} component={TabNavigation}/>
+                    <Stack.Screen name={'EmptyClassroomPage'} component={EmptyClassroomPage}/>
+                    <Stack.Screen name={'ScorePage'} component={ScorePage}/>
+                    <Stack.Screen name={'TablePage'} component={TablePage}/>
+                    <Stack.Screen name={'SpecificationPage'} component={SpecificationPage}/>
+                    <Stack.Screen name={'UserAgreementPage'} component={UserAgreePage}/>
+                    <Stack.Screen name={'PrivacyPolicyPage'} component={PrivacyPolicyPage}/>
+                    <Stack.Screen name={'FeedbackPage'} component={FeedbackPage}/>
+                </Stack.Navigator>
+            </GestureHandlerRootView>
+        </View>
     )
 }
 

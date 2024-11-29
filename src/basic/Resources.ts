@@ -16,7 +16,7 @@ class Resources {
     /**
      * 获取课表数据
      */
-    private static async getData(url: string, token: string): Promise<ResourceMessage> {
+    private static async getData(url: string, token: string, interval: number): Promise<ResourceMessage> {
         try {
             let count = 0;
             while(true) {
@@ -47,7 +47,7 @@ class Resources {
                     message: '网络连接超时'
                 }
 
-                await sleep(1000);
+                await sleep(interval);
             }
 
         } catch(error) {
@@ -59,7 +59,7 @@ class Resources {
     }
 
     public static async getClassData(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/courses`, token);
+        const response = await this.getData(`${rootUrl}/courses`, token, 1500);
 
         if (response.code === ResourceCode.Successful) {
             return {
@@ -121,7 +121,7 @@ class Resources {
     }
 
     public static async getExam(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/exams`, token);
+        const response = await this.getData(`${rootUrl}/exams`, token, 1500);
 
         if (response.code === ResourceCode.Successful) {
             return {
@@ -137,7 +137,7 @@ class Resources {
     }
 
     public static async getScore(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/scores`, token);
+        const response = await this.getData(`${rootUrl}/scores`, token, 1500);
 
         if (response.code === ResourceCode.Successful) {
             return {
@@ -153,7 +153,7 @@ class Resources {
     }
 
     public static async getScoreOverview(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/rank`, token);
+        const response = await this.getData(`${rootUrl}/rank`, token, 2000);
 
         if (response.code === ResourceCode.Successful) {
             return {
@@ -169,7 +169,7 @@ class Resources {
     }
 
     public static async getFirstDate(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/calendar`, token);
+        const response = await this.getData(`${rootUrl}/calendar`, token, 1500);
 
         if (response.code === ResourceCode.Successful) {
             return {
@@ -185,7 +185,7 @@ class Resources {
     }
 
     public static async getInfo(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/info`, token);
+        const response = await this.getData(`${rootUrl}/info`, token, 1500);
 
         if (response.code === ResourceCode.Successful) {
             return {
@@ -201,7 +201,7 @@ class Resources {
     }
 
     public static async getTodayClassroomStatus(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/classroom/today`, token);
+        const response = await this.getData(`${rootUrl}/classroom/today`, token, 1500);
 
         if (response.code === ResourceCode.Successful) {
             return {
@@ -217,7 +217,7 @@ class Resources {
     }
 
     public static async getTomorrowClassroomStatus(token: string) {
-        const response = await this.getData(`${rootUrl}/classroom/tomorrow`, token);
+        const response = await this.getData(`${rootUrl}/classroom/tomorrow`, token, 1500);
 
         if (response.code === ResourceCode.Successful) {
             return {

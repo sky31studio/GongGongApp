@@ -1,5 +1,14 @@
 import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
-import {Modal, Pressable, StyleSheet, useWindowDimensions, View} from "react-native";
+import {
+    Modal,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    ToastAndroid,
+    useWindowDimensions,
+    View
+} from "react-native";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
 import {AgendaList} from "./agenda/agendaList.tsx";
@@ -16,9 +25,11 @@ import LinearGradient from "react-native-linear-gradient";
 import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 import {useQuery} from "@realm/react";
 import GongUser from "../../dao/object/User.ts";
-import {useAppSelector} from "../../app/hooks.ts";
-import {selectShowAddBoard} from "../../app/slice/agendaSlice.ts";
+import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
+import {examChangedCountIncrement, initExam, selectShowAddBoard} from "../../app/slice/agendaSlice.ts";
 import AddBoard from "./agenda/addBoard.tsx";
+import Resources, {ResourceMessage} from "../../basic/Resources.ts";
+import {ResourceCode} from "../../utils/enum.ts";
 
 export interface NavigationProps {
     navigation: {
@@ -28,30 +39,60 @@ export interface NavigationProps {
 }
 
 const Home = ({navigation}: NavigationProps) => {
+    const dispatch = useAppDispatch();
+
+    const user = useQuery<GongUser>('GongUser')[0];
+
+    const [refreshing, setRefreshing] = useState<boolean>(false);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+
+        const getData = async () => {
+            const msg: ResourceMessage = await Resources.getExam(user.token);
+            if(msg.code === ResourceCode.Successful) {
+                dispatch(examChangedCountIncrement());
+                dispatch(initExam(msg.data));
+            } else {
+                ToastAndroid.showWithGravity('考试信息获取失败！', 1500, ToastAndroid.BOTTOM);
+            }
+        }
+
+        getData().then(() => setRefreshing(false));
+    }
+
     const functionBar = () => <FunctionBar navigation={navigation}/>;
     const modalVisible = useAppSelector(selectShowAddBoard);
 
     return (
-        <View style={styleSheet.homeContainer}>
-            <View style={{width: '100%', height: '18%'}}>
-                {functionBar()}
-            </View>
-            <View style={styleSheet.mainBoardWrapper}>
-                <MainBoard/>
-            </View>
-            {/*AddBoard模态*/}
-            <Modal
-                visible={modalVisible}
-                transparent={true}
-                animationType={'fade'}
-            >
-                <View style={{flex: 1, alignItems: 'center', backgroundColor: BackgroundColor.modalShadow}}>
-                    <View style={{position: 'absolute', bottom: 0, width: '100%'}}>
-                        <AddBoard/>
-                    </View>
+        <ScrollView
+            contentContainerStyle={{flex: 1}}
+            nestedScrollEnabled={true}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[BackgroundColor.primary]}/>
+            }
+        >
+            <View style={styleSheet.homeContainer}>
+                <View style={{width: '100%', height: '18%'}}>
+                    {functionBar()}
                 </View>
-            </Modal>
-        </View>
+                <View style={styleSheet.mainBoardWrapper}>
+                    <MainBoard/>
+                </View>
+                {/*AddBoard模态*/}
+                <Modal
+                    visible={modalVisible}
+                    transparent={true}
+                    animationType={'fade'}
+                >
+                    <View style={{flex: 1, alignItems: 'center', backgroundColor: BackgroundColor.modalShadow}}>
+                        <View style={{position: 'absolute', bottom: 0, width: '100%'}}>
+                            <AddBoard/>
+                        </View>
+                    </View>
+                </Modal>
+            </View>
+        </ScrollView>
     )
 }
 

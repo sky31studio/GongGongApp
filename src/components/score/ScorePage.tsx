@@ -1,21 +1,62 @@
-import {Animated, Pressable, StyleSheet, Text, View} from "react-native";
+import {Animated, Pressable, RefreshControl, StyleSheet, Text, ToastAndroid, View} from "react-native";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
-import React from "react";
+import React, {useState} from "react";
 import {NavigationProps} from "../home/homePage.tsx";
 import SingleScore from "./SingleScore.tsx";
-import {useAppSelector} from "../../app/hooks.ts";
+import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {
+    initScoreList,
     selectAverageScore,
     selectClassRank,
     selectGpa,
     selectMajorRank,
-    selectScoreList
+    selectScoreList, setScoreOverview
 } from "../../app/slice/scoreSlice.ts";
 import ScrollView = Animated.ScrollView;
+import {useQuery, useRealm} from "@realm/react";
+import GongUser from "../../dao/object/User.ts";
+import Resources, {ResourceMessage} from "../../basic/Resources.ts";
+import {ResourceCode} from "../../utils/enum.ts";
 
 const ScorePage = ({navigation}: NavigationProps) => {
+    const dispatch = useAppDispatch();
+
+    const realm = useRealm();
+    const user = useQuery<GongUser>('GongUser')[0];
+
+    const [refreshing, setRefreshing] = useState<boolean>(false);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+
+        const getData = async () => {
+            let msg: ResourceMessage = await Resources.getScoreOverview(user.token);
+            if(msg.code === ResourceCode.Successful) {
+                dispatch(setScoreOverview(msg.data));
+                realm.write(() => {
+                    user.scoreOverview = JSON.stringify(msg.data);
+                })
+            } else {
+                ToastAndroid.showWithGravity('总成绩获取失败', 1500, ToastAndroid.BOTTOM);
+                return;
+            }
+
+            msg = await Resources.getScore(user.token);
+            if(msg.code === ResourceCode.Successful) {
+                dispatch(initScoreList(msg.data));
+                realm.write(() => {
+                    user.scoreList = JSON.stringify(msg.data);
+                })
+            } else {
+                ToastAndroid.showWithGravity('成绩表单获取失败', 1500, ToastAndroid.BOTTOM);
+            }
+        }
+
+        getData().then(() => setRefreshing(false));
+    }
+
     const scoreList = useAppSelector(selectScoreList);
     const averageScore = useAppSelector(selectAverageScore)
     const gpa = useAppSelector(selectGpa);
@@ -26,30 +67,38 @@ const ScorePage = ({navigation}: NavigationProps) => {
         navigation.navigate('TabNavigation');
     }
     return (
-        <View style={{height: '100%'}}>
-            <View style={ss.titleBar}>
-                <Pressable onPress={handleBack} style={ss.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
-                    <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
-                </Pressable>
+        <ScrollView
+            contentContainerStyle={{flex: 1}}
+            nestedScrollEnabled={true}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[BackgroundColor.primary]}/>
+            }
+        >
+            <View style={{height: '100%'}}>
+                <View style={ss.titleBar}>
+                    <Pressable onPress={handleBack} style={ss.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
+                        <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
+                    </Pressable>
 
-                <Text style={ss.titleText}>查成绩</Text>
-            </View>
-            <View style={ss.mainContainer}>
-                <View style={ss.totalContainer}>
-                    <ScoreBox score={gpa} text={'平均绩点'}/>
-                    <ScoreBox score={classRank} text={'班级排名'}/>
-                    <ScoreBox score={majorRank} text={'年级排名'}/>
-                    <ScoreBox score={averageScore} text={'平均成绩'}/>
+                    <Text style={ss.titleText}>查成绩</Text>
                 </View>
-                <ScrollView style={ss.scoreListContainer}>
-                    {
-                        scoreList.map((singleScore, index) => {
-                            return <SingleScore scoreList={singleScore} term={singleScore.term} key={index}/>
-                        })
-                    }
-                </ScrollView>
+                <View style={ss.mainContainer}>
+                    <View style={ss.totalContainer}>
+                        <ScoreBox score={gpa} text={'平均绩点'}/>
+                        <ScoreBox score={classRank} text={'班级排名'}/>
+                        <ScoreBox score={majorRank} text={'年级排名'}/>
+                        <ScoreBox score={averageScore} text={'平均成绩'}/>
+                    </View>
+                    <ScrollView style={ss.scoreListContainer} nestedScrollEnabled={true}>
+                        {
+                            scoreList.map((singleScore, index) => {
+                                return <SingleScore scoreList={singleScore} term={singleScore.term} key={index}/>
+                            })
+                        }
+                    </ScrollView>
+                </View>
             </View>
-        </View>
+        </ScrollView>
     )
 }
 

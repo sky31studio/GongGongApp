@@ -21,12 +21,12 @@ const MoreInfoPage = ({props, handleNavigation}: {props: MoreInfoPageProps, hand
     return (
         <View style={{flex: 1, display: 'flex', alignItems: 'center', backgroundColor: 'white'}}>
             <View style={ss.guideBar}>
-                <Pressable onPress={handleGoBack} style={ss.backButton}>
+                <Pressable onPress={handleGoBack} style={ss.backButton} hitSlop={{top: 5, bottom: 5, left: 10, right: 10}}>
                     <SvgXml xml={XMLResources.blackBackArrow} width={10} height={18}/>
                 </Pressable>
                 <Text style={ss.moreInfoTitle}>{props.wholeTitle}</Text>
             </View>
-            <ScrollView showsVerticalScrollIndicator={false} style={{width: '88%'}}>
+            <ScrollView showsVerticalScrollIndicator={false} style={{width: '88%'}} nestedScrollEnabled={true}>
                 <View style={{display: 'flex', flexDirection: 'row', marginVertical: 10}}>
                     <View style={{width: 8, backgroundColor: BackgroundColor.primary, height: '100%'}}></View>
                     <View style={{display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginLeft: 8}}>

@@ -1,4 +1,4 @@
-import {Modal, Pressable, ScrollView, StyleSheet, Text, View} from "react-native";
+import {Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, ToastAndroid, View} from "react-native";
 import React, {useEffect, useRef, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {BackgroundColor, BorderColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
@@ -11,21 +11,48 @@ import Schedule from "./schedule.tsx";
 import {NavigationProps} from "../home/homePage.tsx";
 import {
     hideModal,
+    initTable,
     lockModal,
     selectCurrentTimeCourses,
     selectModalVisible,
     unlockModal
 } from "../../app/slice/scheduleSlice.ts";
 import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
-import {ENToCNWeekDay} from "../../utils/enum.ts";
+import {ENToCNWeekDay, ResourceCode} from "../../utils/enum.ts";
+import Resources, {ResourceMessage} from "../../basic/Resources.ts";
+import {useQuery, useRealm} from "@realm/react";
+import GongUser from "../../dao/object/User.ts";
 
 export const TablePage = ({navigation}: NavigationProps) => {
+    const realm = useRealm();
+    const user = useQuery<GongUser>('GongUser')[0];
+
     const dispatch = useAppDispatch();
     const theWeek = useAppSelector(selectTheWeek);
     const modalVisible = useAppSelector(selectModalVisible);
     const courseList = useAppSelector(selectCurrentTimeCourses);
 
     const [isLazyLoaded, setIsLazyLoaded] = useState<boolean>(false);
+
+    const [refreshing, setRefreshing] = useState<boolean>(false);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+
+        const getData = async () => {
+            const msg: ResourceMessage = await Resources.getClassData(user.token);
+            if(msg.code === ResourceCode.Successful) {
+                dispatch(initTable(msg.data));
+                realm.write(() => {
+                    user.courses = JSON.stringify(msg.data);
+                });
+            }else {
+                ToastAndroid.showWithGravity('课表获取失败', 1500, ToastAndroid.BOTTOM);
+            }
+        }
+
+        getData().then(() => setRefreshing(false));
+    }
 
     useEffect(() => {
         setTimeout(() => {
@@ -83,7 +110,6 @@ export const TablePage = ({navigation}: NavigationProps) => {
         }
     });
 
-
     const weekListRenderItem = (data: any) => {
         const color = currentWeek === data.item.week ? FontColor.secondary : FontColor.grey;
         let backgroundColor = 'transparent';
@@ -131,10 +157,12 @@ export const TablePage = ({navigation}: NavigationProps) => {
     }
 
     return (
-        <View style={{
-            width: '100%',
-            flex: 1,
-        }}
+        <ScrollView
+            contentContainerStyle={{flex: 1}}
+            nestedScrollEnabled={true}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[BackgroundColor.primary]}/>
+            }
         >
             <View style={{
                 width: '100%',
@@ -224,7 +252,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
                                 </Pressable>
                             </View>
                             <ScrollView style={{width: '100%', height: 400}}>
-                                {courseList &&
+                                {courseList ?
                                     courseList.map((course, index) => {
                                         const periodStart = course.placeInfo.periodStart;
                                         const weekDay = ENToCNWeekDay[course.placeInfo.day as keyof typeof ENToCNWeekDay];
@@ -256,14 +284,14 @@ export const TablePage = ({navigation}: NavigationProps) => {
                                                 </View>
                                             </View>
                                         )
-                                    })
+                                    }) : null
                                 }
                             </ScrollView>
                         </View>
                     </View>
                 </Modal>
             </View>
-        </View>
+        </ScrollView>
     );
 }
 
@@ -273,7 +301,7 @@ const styleSheet = StyleSheet.create({
         justifyContent: 'flex-start',
         flexDirection: 'row',
         width: '100%',
-        height: 100,
+        height: 90,
         backgroundColor: BackgroundColor.primary,
         position: 'relative',
     },

@@ -82,6 +82,18 @@ const scheduleSlice = createSlice({
         },
         unlockModal: (state) => {
             state.modalLocked = false;
+        },
+
+        resetSchedule: (state) => {
+            state.table = {
+                'Monday': [],
+                'Tuesday': [],
+                'Wednesday': [],
+                'Thursday': [],
+                'Friday': [],
+                'Saturday': [],
+                'Sunday': []
+            };
         }
     },
     extraReducers: (builder) => {
@@ -132,5 +144,6 @@ export const {
     hideModal,
     lockModal,
     unlockModal,
+    resetSchedule,
 } = scheduleSlice.actions;
 export default scheduleSlice.reducer;

@@ -1,4 +1,4 @@
-import {Pressable, StyleSheet, Text, ToastAndroid, useWindowDimensions, View} from "react-native";
+import {Pressable, ScrollView, StyleSheet, Text, ToastAndroid, useWindowDimensions, View} from "react-native";
 import React, {forwardRef, memo, useImperativeHandle, useMemo, useRef, useState} from "react";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
@@ -6,19 +6,20 @@ import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
 import {
     addExamToTop,
     addSelfToTop,
-    Agenda, examChangedCountIncrement,
+    Agenda,
+    examChangedCountIncrement,
     removeExamFromTop,
     removeSelf,
     removeSelfFromTop,
     selectAgendaList,
     selectExamLength,
-    selectOnlyExamList, selfChangedCountIncrement,
+    selectOnlyExamList,
+    selfChangedCountIncrement,
     setShowedAgenda,
     showAddBoard
 } from "../../../app/slice/agendaSlice.ts";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {AgendaType, CNWeekDay} from "../../../utils/enum.ts";
-import {GestureHandlerRootView, ScrollView} from "react-native-gesture-handler";
 import {convertDateToString} from "../../../utils/agendaUtils.ts";
 import Swipeable, {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
@@ -124,7 +125,7 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
                 }
 
                 return (
-                    <View key={agenda.id} style={{position: 'relative', height: 75, width: '100%'}}>
+                    <View key={agenda.id} style={{height: 75, width: '100%'}}>
                         {/* 分割线 */}
                         <View
                             style={{
@@ -158,16 +159,16 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
     const noExam = <NoExam/>
 
     return (
-        <GestureHandlerRootView style={{width: '100%', flex: 1}}>
+        <View style={{width: '100%', flex: 1}}>
             <ScrollView
+                nestedScrollEnabled={true}
                 showsVerticalScrollIndicator={false}
-                scrollEnabled={true}
                 style={ss.countdownListContainer}
                 onScroll={closeOpenedSwipeable}
             >
                 {agendaListLength === 0 && onlyExam ? noExam : renderList}
             </ScrollView>
-        </GestureHandlerRootView>
+        </View>
     );
 }
 
@@ -333,9 +334,9 @@ const AgendaBox = forwardRef((
                         </ScalingNotAllowedText>
                         {agenda.type !== undefined && typeTip()}
                     </View>
-                    {agenda.text !== '' && <ScalingNotAllowedText
+                    {agenda.text !== '' ? <ScalingNotAllowedText
                         numberOfLines={1} ellipsizeMode="tail"
-                        style={[ss.agendaText, {maxWidth: winWidth * .4, paddingLeft: '5%'}]}>{agenda.text}</ScalingNotAllowedText>}
+                        style={[ss.agendaText, {maxWidth: winWidth * .4, paddingLeft: '5%'}]}>{agenda.text}</ScalingNotAllowedText> : null}
                 </View>
                 <View style={ss.agendaLocationAndTimeContainer}>
                     <SvgXml xml={XMLResources.clock} width={9} height={9}/>

@@ -207,6 +207,13 @@ const agendaSlice = createSlice({
         examChangedCountIncrement: (state) => {
             state.examChangedCount += 1;
         },
+
+        agendaResetAll: (state) => {
+            state.selfChangedCount = 0;
+            state.examChangedCount = 0;
+            state.selfList = [];
+            state.examList = [];
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -316,6 +323,7 @@ export const {
     writeSelfAgendaList,
     selfChangedCountIncrement,
     examChangedCountIncrement,
+    agendaResetAll
 } = agendaSlice.actions;
 export default agendaSlice.reducer;
 
