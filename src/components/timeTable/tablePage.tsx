@@ -46,8 +46,10 @@ export const TablePage = ({navigation}: NavigationProps) => {
                 realm.write(() => {
                     user.courses = JSON.stringify(msg.data);
                 });
-            }else {
-                ToastAndroid.showWithGravity('课表获取失败', 1500, ToastAndroid.BOTTOM);
+            } else if(msg.code === ResourceCode.PermissionDenied) {
+                ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
+            } else {
+                ToastAndroid.showWithGravity('课表获取失败！', 1500, ToastAndroid.BOTTOM);
             }
         }
 
@@ -259,7 +261,11 @@ export const TablePage = ({navigation}: NavigationProps) => {
                                         const periodText = `${weekDay} ${periodStart}-${periodStart + course.placeInfo.periodDuration - 1}节`;
                                         let weekText = '';
                                         for(let info of course.placeInfo.weekInfo) {
-                                            weekText = weekText.concat(`${info.weekStart}-${info.weekEnd},`);
+                                            if(info.weekStart === info.weekEnd) {
+                                                weekText = weekText.concat(`${info.weekStart},`);
+                                            } else {
+                                                weekText = weekText.concat(`${info.weekStart}-${info.weekEnd},`);
+                                            }
                                         }
                                         weekText = weekText.slice(0, -1);
                                         weekText = weekText.concat(' 周');

@@ -58,10 +58,17 @@ export function convertToWeekInfo(str: string): { weekStart: number, weekEnd: nu
     weekInterval.forEach((interval) => {
         const tmp = interval.split('-');
 
-        res.push({
-            weekStart: parseInt(tmp[0]),
-            weekEnd: parseInt(tmp[1])
-        })
+        if(tmp.length === 1) {
+            res.push({
+                weekStart: parseInt(tmp[0]),
+                weekEnd: parseInt(tmp[0])
+            })
+        } else {
+            res.push({
+                weekStart: parseInt(tmp[0]),
+                weekEnd: parseInt(tmp[1])
+            })
+        }
     })
     return res;
 }
