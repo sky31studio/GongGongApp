@@ -191,6 +191,38 @@ const agendaSlice = createSlice({
             state.examList.sort(compare);
         },
 
+        updateExamAgendaList: (state, action) => {
+            let processedData = dealExams(action.payload);
+            processedData = processedData.filter((exam: any) => {
+                if(exam.startTime !== '') {
+                    const currentTime = new Date(Date.now());
+                    const date = new Date(exam.startTime);
+
+                    if(currentTime.getTime() > date.getTime()) return false;
+                }
+
+                return true;
+            })
+
+            processedData.forEach((exam: any) => {
+                const id = generateID(exam.name, exam.startTime, exam.endTime);
+                for(let existExam of state.examList) {
+                    if(existExam.id === id) {
+                        return;
+                    }
+                }
+
+                state.examList.push({
+                    id: id,
+                    isCustom: false,
+                    isOnTop: false,
+                    ...exam
+                })
+            });
+
+            state.examList.sort(compare);
+        },
+
         writeExamAgendaList: (state, action) => {
             state.examList = action.payload;
         },
@@ -323,7 +355,8 @@ export const {
     writeSelfAgendaList,
     selfChangedCountIncrement,
     examChangedCountIncrement,
-    agendaResetAll
+    agendaResetAll,
+    updateExamAgendaList
 } = agendaSlice.actions;
 export default agendaSlice.reducer;
 
