@@ -1,5 +1,14 @@
 import {Pressable, ScrollView, StyleSheet, Text, ToastAndroid, useWindowDimensions, View} from "react-native";
-import React, {forwardRef, memo, useImperativeHandle, useMemo, useRef, useState} from "react";
+import React, {
+    createContext,
+    forwardRef,
+    memo,
+    useCallback, useContext,
+    useImperativeHandle,
+    useMemo,
+    useRef,
+    useState
+} from "react";
 import {SvgXml} from "react-native-svg";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 import {useAppDispatch, useAppSelector} from "../../../app/hooks.ts";
@@ -65,6 +74,16 @@ const agendaComponent = memo(() => {
     )
 })
 
+const SwipeableContext = createContext<{
+    openedIndex: number | null,
+    setOpenedIndex: React.Dispatch<React.SetStateAction<number | null>>,
+    closeOpenedSwipeable: () => void,
+}>({
+    openedIndex: 0,
+    setOpenedIndex: () => {},
+    closeOpenedSwipeable: () => {},
+});
+
 /**
  * Agenda列表部分
  */
@@ -78,26 +97,14 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
 
     const swipeableListRef = useRef<Record<number, SwipeableMethods>>({})
 
-    // 设置打开的Swipeable下标
-    const setIndex = (index: number) => {
-        setOpenedIndex(index);
-    }
-
     // TODO: 没有正确的关闭，可能与index的存储有关
     // 监听滚动，如果有Swipeable是打开的，则关闭所有Swipeable
-    const closeOpenedSwipeable = () => {
-        if(openedIndex) {
-            if(swipeableListRef.current) {
-                for(let index in swipeableListRef.current) {
-                    if(Number(index) === openedIndex && swipeableListRef.current[index]) {
-                        swipeableListRef.current[index].close();
-                        break;
-                    }
-                }
-            }
+    const closeOpenedSwipeable = useCallback(() => {
+        if(openedIndex !== null) {
+            swipeableListRef.current[openedIndex].close();
             setOpenedIndex(null);
         }
-    }
+    }, [openedIndex, swipeableListRef.current]);
 
     const renderList = useMemo(() => {
         return agendaList
@@ -143,11 +150,9 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
                                 dispatch(showAddBoard());
                             }}>
                             <AgendaBox
-                                handleClose={closeOpenedSwipeable}
                                 index={index} agenda={agenda}
                                 countdown={countdown}
                                 ref={el => swipeableListRef.current[index] = el as SwipeableMethods}
-                                sendIndex={setIndex}
                             />
                         </Pressable>
                     </View>
@@ -159,16 +164,18 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
     const noExam = <NoExam/>
 
     return (
-        <View style={{width: '100%', flex: 1}}>
-            <ScrollView
-                nestedScrollEnabled={true}
-                showsVerticalScrollIndicator={false}
-                style={ss.countdownListContainer}
-                onScroll={closeOpenedSwipeable}
-            >
-                {agendaListLength === 0 && onlyExam ? noExam : renderList}
-            </ScrollView>
-        </View>
+        <SwipeableContext.Provider value={{openedIndex, setOpenedIndex, closeOpenedSwipeable}}>
+            <View style={{width: '100%', flex: 1}}>
+                <ScrollView
+                    nestedScrollEnabled={true}
+                    showsVerticalScrollIndicator={false}
+                    style={ss.countdownListContainer}
+                    onScroll={closeOpenedSwipeable}
+                >
+                    {agendaListLength === 0 && onlyExam ? noExam : renderList}
+                </ScrollView>
+            </View>
+        </SwipeableContext.Provider>
     );
 }
 
@@ -191,8 +198,6 @@ interface AgendaBoxProps {
     agenda: Agenda,
     countdown: number | undefined,
     index: number,
-    handleClose: (idx: number) => void,
-    sendIndex: (index: number) => void
 }
 
 const AgendaBox = forwardRef((
@@ -200,11 +205,11 @@ const AgendaBox = forwardRef((
         agenda,
         countdown,
         index,
-        handleClose,
-        sendIndex,
     }: AgendaBoxProps, ref: any) => {
     const winWidth = useWindowDimensions().width;
     const dispatch = useAppDispatch();
+
+    const {setOpenedIndex, closeOpenedSwipeable} = useContext(SwipeableContext);
 
     const swipeableRef = useRef<SwipeableMethods>(null);
     const isOnTop = agenda.isOnTop;
@@ -317,8 +322,14 @@ const AgendaBox = forwardRef((
             rightThreshold={40}
             overshootRight={false}
             overshootLeft={false}
-            onSwipeableOpenStartDrag={() => handleClose(index)}
-            onSwipeableWillOpen={() => sendIndex(index)}
+            overshootFriction={5}
+            onSwipeableOpenStartDrag={() => closeOpenedSwipeable()}
+            onSwipeableWillOpen={() => {
+                setOpenedIndex(index)
+            }}
+            onSwipeableWillClose={() => {
+                setOpenedIndex(null);
+            }}
         >
             <View style={[ss.agendaContainer, {backgroundColor: isOnTop ? '#eeeeee' : BackgroundColor.mainLight}]}>
                 <View>
