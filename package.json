@@ -26,6 +26,7 @@
     "react-devtools": "^5.3.1",
     "react-markdown": "^9.0.1",
     "react-native": "0.75.4",
+    "react-native-device-info": "^14.0.1",
     "react-native-gesture-handler": "^2.20.2",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-modal-datetime-picker": "^18.0.0",

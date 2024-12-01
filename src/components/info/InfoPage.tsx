@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Modal, Pressable, StyleSheet, Text, View} from "react-native";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
@@ -12,10 +12,14 @@ import {NavigationProps} from "../home/homePage.tsx";
 import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 import {useQuery, useRealm} from "@realm/react";
 import GongUser from "../../dao/object/User.ts";
+import {getAndroidId, getVersion} from "react-native-device-info";
 
 const InfoPage = ({navigation}: NavigationProps) => {
+    // realm
     const realm = useRealm();
     const user = useQuery<GongUser>('GongUser')[0];
+
+    // redux
     const dispatch = useAppDispatch();
     const agendaNumber = useAppSelector(selectCurrentAgendaNumber);
     const courseNumber = useAppSelector(selectCurrentCourseNumber);
@@ -24,13 +28,12 @@ const InfoPage = ({navigation}: NavigationProps) => {
     const major = useAppSelector(selectStudentMajor);
     const isLogin = useAppSelector(selectIsLogin);
 
+    // state
     const [modalVisible, setModalVisible] = useState<boolean>(false);
-
-    const openModal = () => setModalVisible(true);
-    const closeModal = () => setModalVisible(false);
+    const [version, setVersion] = useState<string>('--');
 
     const handleReLogin = () => {
-        closeModal();
+        setModalVisible(false);
         dispatch(agendaResetAll());
         dispatch(resetSchedule());
         realm.write(() => {
@@ -38,6 +41,10 @@ const InfoPage = ({navigation}: NavigationProps) => {
         })
         setTimeout(() => dispatch(logoutSuccessful()), 800);
     }
+
+    useEffect(() => {
+        setVersion(getVersion());
+    }, []);
 
     return (
         <View style={{flex: 1}}>
@@ -104,10 +111,36 @@ const InfoPage = ({navigation}: NavigationProps) => {
                     {/*<NavigationBox title={'新功能'} handleNavigation={() => null}/>*/}
                     {/*<NavigationBox title={'新手指南'} handleNavigation={() => null}/>*/}
                     {/*<NavigationBox title={'关于拱拱'} handleNavigation={() => null}/>*/}
-                    <NavigationBox title={'联系我们'} handleNavigation={() => navigation.navigate('FeedbackPage')}/>
-                    <NavigationBox title={'用户协议'} handleNavigation={() => navigation.navigate('UserAgreementPage')}/>
-                    <NavigationBox title={'隐私条款'} handleNavigation={() => navigation.navigate('PrivacyPolicyPage')}/>
-                    <NavigationBox title={'社区规范'} handleNavigation={() => navigation.navigate('SpecificationPage')}/>
+                    <NavigationBox title='联系我们' handleNavigation={() => navigation.navigate('FeedbackPage')}/>
+                    <NavigationBox title='用户协议' handleNavigation={() => navigation.navigate('UserAgreementPage')}/>
+                    <NavigationBox title='隐私条款' handleNavigation={() => navigation.navigate('PrivacyPolicyPage')}/>
+                    <NavigationBox title='社区规范' handleNavigation={() => navigation.navigate('SpecificationPage')}/>
+                    <View
+                        style={{
+                            width: '100%',
+                            paddingVertical: 12,
+                            paddingHorizontal: 20,
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            borderBottomWidth: .5,
+                            borderBottomColor: BackgroundColor.grey,
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: FontSize.s,
+                                color: FontColor.dark,
+                            }}
+                        >当前版本</Text>
+                        <Text
+                            style={{
+                                fontSize: FontSize.s,
+                                color: FontColor.dark,
+                            }}
+                        >{version}</Text>
+                    </View>
                 </View>
                 {/* 登录/退出登录 按钮 */}
                 <Pressable
@@ -123,7 +156,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                         position: 'absolute',
                         transform: [{translateY: 35}]
                     }}
-                    onPress={openModal}>
+                    onPress={() => setModalVisible(true)}>
                     <Text
                         style={{
                             color: FontColor.light,
@@ -177,7 +210,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                                 borderRightWidth: 1,
                                 borderRightColor: BackgroundColor.grey,
                                 paddingVertical: 15
-                            }} onPress={closeModal}>
+                            }} onPress={() => setModalVisible(false)}>
                                 <ScalingNotAllowedText
                                     style={{color: FontColor.grey, fontSize: FontSize.l}}>取消</ScalingNotAllowedText>
                             </Pressable>
