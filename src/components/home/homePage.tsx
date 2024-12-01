@@ -1,4 +1,4 @@
-import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
+import React, {createContext, useContext, useEffect, useState} from "react";
 import {
     Modal,
     Pressable,
@@ -26,7 +26,7 @@ import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 import {useQuery} from "@realm/react";
 import GongUser from "../../dao/object/User.ts";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
-import {examChangedCountIncrement, initExam, selectShowAddBoard} from "../../app/slice/agendaSlice.ts";
+import {examChangedCountIncrement, selectShowAddBoard, updateExamAgendaList} from "../../app/slice/agendaSlice.ts";
 import AddBoard from "./agenda/addBoard.tsx";
 import Resources, {ResourceMessage} from "../../basic/Resources.ts";
 import {ResourceCode} from "../../utils/enum.ts";
@@ -40,19 +40,20 @@ export interface NavigationProps {
 
 const Home = ({navigation}: NavigationProps) => {
     const dispatch = useAppDispatch();
+    const modalVisible = useAppSelector(selectShowAddBoard);
 
     const user = useQuery<GongUser>('GongUser')[0];
-
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
     const onRefresh = () => {
         setRefreshing(true);
-
         const getData = async () => {
             const msg: ResourceMessage = await Resources.getExam(user.token);
             if(msg.code === ResourceCode.Successful) {
                 dispatch(examChangedCountIncrement());
-                dispatch(initExam(msg.data));
+                dispatch(updateExamAgendaList(msg.data));
+            } else if(msg.code === ResourceCode.PermissionDenied) {
+                ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
             } else {
                 ToastAndroid.showWithGravity('考试信息获取失败！', 1500, ToastAndroid.BOTTOM);
             }
@@ -60,9 +61,6 @@ const Home = ({navigation}: NavigationProps) => {
 
         getData().then(() => setRefreshing(false));
     }
-
-    const functionBar = () => <FunctionBar navigation={navigation}/>;
-    const modalVisible = useAppSelector(selectShowAddBoard);
 
     return (
         <ScrollView
@@ -74,7 +72,7 @@ const Home = ({navigation}: NavigationProps) => {
         >
             <View style={styleSheet.homeContainer}>
                 <View style={{width: '100%', height: '18%'}}>
-                    {functionBar()}
+                    <FunctionBar navigation={navigation}/>
                 </View>
                 <View style={styleSheet.mainBoardWrapper}>
                     <MainBoard/>
@@ -137,28 +135,16 @@ const FunctionBar: React.ComponentType<NavigationProps> = ({navigation}) => {
     );
 }
 
-interface HomeContextType {
-    choice: number;
-    shiftChoice: (value: number) => void;
-}
-
-const HomeContext = createContext<HomeContextType>({
-    choice: 0,
-    shiftChoice: () => {
-    }
-});
+const HomeContext = createContext<{choice: number, setChoice: React.Dispatch<React.SetStateAction<number>>}>({choice: 0, setChoice: () => {}});
 
 const MainBoard = () => {
     const user = useQuery<GongUser>('GongUser');
-    const classTableButton = <ShiftButton id={0} text='课程表' initFocus={true}/>;
-    const countdownButton = <ShiftButton id={1} text='倒计时'/>;
+
+    const winWidth = useWindowDimensions().width;
 
     const [hasToken, _] = useState(user !== undefined);
     const [choice, setChoice] = useState<number>(0);
-    const winWidth = useWindowDimensions().width;
 
-    const classList = useMemo(() => <ClassList hasToken={hasToken}/>, [hasToken]);
-    const agendaList = useMemo(() => <AgendaList hasToken={hasToken}/>, [hasToken]);
 
     const translateX = useSharedValue(-winWidth * 0.12);
     const animatedStyle = useAnimatedStyle(() => {
@@ -181,20 +167,16 @@ const MainBoard = () => {
         }
     }, [choice]);
 
-    const handleChoice = (value: number) => {
-        setChoice(value);
-    }
-
     return (
         <View style={styleSheet.mainBoardContainer}>
-            <HomeContext.Provider value={{choice, shiftChoice: handleChoice}}>
+            <HomeContext.Provider value={{choice, setChoice}}>
                 <View style={styleSheet.shiftButtonContainer}>
                     <View style={styleSheet.shiftButton}>
-                        {classTableButton}
+                        <ShiftButton id={0} text='课程表' initFocus={true}/>
                     </View>
                     <View style={{height: '100%', width: 2, borderRadius: 1, backgroundColor: '#D9D9D9'}}></View>
                     <View style={styleSheet.shiftButton}>
-                        {countdownButton}
+                        <ShiftButton id={1} text='倒计时'/>
                     </View>
                     <Animated.View style={[animatedStyle, {position: 'absolute', bottom: 8}]}>
                         <LinearGradient
@@ -210,10 +192,10 @@ const MainBoard = () => {
             </HomeContext.Provider>
             <View style={styleSheet.mainWrapper}>
                 <View style={{ display: choice === 0 ? 'flex' : 'none' }}>
-                    {classList}
+                    <ClassList hasToken={hasToken}/>
                 </View>
                 <View style={{ display: choice === 1 ? 'flex' : 'none' }}>
-                    {agendaList}
+                    <AgendaList hasToken={hasToken}/>
                 </View>
             </View>
         </View>
@@ -227,7 +209,7 @@ interface ButtonProps {
 }
 
 const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus = false}): React.JSX.Element => {
-    const {choice, shiftChoice}: HomeContextType = useContext(HomeContext);
+    const {choice, setChoice} = useContext(HomeContext);
 
     const colorValue = useSharedValue(initFocus ? 1 : 0);
     const animatedStyle = useAnimatedStyle(() => {
@@ -237,7 +219,7 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
     })
 
     const handleClick = () => {
-        shiftChoice(id);
+        setChoice(id);
     }
 
     useEffect(() => {
@@ -261,8 +243,9 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
     return (
         <Pressable onPress={handleClick}>
             <View style={styleSheet.shiftBox}>
-                <Animated.Text numberOfLines={1}
-                               style={[styleSheet.shiftBoxText, animatedStyle]}
+                <Animated.Text
+                    numberOfLines={1}
+                    style={[styleSheet.shiftBoxText, animatedStyle]}
                 >
                     {text}
                 </Animated.Text>

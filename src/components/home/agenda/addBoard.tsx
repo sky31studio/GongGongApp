@@ -29,18 +29,24 @@ import {transTo2Digits} from "../../../utils/agendaUtils.ts";
  */
 const AddBoard = () => {
     const dispatch = useAppDispatch();
-    // 获取目前展示的Agenda
     const agenda = useAppSelector(selectShowedAgenda);
-
+    // 是否是考试
     const [onlyExam, setOnlyExam] = useState<boolean>(agenda ? (agenda.type === 0) : false);
-    const editable = useMemo(() => agenda ? agenda.isCustom : true, [agenda]);
-
     //  初始化设置名称、地点、tip、起止时间
     const [name, setName] = useState<string>(agenda ? agenda.name : '');
     const [location, setLocation] = useState<string>(agenda ? agenda.location : '');
     const [tip, setTip] = useState<string>(agenda?.text ?? '');
-
     const [theDate, setTheDate] = useState<Date | null>(agenda ? (agenda.startTime === '' ? null : new Date(agenda.startTime)) : null);
+    // 起始和终止下标
+    const [timePickerIndex, setTimePickerIndex] = useState<number | null>(null);
+    // 起止时间Date对象
+    const [startTime, setStartTime] = useState<Date | null>(agenda ? (agenda.startTime === '' ? null : new Date(agenda.startTime)) : null);
+    const [endTime, setEndTime] = useState<Date | null>(agenda ? (agenda.endTime === '' ? null : new Date(agenda.endTime)) : null);
+    // picker显示
+    const [datePickerVisible, setDatePickerVisible] = useState<boolean>(false);
+    const [timePickerVisible, setTimePickerVisible] = useState<boolean>(false);
+    // 是否可以编辑，取决于agenda是自定义的还是后端数据
+    const editable = useMemo(() => agenda ? agenda.isCustom : true, [agenda]);
     const dateStr = useMemo(() => {
         if(theDate) {
             return `${theDate.getFullYear()}/${transTo2Digits(theDate.getMonth() + 1)}/${transTo2Digits(theDate.getDate())}`;
@@ -48,9 +54,7 @@ const AddBoard = () => {
 
         return ''
     }, [theDate]);
-
-    const [timePickerIndex, setTimePickerIndex] = useState<number | null>(null);
-    const [startTime, setStartTime] = useState<Date | null>(agenda ? (agenda.startTime === '' ? null : new Date(agenda.startTime)) : null);
+    // 起止时间字符串
     const startTimeStr = useMemo(() => {
         if(startTime) {
             return `${transTo2Digits(startTime.getHours())}:${transTo2Digits(startTime.getMinutes())}`;
@@ -58,7 +62,6 @@ const AddBoard = () => {
 
         return '';
     }, [startTime]);
-    const [endTime, setEndTime] = useState<Date | null>(agenda ? (agenda.endTime === '' ? null : new Date(agenda.endTime)) : null);
     const endTimeStr = useMemo(() => {
         if(endTime) {
             return `${transTo2Digits(endTime.getHours())}:${transTo2Digits(endTime.getMinutes())}`;
@@ -90,30 +93,11 @@ const AddBoard = () => {
         }
     })
 
-    const [datePickerVisible, setDatePickerVisible] = useState<boolean>(false);
-    const [timePickerVisible, setTimePickerVisible] = useState<boolean>(false);
-
-    // name不为空时，完成按钮变为valid
-    useEffect(() => {
-        if (name !== '') {
-            colorValue.value = withTiming(1, {
-                duration: 300,
-                easing: Easing.ease,
-            })
-        } else if(colorValue.value !== 0) {
-            colorValue.value = withTiming(0, {
-                duration: 300,
-                easing: Easing.ease,
-            })
-        }
-    }, [name, location]);
-
     // 仅考试
     const handleOnlyExam = () => {
         if(agenda && !agenda.isCustom) return;
         setOnlyExam(!onlyExam);
     }
-
     // onChangeText回调函数
     const handleName = (data: string) => {
         setName(data);
@@ -126,9 +110,7 @@ const AddBoard = () => {
     const handleTip = (data: string) => {
         setTip(data);
     }
-
     // ----------------------
-
     const showDatePicker = () => {
         if(agenda && !agenda.isCustom) return;
 
@@ -159,7 +141,6 @@ const AddBoard = () => {
     const handleDatePickerCancel = () => {
         setDatePickerVisible(false);
     }
-
     // 添加倒计时回调函数
     const handleDateConfirm = (date: Date) => {
         setTheDate(date);
@@ -205,7 +186,6 @@ const AddBoard = () => {
 
         setTimePickerVisible(false);
     }
-
     // 添加agenda
     const handleAddAgenda = () => {
         if(agenda && !agenda.isCustom) {
@@ -239,6 +219,21 @@ const AddBoard = () => {
 
         dispatch(hideAddBoard());
     }
+
+    // name不为空时，完成按钮变为valid
+    useEffect(() => {
+        if (name !== '') {
+            colorValue.value = withTiming(1, {
+                duration: 300,
+                easing: Easing.ease,
+            })
+        } else if(colorValue.value !== 0) {
+            colorValue.value = withTiming(0, {
+                duration: 300,
+                easing: Easing.ease,
+            })
+        }
+    }, [name, location]);
 
     return (
         <View style={ss.addAgendaContainer}>

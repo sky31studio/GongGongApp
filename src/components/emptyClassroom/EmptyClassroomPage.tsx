@@ -1,6 +1,6 @@
 import {FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, ToastAndroid, View} from "react-native";
 import {BackgroundColor, FontColor, FontFamily, FontSize} from "../../config/globalStyleSheetConfig.ts";
-import React, {useMemo, useState} from "react";
+import React, {memo, useCallback, useMemo, useState} from "react";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
 import {NavigationProps} from "../home/homePage.tsx";
@@ -29,9 +29,10 @@ const periods = ['1-2', '3-4', '5-6', '7-8', '9-11'];
  */
 const EmptyClassroomPage = ({navigation}: NavigationProps) => {
     const dispatch = useAppDispatch();
-    // 数据库查询
+    // realm
     const realm = useRealm();
     const user = useQuery<GongUser>('GongUser')[0];
+
     // 列表刷新状态
     const [refreshing, setRefreshing] = useState<boolean>(false);
     // 选中地点下标
@@ -40,10 +41,12 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
     const [isToday, setIsToday] = useState<boolean>(true);
     // 选中课程节次
     const [currentPeriod, setCurrentPeriod] = useState([false, false, false, false, false]);
+
     // 今日空教室数据
     const todayData = useAppSelector(selectTodayClassroomStatus);
     // 明日空教室数据
     const tomorrowData = useAppSelector(selectTomorrowClassroomStatus);
+
     // 从空教室数据中筛选出的选中地点以及选中课程节次的数据
     const locationData = useMemo(() => {
         const classData = isToday ? todayData : tomorrowData;
@@ -64,7 +67,10 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
 
             return true;
         });
-    }, [isToday, currentIndex, currentPeriod, todayData, tomorrowData])
+    }, [isToday, currentIndex, currentPeriod, todayData, tomorrowData]);
+
+    const leftHandler = useCallback(() => setIsToday(true), []);
+    const rightHandler = useCallback(() => setIsToday(false), []);
 
     // 更新currentPeriod数组(使用immer)
     const updatePeriod = (index: number) => {
@@ -76,25 +82,12 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
     }
 
     // 重置currentPeriod数组
-    const clearCurrentPeriod = () => {
+    const clearCurrentPeriod = useCallback(() => {
         setCurrentPeriod([false, false, false, false, false]);
-    }
-
-    // 功能键组件
-    const functionField = () => <FunctionField
-        handleLeft={() => setIsToday(true)}
-        handleRight={() => setIsToday(false)}
-        reset={clearCurrentPeriod}
-        currentIndex={currentIndex}
-    />
-
-    // 返回键回调函数
-    const handleBack = () => {
-        navigation.navigate('TabNavigation');
-    }
+    }, []);
 
     // 刷新获取数据
-    const onRefresh = () => {
+    const onRefresh = useCallback(() => {
         setRefreshing(true);
 
         const fetchData = async () => {
@@ -112,13 +105,15 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                 realm.write(() => {
                     user.tomorrowClassroom = JSON.stringify(msg.data);
                 })
+            } else if(msg.code === ResourceCode.PermissionDenied) {
+                ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
             } else {
                 ToastAndroid.showWithGravity('空教室信息获取失败！', 1500, ToastAndroid.BOTTOM);
             }
         }
 
         fetchData().then(() => setRefreshing(false));
-    }
+    }, [user.token]);
 
     // FlatList渲染需要使用的数据
     const listData = location.map((place) => {
@@ -180,7 +175,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                     >
                         <ScalingNotAllowedText style={ss.titleText}>空教室</ScalingNotAllowedText>
                     </View>
-                    <Pressable onPress={handleBack} style={ss.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
+                    <Pressable onPress={() => navigation.navigate('TabNavigation')} style={ss.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
                         <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
                     </Pressable>
                     <View style={{width: '100%', height: 40, position: 'absolute', bottom: 0}}>
@@ -195,7 +190,12 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                     </View>
                 </View>
                 <View style={ss.mainContainer}>
-                    {functionField()}
+                    <FunctionField
+                        handleLeft={leftHandler}
+                        handleRight={rightHandler}
+                        reset={clearCurrentPeriod}
+                        currentIndex={currentIndex}
+                    />
                     <View style={ss.mainInfoContainer}>
                         <View style={{width: '100%', height: 40, display: 'flex', flexDirection: 'row'}}>
                             <View style={{width: 50, height: '100%'}}></View>
@@ -250,10 +250,10 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
     )
 }
 
-const FunctionField = ({handleLeft, handleRight, reset, currentIndex}: any) => {
+const FunctionField = memo(({handleLeft, handleRight, reset, currentIndex}: any) => {
     const [isToday, setIsToday] = useState<boolean>(true);
-    const buttonAnimatedValue = useSharedValue<number>(0);
 
+    const buttonAnimatedValue = useSharedValue<number>(0);
     const buttonAnimatedStyle = useAnimatedStyle(() => {
         return {
             left: `${buttonAnimatedValue.value}%`
@@ -325,7 +325,7 @@ const FunctionField = ({handleLeft, handleRight, reset, currentIndex}: any) => {
             </View>
         </View>
     )
-}
+})
 
 const ss = StyleSheet.create({
     titleBar: {

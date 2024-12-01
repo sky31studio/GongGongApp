@@ -49,8 +49,10 @@ const ScorePage = ({navigation}: NavigationProps) => {
                 realm.write(() => {
                     user.scoreList = JSON.stringify(msg.data);
                 })
+            } else if(msg.code === ResourceCode.PermissionDenied) {
+                ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
             } else {
-                ToastAndroid.showWithGravity('成绩表单获取失败', 1500, ToastAndroid.BOTTOM);
+                ToastAndroid.showWithGravity('成绩表单获取失败！', 1500, ToastAndroid.BOTTOM);
             }
         }
 
