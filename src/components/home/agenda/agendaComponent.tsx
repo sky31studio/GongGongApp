@@ -258,6 +258,7 @@ const AgendaBox = forwardRef((
 
     const handlePinToTop = () => {
         swipeableRef.current?.reset();
+        setOpenedIndex(null);
         if (agenda.isCustom) {
             dispatch(selfChangedCountIncrement());
             dispatch(addSelfToTop(agenda.id));
@@ -269,6 +270,7 @@ const AgendaBox = forwardRef((
 
     const handleUnpinToTop = () => {
         swipeableRef.current?.reset();
+        setOpenedIndex(null);
         if (agenda.isCustom) {
             dispatch(selfChangedCountIncrement());
             dispatch(removeSelfFromTop(agenda.id));
@@ -384,13 +386,13 @@ const ss = StyleSheet.create({
     },
 
     functionContainer: {
-        width: '100%',
+        width: '90%',
         height: 60,
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 10,
-        paddingHorizontal: 10,
+        paddingHorizontal: '5%',
     },
 
     countdownListContainer: {
