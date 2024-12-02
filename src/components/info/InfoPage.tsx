@@ -6,13 +6,19 @@ import XMLResources from "../../basic/XMLResources.ts";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {agendaResetAll, selectCurrentAgendaNumber} from "../../app/slice/agendaSlice.ts";
 import {resetSchedule, selectCurrentCourseNumber} from "../../app/slice/scheduleSlice.ts";
-import {selectStudentID, selectStudentMajor, selectStudentName} from "../../app/slice/infoSlice.ts";
+import {
+    clearInfo,
+    selectStudentID,
+    selectStudentMajor,
+    selectStudentName
+} from "../../app/slice/infoSlice.ts";
 import {logoutSuccessful, selectIsLogin} from "../../app/slice/globalSlice.ts";
 import {NavigationProps} from "../home/homePage.tsx";
 import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 import {useQuery, useRealm} from "@realm/react";
 import GongUser from "../../dao/object/User.ts";
-import {getAndroidId, getVersion} from "react-native-device-info";
+import {getVersion} from "react-native-device-info";
+import {clearScore} from "../../app/slice/scoreSlice.ts";
 
 const InfoPage = ({navigation}: NavigationProps) => {
     // realm
@@ -36,6 +42,8 @@ const InfoPage = ({navigation}: NavigationProps) => {
         setModalVisible(false);
         dispatch(agendaResetAll());
         dispatch(resetSchedule());
+        dispatch(clearInfo());
+        dispatch(clearScore());
         realm.write(() => {
             realm.delete(user);
         })

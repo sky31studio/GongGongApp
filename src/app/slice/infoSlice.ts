@@ -32,7 +32,13 @@ const infoSlice = createSlice({
             state.studentID = action.payload.student_id;
             state.name = action.payload.name;
             state.major = action.payload.major;
-        }
+        },
+
+        clearInfo: (state) => {
+            state.studentID = '';
+            state.name = '';
+            state.major = '';
+        },
     },
     extraReducers: builder => {
         builder
@@ -48,6 +54,6 @@ export const selectStudentID = (state: RootState) => state.info.studentID;
 export const selectStudentMajor = (state: RootState) => state.info.major;
 export const selectStudentName = (state: RootState) => state.info.name;
 
-export const {initInfo}  = infoSlice.actions;
+export const {initInfo, clearInfo}  = infoSlice.actions;
 
 export default infoSlice.reducer;

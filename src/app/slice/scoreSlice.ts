@@ -43,6 +43,14 @@ const scoreSlice = createSlice({
 
         initScoreList: (state, action) => {
             state.scoreList = dealScore(action.payload);
+        },
+
+        clearScore: (state) => {
+            state.gpa = -1;
+            state.classRank = -1;
+            state.majorRank = -1;
+            state.averageScore = -1;
+            state.scoreList = [];
         }
     },
     extraReducers: (builder) => {
@@ -62,6 +70,6 @@ export const selectClassRank = (state: RootState) => state.score.classRank;
 export const selectMajorRank = (state: RootState) => state.score.majorRank;
 export const selectScoreList = (state: RootState) => state.score.scoreList;
 
-export const {setScoreOverview, initScoreList}  = scoreSlice.actions;
+export const {setScoreOverview, initScoreList, clearScore}  = scoreSlice.actions;
 
 export default scoreSlice.reducer;
