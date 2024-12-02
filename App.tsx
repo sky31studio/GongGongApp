@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {createContext, useEffect, useLayoutEffect} from 'react';
 import {Dimensions, SafeAreaView, StatusBar, StyleSheet, useColorScheme, View,} from 'react-native';
 import {Colors,} from 'react-native/Libraries/NewAppScreen';
 import {NavigationContainer} from "@react-navigation/native";
@@ -46,12 +46,25 @@ function App(): React.JSX.Element {
     );
 }
 
+export const CurrentTimeContext = createContext<{currentTime: Date}>({currentTime: new Date(Date.now())});
+
 const SafeArea = () => {
     const user = useQuery<GongUser>('GongUser')[0];
     const dispatch = useAppDispatch();
     const isLogin = useAppSelector(selectIsLogin);
 
+    const [currentTime, setCurrentTime] = React.useState<Date>(new Date(Date.now()));
+
     useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date(Date.now()));
+        }, 8000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    // 使用useLayoutEffect防止登录界面一闪而过
+    useLayoutEffect(() => {
         const checkIsLogin = async () => {
             console.log('check whether login');
             if(user) {
@@ -65,7 +78,9 @@ const SafeArea = () => {
 
     return (
         <View style={{flex: 1}}>
-            {isLogin ? <HomeNavigation/> : <LoginNavigation/>}
+            <CurrentTimeContext.Provider value={{currentTime}}>
+                {isLogin ? <HomeNavigation/> : <LoginNavigation/>}
+            </CurrentTimeContext.Provider>
         </View>
     )
 }

@@ -75,7 +75,7 @@ class Resources {
     }
 
     /**
-     * 处理登录请求，将返回的token存入MMKV中
+     * 处理登录请求，将返回的token存入user中
      * @param username 用户名(学号)
      * @param password 密码
      */

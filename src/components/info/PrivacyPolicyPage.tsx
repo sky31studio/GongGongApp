@@ -7,10 +7,10 @@ const PrivacyPolicyPage = ({navigation}: NavigationProps) => {
     const props: any = {
         wholeTitle: '隐私条款',
         title: {
-            main: '隐私条跨',
+            main: '隐私条款',
             sub: 'Privacy policy',
         },
-        content: TextConfig.specs,
+        content: TextConfig.PrivacyPolicy,
     }
 
     const handleGoBack = () => {

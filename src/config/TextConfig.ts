@@ -243,7 +243,7 @@ export class TextConfig {
             ]
         },
         {
-            title: '一、如何收集信息\n',
+            title: '一、如何收集信息',
             content: [
                 {
                     type: 0,
@@ -262,7 +262,7 @@ export class TextConfig {
             ]
         },
         {
-            title: '二、如何使用隐私信息\n',
+            title: '二、如何使用隐私信息',
             content: [
                 {
                     type: 0,
@@ -274,7 +274,7 @@ export class TextConfig {
             ]
         },
         {
-            title: '三、手机权限的获取与使用\n',
+            title: '三、手机权限的获取与使用',
             content: [
                 {
                     type: 0,
@@ -287,7 +287,7 @@ export class TextConfig {
             ]
         },
         {
-            title: '四、我们如何存储和保护个人信息\n',
+            title: '四、我们如何存储和保护个人信息',
             content: [
                 {
                     type: 0,
@@ -313,7 +313,7 @@ export class TextConfig {
             ]
         },
         {
-            title: '五、如何联系我们\n',
+            title: '五、如何联系我们',
             content: [
                 {
                     type: 0,

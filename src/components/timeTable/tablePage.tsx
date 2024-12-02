@@ -33,7 +33,6 @@ export const TablePage = ({navigation}: NavigationProps) => {
     const courseList = useAppSelector(selectCurrentTimeCourses);
 
     const [isLazyLoaded, setIsLazyLoaded] = useState<boolean>(false);
-
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
     const onRefresh = () => {

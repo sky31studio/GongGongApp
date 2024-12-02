@@ -1,4 +1,4 @@
-import React, {useMemo} from "react";
+import React, {useCallback, useContext, useMemo} from "react";
 import {StyleSheet, Text, View} from "react-native";
 import ClassBox from "./classBox";
 import TimeTableConfig from "../../config/TimeTableConfig";
@@ -8,12 +8,14 @@ import {selectTable} from "../../app/slice/scheduleSlice.ts";
 import {selectFirstDate} from "../../app/slice/globalSlice.ts";
 import {transTo2Digits} from "../../utils/agendaUtils.ts";
 import Animated from "react-native-reanimated";
-import {FontSize} from "../../config/globalStyleSheetConfig.ts";
-
-const weekdayCNName = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+import {FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
+import {CurrentTimeContext} from "../../../App.tsx";
+import {CNWeekDayShort} from "../../utils/enum.ts";
+import {ClassObject} from "./ClassObject.ts";
 
 export default function Schedule({week}: { week: number }): React.JSX.Element {
     const date = useAppSelector(selectFirstDate);
+
     const firstDate = useMemo(() => {
         if (date !== '') {
             const tmpDate = new Date(date);
@@ -75,96 +77,15 @@ export default function Schedule({week}: { week: number }): React.JSX.Element {
     const table = useAppSelector(selectTable);
     const courses = useMemo(() => getAllCoursesByWeek(table, week), [table, week]);
 
-    const classList = () => {
-        return courses.map((item, index) => {
-            let showText = '--';
-            if (firstDate !== '') {
-                const showDate = new Date(firstDate);
-                showDate.setDate(showDate.getDate() + index);
 
-                showText = `${transTo2Digits(showDate.getMonth() + 1)}-${transTo2Digits(showDate.getDate())}`;
-            }
+    const weekDayScheduleList = courses.map((item, index) => {
+        const tmpDate = new Date(firstDate);
+        tmpDate.setDate(tmpDate.getDate() + index);
 
-            const weekDayItem = (
-                <View style={styleSheet.weekdayItemWrapper}>
-                    <View style={styleSheet.weekdayItem}>
-                        <Text style={styleSheet.wItemBoldText}>{weekdayCNName[index]}</Text>
-                        <Text
-                            style={styleSheet.wItemSlimText}>{showText}</Text>
-                    </View>
-                </View>
-            );
-
-            let flag = 1;
-            const classItemList = item.reduce((acc: React.JSX.Element[], item, index) => {
-                const space = 4 - (flag - 1) % 4;
-                if (space <= item.period) {
-                    const view = (
-                        <View key={index} style={{...styleSheet.classItem, flex: space}}>
-                            <View style={{width: '100%', height: '100%', padding: 3}}>
-                                {item.isEmpty ? '' : <ClassBox course={item}/>}
-                            </View>
-                        </View>
-                    );
-
-                    acc.push(view);
-
-                    let remainPeriod = item.period - space;
-                    while (remainPeriod >= 4) {
-                        const secView = (
-                            <View style={{...styleSheet.classItem, flex: 4}}>
-                                <View style={{width: '100%', height: '100%', padding: 3}}>
-                                    {item.isEmpty ? '' : <ClassBox course={item}/>}
-                                </View>
-                            </View>
-                        );
-
-                        acc.push(<View style={styleSheet.classGap}/>, secView);
-                        remainPeriod -= 4;
-                    }
-
-                    if (remainPeriod !== 0) {
-                        const secView = (
-                            <View style={{...styleSheet.classItem, flex: remainPeriod}}>
-                                <View style={{width: '100%', height: '100%', padding: 3}}>
-                                    {item.isEmpty ? '' : <ClassBox course={item}/>}
-                                </View>
-                            </View>
-                        );
-
-                        acc.push(<View style={styleSheet.classGap}/>, secView);
-                    } else {
-                        acc.push(<View style={styleSheet.classGap}/>);
-                    }
-
-                } else {
-                    const view = (
-                        <View style={{...styleSheet.classItem, flex: item.period}}>
-                            <View style={{width: '100%', height: '100%', padding: 3}}>
-                                {item.isEmpty ? '' : <ClassBox course={item}/>}
-                            </View>
-
-                        </View>
-                    );
-
-                    acc.push(view);
-                }
-
-                flag += item.period;
-
-                return acc;
-            }, []);
-
-            return (
-                <View key={index} style={styleSheet.weekdayContainer}>
-                    {weekDayItem}
-                    {classItemList.map((item) => (
-                        item
-                    ))}
-                </View>
-            )
-        });
-    }
+        return (
+            <WeekDaySchedule key={index} courses={item} date={tmpDate}/>
+        )
+    })
 
     return (
         <Animated.View style={styleSheet.scheduleContainer}>
@@ -173,9 +94,122 @@ export default function Schedule({week}: { week: number }): React.JSX.Element {
                     item
                 ))}
             </View>
-            {classList()}
+            {weekDayScheduleList}
         </Animated.View>
     );
+}
+
+const WeekDaySchedule = ({courses, date}: {courses: any, date: Date}) => {
+    const {currentTime} = useContext(CurrentTimeContext);
+
+    const weekDay = useMemo(() => date.getDay(), [date]);
+    const dateText = useMemo(() =>`${transTo2Digits(date.getMonth() + 1)}-${transTo2Digits(date.getDate())}`, [date]);
+    const {dateTextColor, backgroundColor} = useMemo(() => {
+        if(date.getFullYear() < currentTime.getFullYear()) {
+            return {
+                dateTextColor: FontColor.dark,
+                backgroundColor: '#fafafa'
+            };
+        }
+        if(date.getMonth() < currentTime.getMonth()) {
+            return {
+                dateTextColor: FontColor.grey,
+                backgroundColor: '#fafafa'
+            };
+        }
+        if(date.getDate() < currentTime.getDate()) {
+            return {
+                dateTextColor: FontColor.grey,
+                backgroundColor: '#fafafa'
+            };
+        }
+        else if(date.getDate() === currentTime.getDate()) {
+            return {
+                dateTextColor: FontColor.primary,
+                backgroundColor: '#ffeaea'
+            };
+        }
+
+        return {
+            dateTextColor: FontColor.dark,
+            backgroundColor: '#fafafa'
+        };
+    }, [currentTime]);
+
+    const courseList = useCallback(() => {
+        let flag = 1;
+        return courses.reduce((acc: React.JSX.Element[], item: ClassObject, index: number) => {
+            const space = 4 - (flag - 1) % 4;
+            if (space <= item.period) {
+                const view = (
+                    <View key={index} style={{...styleSheet.classItem, flex: space}}>
+                        <View style={{width: '100%', height: '100%', padding: 3}}>
+                            {item.isEmpty ? '' : <ClassBox course={item}/>}
+                        </View>
+                    </View>
+                );
+
+                acc.push(view);
+
+                let remainPeriod = item.period - space;
+                while (remainPeriod >= 4) {
+                    const secView = (
+                        <View style={{...styleSheet.classItem, flex: 4}}>
+                            <View style={{width: '100%', height: '100%', padding: 3}}>
+                                {item.isEmpty ? '' : <ClassBox course={item}/>}
+                            </View>
+                        </View>
+                    );
+
+                    acc.push(<View style={styleSheet.classGap}/>, secView);
+                    remainPeriod -= 4;
+                }
+
+                if (remainPeriod !== 0) {
+                    const secView = (
+                        <View style={{...styleSheet.classItem, flex: remainPeriod}}>
+                            <View style={{width: '100%', height: '100%', padding: 3}}>
+                                {item.isEmpty ? '' : <ClassBox course={item}/>}
+                            </View>
+                        </View>
+                    );
+
+                    acc.push(<View style={styleSheet.classGap}/>, secView);
+                } else {
+                    acc.push(<View style={styleSheet.classGap}/>);
+                }
+
+            } else {
+                const view = (
+                    <View style={{...styleSheet.classItem, flex: item.period}}>
+                        <View style={{width: '100%', height: '100%', padding: 3}}>
+                            {item.isEmpty ? '' : <ClassBox course={item}/>}
+                        </View>
+
+                    </View>
+                );
+
+                acc.push(view);
+            }
+
+            flag += item.period;
+
+            return acc;
+        }, []);
+    }, [courses]);
+
+    return (
+        <View style={[styleSheet.weekdayContainer, {backgroundColor: backgroundColor}]}>
+            {/* 日期单元格 */}
+            <View style={styleSheet.weekdayItemWrapper}>
+                <View style={styleSheet.weekdayItem}>
+                    <Text style={[styleSheet.wItemBoldText, {color: dateTextColor}]}>{CNWeekDayShort[weekDay]}</Text>
+                    <Text style={[styleSheet.wItemSlimText, {color: dateTextColor}]}>{dateText}</Text>
+                </View>
+            </View>
+            {courseList()}
+        </View>
+    )
 }
 
 const styleSheet = StyleSheet.create({
@@ -246,7 +280,6 @@ const styleSheet = StyleSheet.create({
     },
 
     weekdayContainer: {
-        backgroundColor: '#fafafa',
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
@@ -277,7 +310,7 @@ const styleSheet = StyleSheet.create({
 
     wItemSlimText: {
         width: '100%',
-        fontWeight: '200',
+        fontWeight: '400',
         textAlign: 'center',
         fontSize: FontSize.s,
         textAlignVertical: 'center',
@@ -291,6 +324,5 @@ const styleSheet = StyleSheet.create({
     classGap: {
         height: 7,
         width: '100%',
-        backgroundColor: '#fafafa',
     }
 });

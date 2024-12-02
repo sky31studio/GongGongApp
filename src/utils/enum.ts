@@ -11,6 +11,16 @@ export enum CNWeekDay {
     "星期六" = 6,
 }
 
+export enum CNWeekDayShort {
+    "周日" = 0,
+    "周一" = 1,
+    "周二" = 2,
+    "周三" = 3,
+    "周四" = 4,
+    "周五" = 5,
+    "周六" = 6,
+}
+
 export enum ENWeekDay {
     "SUN." = 0,
     "MON.",
