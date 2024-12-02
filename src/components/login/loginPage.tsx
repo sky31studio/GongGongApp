@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {createContext, useContext, useEffect, useState} from "react";
 import {
     Animated as Ani,
     Keyboard,
@@ -10,9 +10,10 @@ import {
     View
 } from "react-native";
 import Animated, {
+    cancelAnimation,
     Easing,
+    interpolateColor,
     ReduceMotion,
-    runOnJS,
     useAnimatedStyle,
     useSharedValue,
     withDelay,
@@ -27,7 +28,14 @@ import {useAppDispatch} from "../../app/hooks.ts";
 import {loginSuccessful} from "../../app/slice/globalSlice.ts";
 import {NavigationProps} from "../home/homePage.tsx";
 import {useRealm} from "@realm/react";
+import LoadingAnimation from "./LoadingAnimation.tsx";
+import {sleep} from "../../utils/globalUtils.ts";
 
+
+const LoginContext = createContext<{
+    isPending: boolean,
+    setIsPending: React.Dispatch<React.SetStateAction<boolean>>,
+}>({isPending: false, setIsPending: () => {}});
 /**
  * 登录主界面
  */
@@ -35,10 +43,11 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
     const dispatch = useAppDispatch();
     const realm = useRealm();
     let handleUsername, handlePassword, handleLogin;
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [alertText, setAlertText] = useState('');
-    const [showAlert, setShowAlert] = useState(false);
+    const [username, setUsername] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const [alertText, setAlertText] = useState<string>('');
+    const [showAlert, setShowAlert] = useState<boolean>(false);
+    const [isPending, setIsPending] = useState<boolean>(false);
 
     const top = useSharedValue(-10);
     const animatedAlert = useAnimatedStyle(() => ({
@@ -47,17 +56,25 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
 
     // alert下弹上拉动画
     const alertAnimation = () => {
+        cancelAnimation(top);
+        setShowAlert(true);
+
         top.value = withSequence(
-            withTiming(30, {
-                duration: 1000,
+            withTiming(-10, {
+                duration: 200,
                 easing: Easing.inOut(Easing.quad),
                 reduceMotion: ReduceMotion.System,
             }),
-            withDelay(3000, withTiming(-10, {
-                duration: 1000,
+            withTiming(30, {
+                duration: 400,
                 easing: Easing.inOut(Easing.quad),
                 reduceMotion: ReduceMotion.System,
-            }, () => runOnJS(setShowAlert)(false))), // runOnJS一定要的
+            }),
+            withDelay(2000, withTiming(-10, {
+                duration: 400,
+                easing: Easing.inOut(Easing.quad),
+                reduceMotion: ReduceMotion.System,
+            },)), // runOnJS一定要的
         )
     }
 
@@ -67,17 +84,18 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
     handlePassword = (data: string) => {
         setPassword(data);
     }
+    // 登录操作
     handleLogin = async () => {
         if (password === '') {
             setAlertText('请输入密码');
-            setShowAlert(true);
             alertAnimation();
+            await sleep(100);
         } else {
             const res = await Resources.login(username, password);
             if (res.code === 0) {
                 setAlertText(res.message);
-                setShowAlert(true);
                 alertAnimation();
+                await sleep(100);
                 return;
             }
             console.log('creating newUser');
@@ -87,7 +105,6 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
                 })
             })
             console.log('newUser is created!');
-
             dispatch(loginSuccessful());
         }
     }
@@ -103,30 +120,30 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
         </Animated.View>
     )
 
-    const buttonSection = <ButtonSection handleLogin={handleLogin} navigation={navigation}/>
-
     const keyboardDismiss = () => {
         Keyboard.dismiss();
     }
 
     return (
-        <TouchableWithoutFeedback onPress={keyboardDismiss}>
-            <View style={styleSheet.loginContainer}>
-                {showAlert && alertModule}
-                <View style={styleSheet.logoWrapper}>
-                    <SvgXml xml={XMLResources.logo} width="100%"/>
-                </View>
-                <View style={styleSheet.inputWrapper}>
-                    <View style={styleSheet.inputContainer}>
-                        {idInput}
-                        {pwdInput}
+        <LoginContext.Provider value={{isPending, setIsPending}}>
+            <TouchableWithoutFeedback onPress={keyboardDismiss}>
+                <View style={styleSheet.loginContainer}>
+                    {showAlert && alertModule}
+                    <View style={styleSheet.logoWrapper}>
+                        <SvgXml xml={XMLResources.logo} width="100%"/>
+                    </View>
+                    <View style={styleSheet.inputWrapper}>
+                        <View style={styleSheet.inputContainer}>
+                            {idInput}
+                            {pwdInput}
+                        </View>
+                    </View>
+                    <View style={styleSheet.buttonWrapper}>
+                        <ButtonSection handleLogin={handleLogin} navigation={navigation}/>
                     </View>
                 </View>
-                <View style={styleSheet.buttonWrapper}>
-                    {buttonSection}
-                </View>
-            </View>
-        </TouchableWithoutFeedback>
+            </TouchableWithoutFeedback>
+        </LoginContext.Provider>
     );
 }
 
@@ -282,12 +299,23 @@ const MyInput: React.ComponentType<InputProps> = ({initText = 'text', visiblePro
 }
 
 const ButtonSection = ({handleLogin, navigation}: { handleLogin: any, navigation: any}) => {
-    const [disabled, setDisabled] = useState<boolean>(false);
+    const {isPending, setIsPending} = useContext(LoginContext);
     const onLogin = async () => {
-        setDisabled(true);
+        setIsPending(true);
         await handleLogin();
-        setDisabled(false);
+        setIsPending(false);
     }
+
+    const buttonColorValue = useSharedValue(0);
+    const buttonAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            backgroundColor: interpolateColor(buttonColorValue.value, [0, 1], [BackgroundColor.primary, BackgroundColor.primarySemiTransparent])
+        }
+    })
+
+    useEffect(() => {
+        buttonColorValue.value = withTiming(isPending ? 1 : 0, {duration: 300});
+    }, [isPending]);
 
     return (
         <View style={buttonStyleSheet.buttonContainer}>
@@ -301,9 +329,17 @@ const ButtonSection = ({handleLogin, navigation}: { handleLogin: any, navigation
                     <Text style={[buttonStyleSheet.introText, buttonStyleSheet.infoText]}>隐私条款</Text>
                 </Pressable>
             </View>
-            <Pressable style={buttonStyleSheet.loginButton} onPress={onLogin} disabled={disabled}>
-                <Text style={{color: '#fff', fontWeight: '600', fontSize: 15}}>登录</Text>
-            </Pressable>
+            <Animated.View style={[buttonStyleSheet.loginButton, buttonAnimatedStyle]}>
+                <Pressable style={{flex: 1, alignItems: 'center', justifyContent: 'center'}} onPress={onLogin} disabled={isPending}>
+                    {isPending ?
+                        <View style={{height: 45, width: 45}}>
+                            <LoadingAnimation/>
+                        </View> :
+                        <Text style={{color: '#fff', fontWeight: '600', fontSize: 15}}>登录</Text>
+                    }
+                </Pressable>
+            </Animated.View>
+
         </View>
     )
 }
@@ -331,9 +367,6 @@ const buttonStyleSheet = StyleSheet.create({
         width: '60%',
         height: 45,
         borderRadius: 25,
-        backgroundColor: BackgroundColor.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
     }
 })
 
