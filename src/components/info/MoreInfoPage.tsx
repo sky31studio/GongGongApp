@@ -1,10 +1,11 @@
 import React from "react";
-import {Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View} from "react-native";
+import {Image, Pressable, ScrollView, StyleSheet, useWindowDimensions, View} from "react-native";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
 import {handleStrongText} from "../../utils/infoUtils.tsx";
 import {Content} from "../../config/TextConfig.ts";
+import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 
 export interface MoreInfoPageProps {
     wholeTitle: string;
@@ -24,23 +25,23 @@ const MoreInfoPage = ({props, handleNavigation}: {props: MoreInfoPageProps, hand
                 <Pressable onPress={handleGoBack} style={ss.backButton} hitSlop={{top: 5, bottom: 5, left: 10, right: 10}}>
                     <SvgXml xml={XMLResources.blackBackArrow} width={10} height={18}/>
                 </Pressable>
-                <Text style={ss.moreInfoTitle}>{props.wholeTitle}</Text>
+                <ScalingNotAllowedText style={ss.moreInfoTitle}>{props.wholeTitle}</ScalingNotAllowedText>
             </View>
             <ScrollView showsVerticalScrollIndicator={false} style={{width: '88%'}} nestedScrollEnabled={true}>
                 <View style={{display: 'flex', flexDirection: 'row', marginVertical: 10}}>
                     <View style={{width: 8, backgroundColor: BackgroundColor.primary, height: '100%'}}></View>
                     <View style={{display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginLeft: 8}}>
-                        <Text style={ss.mainTitle}>{props.title.main}</Text>
-                        <Text style={ss.subTitle}>{props.title.sub}</Text>
+                        <ScalingNotAllowedText style={ss.mainTitle}>{props.title.main}</ScalingNotAllowedText>
+                        <ScalingNotAllowedText style={ss.subTitle}>{props.title.sub}</ScalingNotAllowedText>
                     </View>
                 </View>
                 {props.content.map((item) => {
                     const content = item.content.map((item) => {
                          if(item.type === 0) {
                              return (
-                                 <Text>
+                                 <ScalingNotAllowedText>
                                      {handleStrongText(item.text[0])}
-                                 </Text>
+                                 </ScalingNotAllowedText>
                              )
                          }
 
@@ -55,7 +56,7 @@ const MoreInfoPage = ({props, handleNavigation}: {props: MoreInfoPageProps, hand
                                              width={width}
                                          />
                                          {item.extra && item.extra[index] !== '' &&
-                                             <Text style={{width: '100%', textAlign: 'center', justifyContent: 'center', marginTop: 8}}>{item.extra[index]}</Text>
+                                             <ScalingNotAllowedText style={{width: '100%', textAlign: 'center', justifyContent: 'center', marginTop: 8}}>{item.extra[index]}</ScalingNotAllowedText>
                                          }
                                      </View>
                                  )
@@ -74,7 +75,7 @@ const MoreInfoPage = ({props, handleNavigation}: {props: MoreInfoPageProps, hand
                             {item.title !== '' &&
                                 <View style={{position: 'relative', marginBottom: 10}}>
                                     <View style={{position: 'absolute', bottom: -1, backgroundColor: BackgroundColor.primarySemiTransparent, width: 100, height: 7}}></View>
-                                    <Text style={ss.contentTitle}>{item.title}</Text>
+                                    <ScalingNotAllowedText style={ss.contentTitle}>{item.title}</ScalingNotAllowedText>
                                 </View>
                             }
                             <View>
@@ -92,12 +93,12 @@ const MoreInfoPage = ({props, handleNavigation}: {props: MoreInfoPageProps, hand
                     <View style={{width: 100, height: 50, alignItems: 'center', transform: [{translateY: -10}]}}>
                         <SvgXml xml={XMLResources.logo} width='70%' height='100%'/>
                     </View>
-                    <Text>湘大变得如此简单</Text>
+                    <ScalingNotAllowedText>湘大变得如此简单</ScalingNotAllowedText>
                     <Image
                         source={require('../../assets/png/sureStudioGrey.png')}
                         style={{width: 120, height: 80, marginTop: 60}}
                     />
-                    <Text style={{color: FontColor.grey, fontSize: FontSize.l}}>湘潭大学三翼工作室-产品中心©技术支持</Text>
+                    <ScalingNotAllowedText style={{color: FontColor.grey, fontSize: FontSize.l}}>湘潭大学三翼工作室-产品中心©技术支持</ScalingNotAllowedText>
                 </View>
             </ScrollView>
         </View>

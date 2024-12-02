@@ -255,14 +255,14 @@ const AddBoard = () => {
                 <View style={{width: '40%'}}>
                     <ScalingNotAllowedText style={ss.inputAgendaText}>日期</ScalingNotAllowedText>
                     <Pressable style={[ss.dateContainer, {backgroundColor: '#fff7f8'}]} onPress={showDatePicker}>
-                        <ScalingNotAllowedText style={{paddingLeft: 5}}>{dateStr}</ScalingNotAllowedText>
+                        <ScalingNotAllowedText style={{paddingLeft: 5, color: FontColor.dark}}>{dateStr}</ScalingNotAllowedText>
                     </Pressable>
                 </View>
                 <View style={{width: '23%'}}>
                     <ScalingNotAllowedText style={ss.inputAgendaText}>起始时间</ScalingNotAllowedText>
                     <Animated.View style={[ss.dateContainer, firstTimeAnimatedStyle]}>
                         <Pressable style={{flex: 1, justifyContent: 'center'}} onPress={showFirstTimePicker}>
-                            <ScalingNotAllowedText style={{paddingLeft: 5}}>{startTimeStr}</ScalingNotAllowedText>
+                            <ScalingNotAllowedText style={{paddingLeft: 5, color: FontColor.dark}}>{startTimeStr}</ScalingNotAllowedText>
                         </Pressable>
                     </Animated.View>
                 </View>
@@ -270,7 +270,7 @@ const AddBoard = () => {
                     <ScalingNotAllowedText style={ss.inputAgendaText}>终止时间</ScalingNotAllowedText>
                     <Animated.View style={[ss.dateContainer, secondTimeAnimatedStyle]}>
                         <Pressable style={{flex: 1, justifyContent: 'center'}} onPress={showSecondTimePicker}>
-                            <ScalingNotAllowedText style={{paddingLeft: 5}}>{endTimeStr}</ScalingNotAllowedText>
+                            <ScalingNotAllowedText style={{paddingLeft: 5, color: FontColor.dark}}>{endTimeStr}</ScalingNotAllowedText>
                         </Pressable>
                     </Animated.View>
                 </View>

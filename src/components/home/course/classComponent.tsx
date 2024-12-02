@@ -158,10 +158,10 @@ const ClassComponent = () => {
                 </View>
                 <View style={styleSheet.weekDay}>
                     <ScalingNotAllowedText style={styleSheet.weekDayText}>{ENWeekDay[weekDay]}</ScalingNotAllowedText>
-                    <ScalingNotAllowedText>今日共{courses.length}节课</ScalingNotAllowedText>
+                    <ScalingNotAllowedText style={{color: FontColor.dark}}>今日共{courses.length}节课</ScalingNotAllowedText>
                 </View>
                 <View style={styleSheet.date}>
-                    <ScalingNotAllowedText>{lastTime.getFullYear()}/{month < 10 ? `0${month}` : month}/{day < 10 ? `0${day}` : day}</ScalingNotAllowedText>
+                    <ScalingNotAllowedText style={{color: FontColor.dark}}>{lastTime.getFullYear()}/{month < 10 ? `0${month}` : month}/{day < 10 ? `0${day}` : day}</ScalingNotAllowedText>
                     <ScalingNotAllowedText
                         style={styleSheet.weekText}>第{currentWeek === -1 ? '---' : currentWeek}周</ScalingNotAllowedText>
                 </View>

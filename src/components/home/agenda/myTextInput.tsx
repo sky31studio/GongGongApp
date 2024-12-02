@@ -1,6 +1,6 @@
 import {Pressable, StyleSheet, Text, TextInput, View} from "react-native";
 import {useRef, useState} from "react";
-import {FontSize} from "../../../config/globalStyleSheetConfig.ts";
+import {FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
 
 
 const MyTextInput = ({placeholder, initText = '', editable = true, sendData, multiline = false, height = 34, alignCenter = true}: {
@@ -64,6 +64,7 @@ const ss = StyleSheet.create({
         height: '100%',
         borderRadius: 5,
         fontSize: FontSize.m,
+        color: FontColor.dark,
         paddingVertical: 4,
         paddingLeft: 6,
         margin: 0,
