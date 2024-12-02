@@ -1,17 +1,12 @@
 import React, {useEffect, useState} from "react";
-import {Modal, Pressable, StyleSheet, Text, View} from "react-native";
+import {Image, Modal, Pressable, StyleSheet, Text, View} from "react-native";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {agendaResetAll, selectCurrentAgendaNumber} from "../../app/slice/agendaSlice.ts";
 import {resetSchedule, selectCurrentCourseNumber} from "../../app/slice/scheduleSlice.ts";
-import {
-    clearInfo,
-    selectStudentID,
-    selectStudentMajor,
-    selectStudentName
-} from "../../app/slice/infoSlice.ts";
+import {clearInfo, selectStudentID, selectStudentName} from "../../app/slice/infoSlice.ts";
 import {logoutSuccessful, selectIsLogin} from "../../app/slice/globalSlice.ts";
 import {NavigationProps} from "../home/homePage.tsx";
 import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
@@ -31,7 +26,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
     const courseNumber = useAppSelector(selectCurrentCourseNumber);
     const studentID = useAppSelector(selectStudentID);
     const name = useAppSelector(selectStudentName);
-    const major = useAppSelector(selectStudentMajor);
+    // const major = useAppSelector(selectStudentMajor);
     const isLogin = useAppSelector(selectIsLogin);
 
     // state
@@ -57,7 +52,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
     return (
         <View style={{flex: 1}}>
             <View style={ss.titleBar}>
-                <Text style={ss.titleText}>我的</Text>
+                <ScalingNotAllowedText style={ss.titleText}>我的</ScalingNotAllowedText>
                 {/*<Pressable style={{*/}
                 {/*    position: 'absolute',*/}
                 {/*    top: 46,*/}
@@ -71,16 +66,17 @@ const InfoPage = ({navigation}: NavigationProps) => {
                 <View style={ss.infoContainer}>
                     <View style={ss.innerInfoContainer}>
                         <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 6}}>
-                            <View style={{width: 35, height: 35, borderRadius: 20, backgroundColor: 'red'}}></View>
+                            <View style={{width: 35, height: 35, borderRadius: 20, overflow: 'hidden'}}>
+                                <Image source={require('../../assets/png/avatar.png')} style={{height: '100%', width: '100%'}}/>
+                            </View>
                             <Pressable style={{height: '100%', paddingHorizontal: 12}} onPress={isLogin ? null : handleReLogin}>
-                                <Text>{isLogin ? name : '点击登录'}</Text>
+                                <ScalingNotAllowedText>{isLogin ? name : '点击登录'}</ScalingNotAllowedText>
                             </Pressable>
                         </View>
 
                         <Pressable style={ss.editInfoButton}>
-                            <Text
+                            <ScalingNotAllowedText
                                 style={{
-                                    color: FontColor.dark,
                                     fontSize: FontSize.ss,
                                     fontWeight: '700',
                                     letterSpacing: 1,
@@ -89,22 +85,22 @@ const InfoPage = ({navigation}: NavigationProps) => {
                                     height: '100%',
                                     lineHeight: 17,
                                 }}
-                            >{studentID}</Text>
+                            >{studentID}</ScalingNotAllowedText>
                         </Pressable>
 
                     </View>
                     <View style={[ss.innerInfoContainer, {marginTop: 25}]}>
                         <View style={ss.infoBox}>
-                            <Text>{courseNumber}</Text>
-                            <Text style={ss.infoBoxText}>今日课程</Text>
+                            <ScalingNotAllowedText>{courseNumber}</ScalingNotAllowedText>
+                            <ScalingNotAllowedText style={ss.infoBoxText}>今日课程</ScalingNotAllowedText>
                         </View>
                         <View style={ss.infoBox}>
-                            <Text>{agendaNumber}</Text>
-                            <Text style={ss.infoBoxText}>倒计时</Text>
+                            <ScalingNotAllowedText>{agendaNumber}</ScalingNotAllowedText>
+                            <ScalingNotAllowedText style={ss.infoBoxText}>倒计时</ScalingNotAllowedText>
                         </View>
                     </View>
                 </View>
-                <Text
+                <ScalingNotAllowedText
                     style={{
                         fontSize: FontSize.l,
                         color: FontColor.dark,
@@ -112,7 +108,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                         alignSelf: 'flex-start',
                         fontWeight: '600'
                     }}
-                >小Tips</Text>
+                >小Tips</ScalingNotAllowedText>
 
                 {/* 更多信息 */}
                 <View style={[ss.infoContainer, {paddingTop: 5, paddingBottom: 40, paddingHorizontal: 0}]}>
@@ -136,18 +132,18 @@ const InfoPage = ({navigation}: NavigationProps) => {
                             borderBottomColor: BackgroundColor.grey,
                         }}
                     >
-                        <Text
+                        <ScalingNotAllowedText
                             style={{
                                 fontSize: FontSize.s,
                                 color: FontColor.dark,
                             }}
-                        >当前版本</Text>
-                        <Text
+                        >当前版本</ScalingNotAllowedText>
+                        <ScalingNotAllowedText
                             style={{
                                 fontSize: FontSize.s,
                                 color: FontColor.dark,
                             }}
-                        >{version}</Text>
+                        >{version}</ScalingNotAllowedText>
                     </View>
                 </View>
                 {/* 登录/退出登录 按钮 */}
@@ -164,14 +160,15 @@ const InfoPage = ({navigation}: NavigationProps) => {
                         position: 'absolute',
                         transform: [{translateY: 35}]
                     }}
-                    onPress={() => setModalVisible(true)}>
-                    <Text
+                    onPress={() => setModalVisible(true)}
+                >
+                    <ScalingNotAllowedText
                         style={{
                             color: FontColor.light,
                             letterSpacing: 1,
                             fontWeight: '600'
                         }}
-                    >{isLogin ? '退出登录' : '登录'}</Text>
+                    >{isLogin ? '退出登录' : '登录'}</ScalingNotAllowedText>
                 </Pressable>
             </View>
             <Modal
@@ -199,11 +196,12 @@ const InfoPage = ({navigation}: NavigationProps) => {
                     >
                         <ScalingNotAllowedText style={{
                             fontSize: FontSize.ll,
+                            color: FontColor.dark,
                             fontWeight: '800',
                             marginBottom: 25,
                             marginTop: 10
                         }}>提示</ScalingNotAllowedText>
-                        <ScalingNotAllowedText style={{fontWeight: '600'}}>确定要退出登录？</ScalingNotAllowedText>
+                        <ScalingNotAllowedText style={{fontWeight: '600', color: FontColor.dark}}>确定要退出登录？</ScalingNotAllowedText>
                         <View style={{
                             display: 'flex',
                             flexDirection: 'row',
