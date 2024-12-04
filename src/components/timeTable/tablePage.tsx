@@ -147,9 +147,9 @@ export const TablePage = ({navigation}: NavigationProps) => {
                         justifyContent: 'center',
                     }}
                 >
-                    <Text style={{fontSize: FontSize.m, color: color}}>第</Text>
-                    <Text style={{fontSize: FontSize.l, letterSpacing: 4, color: color, fontWeight: 600}}>{data.item.week}</Text>
-                    <Text style={{fontSize: FontSize.m, color: color}}>周</Text>
+                    <ScalingNotAllowedText style={{fontSize: FontSize.m, color: color}}>第</ScalingNotAllowedText>
+                    <ScalingNotAllowedText style={{fontSize: FontSize.l, letterSpacing: 4, color: color, fontWeight: 600}}>{data.item.week}</ScalingNotAllowedText>
+                    <ScalingNotAllowedText style={{fontSize: FontSize.m, color: color}}>周</ScalingNotAllowedText>
                 </View>
                 {theWeek === data.item.week && <Text style={{fontSize: FontSize.xxs, color: color, textAlign: 'center'}}>(本周)</Text>}
 
@@ -176,17 +176,17 @@ export const TablePage = ({navigation}: NavigationProps) => {
                     </Pressable>
                     <View style={styleSheet.weekBox}>
                         <Pressable onPress={toggleWeekList} style={styleSheet.textBox}>
-                            <Text style={{
+                            <ScalingNotAllowedText style={{
                                 color: FontColor.light,
                                 height: 20,
                                 lineHeight: 20,
                                 fontSize: 18,
                                 fontWeight: '600'
-                            }}>第{currentWeek}周</Text>
-                            <Text style={{
+                            }}>第{currentWeek}周</ScalingNotAllowedText>
+                            <ScalingNotAllowedText style={{
                                 color: FontColor.light,
                                 fontSize: 12
-                            }}>{theWeek === currentWeek ? '本周' : '非本周'}</Text>
+                            }}>{theWeek === currentWeek ? '本周' : '非本周'}</ScalingNotAllowedText>
                             <Animated.View
                                 style={[
                                     arrowAnimatedStyle,

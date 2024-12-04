@@ -1,8 +1,9 @@
 import React from "react";
-import {Pressable, StyleSheet, Text, View} from "react-native";
+import {Pressable, StyleSheet, View} from "react-native";
 import {ClassObject} from "./ClassObject.ts";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {selectModalLocked, setModalTimePosition, showModal} from "../../app/slice/scheduleSlice.ts";
+import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 
 interface ClassBoxProps {
     color?: string,
@@ -36,10 +37,10 @@ ClassBox = ({course}) => {
     return (
         <Pressable onPress={handleClick} style={{...styleSheet.boxContainer, backgroundColor: color}}>
             <View style={styleSheet.classBoxTextWrapper}>
-                <Text style={styleSheet.classBoxText}>{name}</Text>
+                <ScalingNotAllowedText style={styleSheet.classBoxText}>{name}</ScalingNotAllowedText>
             </View>
             <View style={{...styleSheet.classBoxTextWrapper, position: 'absolute', bottom: 5}}>
-                <Text style={styleSheet.classBoxText}>{classroom}</Text>
+                <ScalingNotAllowedText style={styleSheet.classBoxText}>{classroom}</ScalingNotAllowedText>
             </View>
         </Pressable>
     );
