@@ -10,7 +10,8 @@ import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {
     selectTodayClassroomStatus,
     selectTomorrowClassroomStatus,
-    setTodayEmptyClassroomStatus, setTomorrowEmptyClassroomStatus
+    setTodayEmptyClassroomStatus,
+    setTomorrowEmptyClassroomStatus
 } from "../../app/slice/classroomSlice.ts";
 import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 import {useQuery, useRealm} from "@realm/react";
@@ -90,6 +91,12 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
     const onRefresh = useCallback(() => {
         setRefreshing(true);
 
+        if(!user) {
+            ToastAndroid.showWithGravity('暂未登录！', 1500, ToastAndroid.BOTTOM);
+            setRefreshing(false);
+            return;
+        }
+
         const fetchData = async () => {
             let msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token);
             if(msg.code === ResourceCode.Successful) {
@@ -99,7 +106,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                 })
             }
 
-            msg = await Resources.getTodayClassroomStatus(user.token);
+            msg = await Resources.getTomorrowClassroomStatus(user.token);
             if(msg.code === ResourceCode.Successful) {
                 dispatch(setTomorrowEmptyClassroomStatus(msg.data));
                 realm.write(() => {

@@ -14,7 +14,7 @@ const initialState: InitialState = {
     date: "",
     termID: "",
     currentTime: (new Date()).toString(),
-    isLogin: false,
+    isLogin: true,
     tokenIsValid: false,
 }
 
@@ -47,6 +47,7 @@ export const selectFirstDate = (state: RootState) => state.global.date;
 export const selectTerm = (state: RootState) => state.global.termID;
 export const selectCurrentTime = (state: RootState) => state.global.currentTime;
 export const selectIsLogin = (state: RootState) => state.global.isLogin;
+export const selectTokenIsValid = (state: RootState) => state.global.tokenIsValid;
 
 export const selectTheWeek = createSelector(
     [selectFirstDate, selectCurrentTime],

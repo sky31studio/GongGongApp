@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {Image, Modal, Pressable, StyleSheet, Text, View} from "react-native";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
@@ -7,7 +7,7 @@ import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {agendaResetAll, selectCurrentAgendaNumber} from "../../app/slice/agendaSlice.ts";
 import {resetSchedule, selectCurrentCourseNumber} from "../../app/slice/scheduleSlice.ts";
 import {clearInfo, selectStudentID, selectStudentName} from "../../app/slice/infoSlice.ts";
-import {logoutSuccessful, selectIsLogin} from "../../app/slice/globalSlice.ts";
+import {logoutSuccessful, selectIsLogin, selectTokenIsValid} from "../../app/slice/globalSlice.ts";
 import {NavigationProps} from "../home/homePage.tsx";
 import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 import {useQuery, useRealm} from "@realm/react";
@@ -27,7 +27,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
     const studentID = useAppSelector(selectStudentID);
     const name = useAppSelector(selectStudentName);
     // const major = useAppSelector(selectStudentMajor);
-    const isLogin = useAppSelector(selectIsLogin);
+    const isLogin = useMemo(() => !!user, [user]);
 
     // state
     const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -39,9 +39,12 @@ const InfoPage = ({navigation}: NavigationProps) => {
         dispatch(resetSchedule());
         dispatch(clearInfo());
         dispatch(clearScore());
-        realm.write(() => {
-            realm.delete(user);
-        })
+
+        if(user) {
+            realm.write(() => {
+                realm.delete(user);
+            })
+        }
         setTimeout(() => dispatch(logoutSuccessful()), 800);
     }
 
@@ -118,7 +121,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                     <NavigationBox title='联系我们' handleNavigation={() => navigation.navigate('FeedbackPage')}/>
                     <NavigationBox title='用户协议' handleNavigation={() => navigation.navigate('UserAgreementPage')}/>
                     <NavigationBox title='隐私条款' handleNavigation={() => navigation.navigate('PrivacyPolicyPage')}/>
-                    <NavigationBox title='社区规范' handleNavigation={() => navigation.navigate('SpecificationPage')}/>
+                    {/*<NavigationBox title='社区规范' handleNavigation={() => navigation.navigate('SpecificationPage')}/>*/}
                     <View
                         style={{
                             width: '100%',

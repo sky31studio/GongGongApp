@@ -1,4 +1,4 @@
-import React, {createContext, useContext, useEffect, useState} from "react";
+import React, {createContext, useCallback, useContext, useEffect, useState} from "react";
 import {
     Modal,
     Pressable,
@@ -30,6 +30,7 @@ import {examChangedCountIncrement, selectShowAddBoard, updateExamAgendaList} fro
 import AddBoard from "./agenda/addBoard.tsx";
 import Resources, {ResourceMessage} from "../../basic/Resources.ts";
 import {ResourceCode} from "../../utils/enum.ts";
+import {useIsFocused} from "@react-navigation/native";
 
 export interface NavigationProps {
     navigation: {
@@ -45,8 +46,17 @@ const Home = ({navigation}: NavigationProps) => {
     const user = useQuery<GongUser>('GongUser')[0];
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
+    const isFocused = useIsFocused();
+
     const onRefresh = () => {
         setRefreshing(true);
+
+        if(!user) {
+            ToastAndroid.showWithGravity('暂未登录！', 1500, ToastAndroid.BOTTOM);
+            setRefreshing(false);
+            return;
+        }
+
         const getData = async () => {
             const msg: ResourceMessage = await Resources.getExam(user.token);
             if(msg.code === ResourceCode.Successful) {
@@ -72,7 +82,7 @@ const Home = ({navigation}: NavigationProps) => {
         >
             <View style={styleSheet.homeContainer}>
                 <View style={{width: '100%', height: '18%'}}>
-                    <FunctionBar navigation={navigation}/>
+                    <FunctionBar navigation={navigation} isFocused={isFocused}/>
                 </View>
                 <View style={styleSheet.mainBoardWrapper}>
                     <MainBoard/>
@@ -94,34 +104,52 @@ const Home = ({navigation}: NavigationProps) => {
     )
 }
 
-const FunctionBar: React.ComponentType<NavigationProps> = ({navigation}) => {
-    const toEmptyClassroomPage = () => {
-        navigation.navigate("EmptyClassroomPage");
-    }
+const FunctionBar = ({navigation, isFocused}: {navigation: any, isFocused: boolean}) => {
+    const [disabled, setDisabled] = useState<boolean>(false);
 
-    const toTablePage = () => {
-        navigation.navigate("TablePage");
-    }
+    const toEmptyClassroomPage = useCallback(() => {
+        if(!disabled) {
+            setDisabled(true);
+            navigation.navigate("EmptyClassroomPage");
+        }
+    }, [disabled]);
 
-    const toScorePage = () => {
-        navigation.navigate("ScorePage");
-    }
+    const toTablePage = useCallback(() => {
+        if(!disabled) {
+            setDisabled(true);
+            navigation.navigate("TablePage");
+        }
+    }, [disabled]);
+
+    const toScorePage = useCallback(() => {
+        if(!disabled) {
+            setDisabled(true);
+            navigation.navigate("ScorePage");
+        }
+    }, [disabled]);
+
+    useEffect(() => {
+        console.log(isFocused);
+        if(isFocused) {
+            setDisabled(false);
+        }
+    }, [isFocused]);
 
     return (
         <View style={styleSheet.functionBarContainer}>
-            <Pressable onPress={toEmptyClassroomPage}>
+            <Pressable onPress={toEmptyClassroomPage} disabled={disabled}>
                 <View style={styleSheet.functionBox}>
                     <SvgXml xml={XMLResources.emptyClassroomIcon} width="100%"/>
                     <ScalingNotAllowedText style={styleSheet.functionText}>空教室</ScalingNotAllowedText>
                 </View>
             </Pressable>
-            <Pressable onPress={toScorePage}>
+            <Pressable onPress={toScorePage} disabled={disabled}>
                 <View style={styleSheet.functionBox}>
                     <SvgXml xml={XMLResources.scoreIcon} width="100%"/>
                     <ScalingNotAllowedText style={styleSheet.functionText}>查成绩</ScalingNotAllowedText>
                 </View>
             </Pressable>
-            <Pressable onPress={toTablePage}>
+            <Pressable onPress={toTablePage} disabled={disabled}>
                 <View style={styleSheet.functionBox}>
                     <SvgXml xml={XMLResources.courseIcon} width="100%"/>
                     <ScalingNotAllowedText style={styleSheet.functionText}>课程表</ScalingNotAllowedText>

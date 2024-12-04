@@ -1,14 +1,14 @@
-import React, {createContext, useEffect, useLayoutEffect} from 'react';
+import React, {createContext, useEffect} from 'react';
 import {Dimensions, SafeAreaView, StatusBar, StyleSheet, useColorScheme, View,} from 'react-native';
 import {Colors,} from 'react-native/Libraries/NewAppScreen';
 import {NavigationContainer} from "@react-navigation/native";
 import {Provider} from "react-redux";
 import {store} from "./src/app/store.ts";
 import HomeNavigation from "./src/components/HomeNavigation.tsx";
-import {useAppDispatch, useAppSelector} from "./src/app/hooks.ts";
-import {loginSuccessful, selectIsLogin} from "./src/app/slice/globalSlice.ts";
+import {useAppSelector} from "./src/app/hooks.ts";
+import {selectIsLogin} from "./src/app/slice/globalSlice.ts";
 import LoginNavigation from "./src/components/LoginNavigation.tsx";
-import {RealmProvider, useQuery} from "@realm/react";
+import {RealmProvider} from "@realm/react";
 import GongUser from "./src/dao/object/User.ts";
 import {configureReanimatedLogger, ReanimatedLogLevel,} from 'react-native-reanimated';
 
@@ -49,8 +49,6 @@ function App(): React.JSX.Element {
 export const CurrentTimeContext = createContext<{currentTime: Date}>({currentTime: new Date(Date.now())});
 
 const SafeArea = () => {
-    const user = useQuery<GongUser>('GongUser')[0];
-    const dispatch = useAppDispatch();
     const isLogin = useAppSelector(selectIsLogin);
 
     const [currentTime, setCurrentTime] = React.useState<Date>(new Date(Date.now()));
@@ -61,19 +59,6 @@ const SafeArea = () => {
         }, 8000);
 
         return () => clearInterval(timer);
-    }, []);
-
-    // 使用useLayoutEffect防止登录界面一闪而过
-    useLayoutEffect(() => {
-        const checkIsLogin = async () => {
-            console.log('check whether login');
-            if(user) {
-                dispatch(loginSuccessful());
-                console.log('isLogin = true');
-            }
-        }
-
-        checkIsLogin().then();
     }, []);
 
     return (

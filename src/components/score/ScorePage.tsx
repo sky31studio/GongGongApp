@@ -12,13 +12,14 @@ import {
     selectClassRank,
     selectGpa,
     selectMajorRank,
-    selectScoreList, setScoreOverview
+    selectScoreList,
+    setScoreOverview
 } from "../../app/slice/scoreSlice.ts";
-import ScrollView = Animated.ScrollView;
 import {useQuery, useRealm} from "@realm/react";
 import GongUser from "../../dao/object/User.ts";
 import Resources, {ResourceMessage} from "../../basic/Resources.ts";
 import {ResourceCode} from "../../utils/enum.ts";
+import ScrollView = Animated.ScrollView;
 
 const ScorePage = ({navigation}: NavigationProps) => {
     const dispatch = useAppDispatch();
@@ -30,6 +31,12 @@ const ScorePage = ({navigation}: NavigationProps) => {
 
     const onRefresh = () => {
         setRefreshing(true);
+
+        if(!user) {
+            ToastAndroid.showWithGravity('暂未登录！', 1500, ToastAndroid.BOTTOM);
+            setRefreshing(false);
+            return;
+        }
 
         const getData = async () => {
             let msg: ResourceMessage = await Resources.getScoreOverview(user.token);
@@ -68,6 +75,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
     const handleBack = () => {
         navigation.navigate('TabNavigation');
     }
+
     return (
         <ScrollView
             contentContainerStyle={{flex: 1}}
