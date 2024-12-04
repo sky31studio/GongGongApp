@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from "react";
-import {Pressable, StyleSheet, ToastAndroid, View} from "react-native";
+import {Modal, Pressable, StyleSheet, ToastAndroid, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../../../basic/XMLResources.ts";
 import {BackgroundColor, FontColor, FontSize} from "../../../config/globalStyleSheetConfig.ts";
@@ -45,6 +45,18 @@ const AddBoard = () => {
     // picker显示
     const [datePickerVisible, setDatePickerVisible] = useState<boolean>(false);
     const [timePickerVisible, setTimePickerVisible] = useState<boolean>(false);
+    // 提示Modal显示
+    const [modalVisible, setModalVisible] = useState<boolean>(false);
+    const [type, setType] = useState<number>(0);
+
+    const disabled = useMemo(() => name === '', [name]);
+    const tipBoardText = useMemo(() => {
+        if(!agenda) {
+            return type === 0 ? '确认添加倒计时吗？' : '确认退出添加吗？';
+        } else {
+            return type === 0 ? '确认保存修改吗？' : '确认退出修改吗？';
+        }
+    }, [type, agenda])
     // 是否可以编辑，取决于agenda是自定义的还是后端数据
     const editable = useMemo(() => agenda ? agenda.isCustom : true, [agenda]);
     const dateStr = useMemo(() => {
@@ -186,6 +198,30 @@ const AddBoard = () => {
 
         setTimePickerVisible(false);
     }
+
+    const closeTrigger = () => {
+        setType(1);
+
+        if(!agenda && name === '' && location === '' && tip === '' && theDate === null && startTime === null && endTime === null) {
+            dispatch(hideAddBoard());
+        } else if(!agenda) {
+            setModalVisible(true);
+        } else if(agenda && agenda.isCustom) {
+            setModalVisible(true);
+        } else {
+            dispatch(hideAddBoard());
+        }
+    }
+
+    const addTrigger = () => {
+        setType(0);
+        setModalVisible(true);
+    }
+
+    const handleCloseConfirm = () => {
+        dispatch(hideAddBoard());
+    }
+
     // 添加agenda
     const handleAddAgenda = () => {
         if(agenda && !agenda.isCustom) {
@@ -217,6 +253,7 @@ const AddBoard = () => {
             dispatch(addSelf(res));
         }
 
+        setModalVisible(false);
         dispatch(hideAddBoard());
     }
 
@@ -233,12 +270,12 @@ const AddBoard = () => {
                 easing: Easing.ease,
             })
         }
-    }, [name, location]);
+    }, [name]);
 
     return (
         <View style={ss.addAgendaContainer}>
             <View style={{width: '100%', height: 30, display: 'flex', alignItems: 'flex-end'}}>
-                <Pressable onPress={() => dispatch(hideAddBoard())}>
+                <Pressable onPress={closeTrigger}>
                     <SvgXml xml={XMLResources.closeAddBoard} width="20" height="20"/>
                 </Pressable>
             </View>
@@ -287,7 +324,7 @@ const AddBoard = () => {
                                  height={90} alignCenter={false}/>
                 </View>
             ) : null}
-            <Pressable onPress={handleAddAgenda} style={{marginTop: 25}}>
+            <Pressable onPress={addTrigger} style={{marginTop: 25}} disabled={disabled}>
                 <Animated.View style={[ss.finishButton, buttonAnimatedStyle]}>
                     <ScalingNotAllowedText style={{
                         fontSize: FontSize.m,
@@ -312,6 +349,62 @@ const AddBoard = () => {
                 onConfirm={handleTimeConfirm}
                 onCancel={handleTimePickerCancel}
             ></DateTimePickerModal>
+
+            <Modal
+                visible={modalVisible}
+                transparent={true}
+                animationType={'fade'}
+            >
+                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: BackgroundColor.modalShadow}}>
+                    <View
+                        style={{
+                            width: '70%',
+                            backgroundColor:
+                            BackgroundColor.mainLight,
+                            borderRadius: 15,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <ScalingNotAllowedText style={{
+                            fontSize: FontSize.ll,
+                            color: FontColor.dark,
+                            fontWeight: '800',
+                            marginBottom: 25,
+                            marginTop: 10
+                        }}>提示</ScalingNotAllowedText>
+                        <ScalingNotAllowedText style={{fontWeight: '600', color: FontColor.dark}}>{tipBoardText}</ScalingNotAllowedText>
+                        <View style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            width: '100%',
+                            marginTop: 30,
+                            borderTopWidth: 1,
+                            borderTopColor: BackgroundColor.grey
+                        }}>
+                            <Pressable style={{
+                                width: '50%',
+                                alignItems: 'center',
+                                borderRightWidth: 1,
+                                borderRightColor: BackgroundColor.grey,
+                                paddingVertical: 15
+                            }} onPress={() => setModalVisible(false)}>
+                                <ScalingNotAllowedText
+                                    style={{color: FontColor.grey, fontSize: FontSize.l}}>取消</ScalingNotAllowedText>
+                            </Pressable>
+                            <Pressable style={{width: '50%', alignItems: 'center', paddingVertical: 15}}
+                                       onPress={type === 0 ? handleAddAgenda : handleCloseConfirm}>
+                                <ScalingNotAllowedText style={{
+                                    color: FontColor.primary,
+                                    fontSize: FontSize.l
+                                }}>确定</ScalingNotAllowedText>
+                            </Pressable>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     )
 }
