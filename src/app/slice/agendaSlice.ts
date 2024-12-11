@@ -241,9 +241,7 @@ const agendaSlice = createSlice({
         },
 
         agendaResetAll: (state) => {
-            state.selfChangedCount = 0;
             state.examChangedCount = 0;
-            state.selfList = [];
             state.examList = [];
         },
     },
