@@ -48,6 +48,10 @@ const InfoPage = ({navigation}: NavigationProps) => {
         setTimeout(() => dispatch(logoutSuccessful()), 800);
     }
 
+    const toLogin = () => {
+        dispatch(logoutSuccessful());
+    }
+
     useEffect(() => {
         setVersion(getVersion());
     }, []);
@@ -163,7 +167,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                         position: 'absolute',
                         transform: [{translateY: 35}]
                     }}
-                    onPress={() => setModalVisible(true)}
+                    onPress={isLogin ? () => setModalVisible(true) : toLogin}
                 >
                     <ScalingNotAllowedText
                         style={{

@@ -69,6 +69,8 @@ const HomeNavigation = () => {
                         user.courses = JSON.stringify(msg.data);
                     });
                     console.log('courses is written!')
+                } else {
+                    console.log('get courses failed!');
                 }
             } else {
                 dispatch(initTable(JSON.parse(user.courses)));
@@ -83,6 +85,8 @@ const HomeNavigation = () => {
                         user.info = JSON.stringify(msg.data);
                     })
                     console.log('userInfo is written!')
+                } else {
+                    console.log('get info failed!');
                 }
             } else {
                 dispatch(initInfo(JSON.parse(user.info)));
@@ -97,6 +101,8 @@ const HomeNavigation = () => {
                         user.todayClassroom = JSON.stringify(msg.data);
                     })
                     console.log('todayClassroom is written!');
+                } else {
+                    console.log('get todayClassroom failed!');
                 }
             } else {
                 dispatch(setTodayEmptyClassroomStatus(JSON.parse(user.todayClassroom)));
@@ -111,6 +117,8 @@ const HomeNavigation = () => {
                         user.tomorrowClassroom = JSON.stringify(msg.data);
                     })
                     console.log('tomorrowClassroom is written!');
+                } else {
+                    console.log('get tomorrowClassroom failed!');
                 }
             } else {
                 dispatch(setTomorrowEmptyClassroomStatus(JSON.parse(user.tomorrowClassroom)));
@@ -121,6 +129,8 @@ const HomeNavigation = () => {
                 if(msg.code === ResourceCode.Successful) {
                     dispatch(examChangedCountIncrement());
                     dispatch(initExam(msg.data))
+                } else {
+                    console.log('get examAgendaList failed!');
                 }
             } else {
                 dispatch(writeExamAgendaList(JSON.parse(user.examAgendaList)));
@@ -135,6 +145,8 @@ const HomeNavigation = () => {
                         user.scoreOverview = JSON.stringify(msg.data);
                     })
                     console.log('scoreOverview is written!');
+                } else {
+                    console.log('get scoreOverview failed!');
                 }
             } else {
                 dispatch(setScoreOverview(JSON.parse(user.scoreOverview)));
@@ -149,6 +161,8 @@ const HomeNavigation = () => {
                         user.scoreList = JSON.stringify(msg.data);
                     })
                     console.log('scoreList is written!');
+                } else {
+                    console.log('get scoreList failed!');
                 }
             } else {
                 dispatch(initScoreList(JSON.parse(user.scoreList)));
@@ -164,6 +178,8 @@ const HomeNavigation = () => {
                         user.termID = msg.data.termID;
                     })
                     console.log('firstDate is written!');
+                } else {
+                    console.log('get firstDate failed!');
                 }
             } else {
                 dispatch(setDate({
@@ -183,6 +199,7 @@ const HomeNavigation = () => {
     }
 
     useEffect(() => {
+        console.log(111);
         dispatch(resetCurrentTime());
         createChannel()
             .then(() => {
