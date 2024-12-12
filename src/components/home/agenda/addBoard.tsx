@@ -275,7 +275,7 @@ const AddBoard = () => {
     return (
         <View style={ss.addAgendaContainer}>
             <View style={{width: '100%', height: 30, display: 'flex', alignItems: 'flex-end'}}>
-                <Pressable onPress={closeTrigger}>
+                <Pressable onPress={closeTrigger} hitSlop={{top: 4, bottom: 4, left: 8, right: 8}}>
                     <SvgXml xml={XMLResources.closeAddBoard} width="20" height="20"/>
                 </Pressable>
             </View>
@@ -324,18 +324,20 @@ const AddBoard = () => {
                                  height={90} alignCenter={false}/>
                 </View>
             ) : null}
-            <Pressable onPress={addTrigger} style={{marginTop: 25}} disabled={disabled}>
-                <Animated.View style={[ss.finishButton, buttonAnimatedStyle]}>
-                    <ScalingNotAllowedText style={{
-                        fontSize: FontSize.m,
-                        color: FontColor.light,
-                        textAlign: 'center',
-                        height: '100%',
-                        lineHeight: 30,
-                        fontWeight: '600'
-                    }}>完成</ScalingNotAllowedText>
-                </Animated.View>
-            </Pressable>
+            {(agenda?.isCustom || !agenda) ? (
+                <Pressable onPress={addTrigger} style={{marginTop: 25}} disabled={disabled}>
+                    <Animated.View style={[ss.finishButton, buttonAnimatedStyle]}>
+                        <ScalingNotAllowedText style={{
+                            fontSize: FontSize.m,
+                            color: FontColor.light,
+                            textAlign: 'center',
+                            height: '100%',
+                            lineHeight: 30,
+                            fontWeight: '600'
+                        }}>完成</ScalingNotAllowedText>
+                    </Animated.View>
+                </Pressable>
+            ) : null}
             <DateTimePickerModal
                 isVisible={datePickerVisible}
                 mode="date"
