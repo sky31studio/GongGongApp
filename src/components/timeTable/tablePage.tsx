@@ -1,5 +1,5 @@
 import {Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, ToastAndroid, View} from "react-native";
-import React, {useEffect, useRef, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {BackgroundColor, BorderColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {selectTheWeek} from "../../app/slice/globalSlice.ts";
@@ -27,13 +27,53 @@ export const TablePage = ({navigation}: NavigationProps) => {
     const realm = useRealm();
     const user = useQuery<GongUser>('GongUser')[0];
 
+    const weekData = Array.from({length: 21}, (_, index) => {
+        return {
+            week: index + 1,
+        }
+    });
+
     const dispatch = useAppDispatch();
     const theWeek = useAppSelector(selectTheWeek);
     const modalVisible = useAppSelector(selectModalVisible);
     const courseList = useAppSelector(selectCurrentTimeCourses);
 
-    const [isLazyLoaded, setIsLazyLoaded] = useState<boolean>(false);
     const [refreshing, setRefreshing] = useState<boolean>(false);
+    const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
+
+    // pagerView ref
+    const pagerViewRef = useRef<PagerView>(null);
+
+    const dropWeekListValue = useSharedValue<number>(0);
+    const arrowAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{
+                rotate: `${interpolate(dropWeekListValue.value, [0, 1], [-90, 90])}deg`
+            }]
+        }
+    })
+
+    const weekListAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            maxHeight: interpolate(dropWeekListValue.value, [0, 1], [0, 50])
+        }
+    })
+
+    const pagerViewList = useMemo(
+        () =>
+            weekData
+                .map((item, index) => {
+                    // 防止卡顿
+                    if(index + 2 < currentWeek || index > currentWeek) {
+                        return null;
+                    }
+                    return (
+                        <View key={index} style={{flex: 1}}>
+                            <Schedule week={item.week}></Schedule>
+                        </View>
+                    )
+            }),
+        [weekData, currentWeek]);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -55,61 +95,30 @@ export const TablePage = ({navigation}: NavigationProps) => {
         getData().then(() => setRefreshing(false));
     }
 
-    useEffect(() => {
-        setTimeout(() => {
-            setIsLazyLoaded(true);
-        }, 500);
-    }, []);
-
-    const [currentWeek, setCurrentWeek] = useState<number>(theWeek);
-    const pagerViewRef = useRef<PagerView>(null);
-
-    const dropWeekListValue = useSharedValue<number>(0);
-    const arrowAnimatedStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{
-                rotate: `${interpolate(dropWeekListValue.value, [0, 1], [-90, 90])}deg`
-            }]
-        }
-    })
-
-    const weekListAnimatedStyle = useAnimatedStyle(() => {
-        return {
-            maxHeight: interpolate(dropWeekListValue.value, [0, 1], [0, 50])
-        }
-    })
-
     const handleGoBack = () => {
         navigation.navigate('TabNavigation');
     }
 
     const toggleWeekList = () => {
-
         dropWeekListValue.value = withTiming(dropWeekListValue.value === 0 ? 1 : 0, {
             duration: 300,
             easing: Easing.ease,
         });
     }
 
-    const handlePageSelected = (e: any) => {
+    const handlePageSelected = useCallback((e: any) => {
         const index= e.nativeEvent.position;
         setCurrentWeek(index + 1);
-    }
+    }, []);
 
     // 防止在滑动时点开Modal
-    const handleScrollStateChanged = (event: any) => {
+    const handleScrollStateChanged = useCallback((event: any) => {
         if(event.nativeEvent.pageScrollState === 'idle') {
             dispatch(unlockModal());
         } else {
             dispatch(lockModal());
         }
-    }
-
-    const weekData = Array.from({length: 21}, (_, index) => {
-        return {
-            week: index + 1,
-        }
-    });
+    }, []);
 
     const weekListRenderItem = (data: any) => {
         const color = currentWeek === data.item.week ? FontColor.secondary : FontColor.grey;
@@ -216,24 +225,16 @@ export const TablePage = ({navigation}: NavigationProps) => {
                     keyExtractor={item => item.week.toString()}
                     removeClippedSubviews={false}
                 />
-                {isLazyLoaded ?
-                    <PagerView
-                        ref={pagerViewRef}
-                        style={[styleSheet.tableWrapper]}
-                        initialPage={currentWeek - 1}
-                        onPageSelected={handlePageSelected}
-                        onPageScrollStateChanged={handleScrollStateChanged}
-                        offscreenPageLimit={1}
-                    >
-                        {weekData.map((item, index) => {
-                            return (
-                                <View key={index} style={{flex: 1}}>
-                                    <Schedule week={item.week}></Schedule>
-                                </View>
-                            )
-                        })}
-                    </PagerView> : null
-                }
+                <PagerView
+                    ref={pagerViewRef}
+                    style={[styleSheet.tableWrapper]}
+                    initialPage={currentWeek - 1}
+                    onPageSelected={handlePageSelected}
+                    onPageScrollStateChanged={handleScrollStateChanged}
+                    offscreenPageLimit={1}
+                >
+                    {pagerViewList}
+                </PagerView>
                 <Modal
                     visible={modalVisible}
                     transparent={true}
