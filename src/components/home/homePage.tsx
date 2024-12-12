@@ -15,7 +15,7 @@ import {AgendaList} from "./agenda/agendaList.tsx";
 import ClassList from "./course/classList.tsx";
 import XMLResources from "../../basic/XMLResources.ts";
 import Animated, {
-    Easing,
+    Easing, interpolate,
     interpolateColor,
     useAnimatedStyle,
     useSharedValue,
@@ -30,7 +30,7 @@ import {examChangedCountIncrement, selectShowAddBoard, updateExamAgendaList} fro
 import AddBoard from "./agenda/addBoard.tsx";
 import Resources, {ResourceMessage} from "../../basic/Resources.ts";
 import {ResourceCode} from "../../utils/enum.ts";
-import {useIsFocused} from "@react-navigation/native";
+import {useFocusEffect, useIsFocused} from "@react-navigation/native";
 
 export interface NavigationProps {
     navigation: {
@@ -173,6 +173,13 @@ const MainBoard = () => {
     const [hasToken, _] = useState(user !== undefined);
     const [choice, setChoice] = useState<number>(0);
 
+    const listAnimatedValue = useSharedValue(0);
+    const listAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: interpolate(listAnimatedValue.value, [0, 1], [0, 1]),
+            transform: [{translateY: interpolate(listAnimatedValue.value, [0, 1], [30, 0])}]
+        }
+    })
 
     const translateX = useSharedValue(-winWidth * 0.12);
     const animatedStyle = useAnimatedStyle(() => {
@@ -180,6 +187,14 @@ const MainBoard = () => {
             transform: [{translateX: translateX.value}]
         }
     })
+
+    useFocusEffect(useCallback(() => {
+        listAnimatedValue.value = withTiming(1, {duration: 300, easing: Easing.sin});
+
+        return () => {
+            listAnimatedValue.value = 0
+        }
+    }, []))
 
     useEffect(() => {
         if (choice === 0) {
@@ -218,14 +233,14 @@ const MainBoard = () => {
                     </Animated.View>
                 </View>
             </HomeContext.Provider>
-            <View style={styleSheet.mainWrapper}>
+            <Animated.View style={[styleSheet.mainWrapper, listAnimatedStyle]}>
                 <View style={{ display: choice === 0 ? 'flex' : 'none' }}>
                     <ClassList hasToken={hasToken}/>
                 </View>
                 <View style={{ display: choice === 1 ? 'flex' : 'none' }}>
                     <AgendaList hasToken={hasToken}/>
                 </View>
-            </View>
+            </Animated.View>
         </View>
     );
 }

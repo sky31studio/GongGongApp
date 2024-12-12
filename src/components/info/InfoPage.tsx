@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useLayoutEffect, useMemo, useState} from "react";
 import {Image, Modal, Pressable, StyleSheet, Text, View} from "react-native";
 import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {SvgXml} from "react-native-svg";
@@ -14,6 +14,8 @@ import {useQuery, useRealm} from "@realm/react";
 import GongUser from "../../dao/object/User.ts";
 import {getVersion} from "react-native-device-info";
 import {clearScore} from "../../app/slice/scoreSlice.ts";
+import {useFocusEffect} from "@react-navigation/native";
+import Animated, {interpolate, useAnimatedStyle, useSharedValue, withDelay, withTiming} from "react-native-reanimated";
 
 const InfoPage = ({navigation}: NavigationProps) => {
     // realm
@@ -32,6 +34,23 @@ const InfoPage = ({navigation}: NavigationProps) => {
     // state
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [version, setVersion] = useState<string>('--');
+
+    const cardAnimatedValue = useSharedValue(0);
+    const listAnimatedValue = useSharedValue(0);
+
+    const cardAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: interpolate(cardAnimatedValue.value, [0, 1], [0, 1]),
+            transform: [{translateY: interpolate(cardAnimatedValue.value, [0, 1], [40, 0])}]
+        }
+    })
+
+    const listAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: interpolate(listAnimatedValue.value, [0, 1], [0, 1]),
+            transform: [{translateY: interpolate(listAnimatedValue.value, [0, 1], [40, 0])}]
+        }
+    })
 
     const handleReLogin = () => {
         setModalVisible(false);
@@ -56,6 +75,17 @@ const InfoPage = ({navigation}: NavigationProps) => {
         setVersion(getVersion());
     }, []);
 
+    useFocusEffect(useCallback(() => {
+        cardAnimatedValue.value = withTiming(1, {duration: 300});
+        listAnimatedValue.value = withDelay(100, withTiming(1, {duration: 300}));
+
+        // 如果写在useFocusEffect内，会导致导航到该页面会有闪烁
+        return () => {
+            cardAnimatedValue.value = 0;
+            listAnimatedValue.value = 0;
+        }
+    }, []))
+
     return (
         <View style={{flex: 1}}>
             <View style={ss.titleBar}>
@@ -70,7 +100,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
             </View>
             <View style={ss.mainContainer}>
                 {/* 个人信息 */}
-                <View style={ss.infoContainer}>
+                <Animated.View style={[ss.infoContainer, cardAnimatedStyle]}>
                     <View style={ss.innerInfoContainer}>
                         <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 6}}>
                             <View style={{width: 35, height: 35, borderRadius: 20, overflow: 'hidden'}}>
@@ -106,7 +136,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                             <ScalingNotAllowedText style={ss.infoBoxText}>倒计时</ScalingNotAllowedText>
                         </View>
                     </View>
-                </View>
+                </Animated.View>
                 <ScalingNotAllowedText
                     style={{
                         fontSize: FontSize.l,
@@ -118,7 +148,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                 >小Tips</ScalingNotAllowedText>
 
                 {/* 更多信息 */}
-                <View style={[ss.infoContainer, {paddingTop: 5, paddingBottom: 40, paddingHorizontal: 0}]}>
+                <Animated.View style={[ss.infoContainer, {paddingTop: 5, paddingBottom: 40, paddingHorizontal: 0}, listAnimatedStyle]}>
                     {/*<NavigationBox title={'新功能'} handleNavigation={() => null}/>*/}
                     {/*<NavigationBox title={'新手指南'} handleNavigation={() => null}/>*/}
                     {/*<NavigationBox title={'关于拱拱'} handleNavigation={() => null}/>*/}
@@ -152,7 +182,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                             }}
                         >{version}</ScalingNotAllowedText>
                     </View>
-                </View>
+                </Animated.View>
                 {/* 登录/退出登录 按钮 */}
                 <Pressable
                     style={{
