@@ -107,10 +107,18 @@ const WeekDaySchedule = ({courses, date}: {courses: any, date: Date}) => {
     const {dateTextColor, backgroundColor} = useMemo(() => {
         if(date.getFullYear() < currentTime.getFullYear()) {
             return {
+                dateTextColor: FontColor.grey,
+                backgroundColor: '#fafafa'
+            };
+        }
+
+        if(date.getFullYear() > currentTime.getFullYear()) {
+            return {
                 dateTextColor: FontColor.dark,
                 backgroundColor: '#fafafa'
             };
         }
+
         if(date.getMonth() < currentTime.getMonth()) {
             return {
                 dateTextColor: FontColor.grey,
