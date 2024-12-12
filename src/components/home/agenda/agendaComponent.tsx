@@ -3,7 +3,8 @@ import React, {
     createContext,
     forwardRef,
     memo,
-    useCallback, useContext,
+    useCallback,
+    useContext,
     useImperativeHandle,
     useMemo,
     useRef,
@@ -32,6 +33,7 @@ import {AgendaType, CNWeekDay} from "../../../utils/enum.ts";
 import {convertDateToString} from "../../../utils/agendaUtils.ts";
 import Swipeable, {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import ScalingNotAllowedText from "../../global/ScalingNotAllowedText.tsx";
+import {useFocusEffect} from "@react-navigation/native";
 
 /**
  * homePage > MainBoard 倒计时组件
@@ -95,7 +97,7 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
     const [lastTime, _] = useState(new Date());
     const [openedIndex, setOpenedIndex] = useState<number | null>(null);
 
-    const swipeableListRef = useRef<Record<number, SwipeableMethods>>({})
+    const swipeableListRef = useRef<Record<number, SwipeableMethods>>({});
 
     // TODO: 没有正确的关闭，可能与index的存储有关
     // 监听滚动，如果有Swipeable是打开的，则关闭所有Swipeable
@@ -163,6 +165,15 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
     // 没有考试展示
     const noExam = <NoExam/>
 
+    useFocusEffect(useCallback(() => {
+        return () => {
+            if(openedIndex !== null) {
+                swipeableListRef.current[openedIndex].close();
+                setOpenedIndex(null);
+            }
+        }
+    }, [openedIndex, swipeableListRef.current]))
+
     return (
         <SwipeableContext.Provider value={{openedIndex, setOpenedIndex, closeOpenedSwipeable}}>
             <View style={{width: '100%', flex: 1}}>
@@ -210,6 +221,8 @@ const AgendaBox = forwardRef((
     const dispatch = useAppDispatch();
 
     const {setOpenedIndex, closeOpenedSwipeable} = useContext(SwipeableContext);
+
+    const [isVisible, setIsVisible] = useState<boolean>(false);
 
     const swipeableRef = useRef<SwipeableMethods>(null);
     const isOnTop = agenda.isOnTop;
@@ -292,7 +305,7 @@ const AgendaBox = forwardRef((
 
     const rightAction = () => {
         return (
-            <View style={{height: '100%', display: 'flex', flexDirection: 'row'}}>
+            <View style={{height: '100%', display: 'flex', flexDirection: 'row', opacity: isVisible ? 1 : 0}}>
                 <Pressable
                     style={[ss.agendaButton, {
                         backgroundColor: BackgroundColor.iconPrimaryBackground,
@@ -300,8 +313,8 @@ const AgendaBox = forwardRef((
                     onPress={isOnTop ? handleUnpinToTop : handlePinToTop}
                 >
                     <SvgXml xml={isOnTop ? XMLResources.unPinToTop : XMLResources.pinToTop} width={15} height={15}/>
-                    <Text
-                        style={[ss.agendaButtonText, {color: BackgroundColor.iconPrimary}]}>{isOnTop ? '取消置顶' : '置顶'}</Text>
+                    <ScalingNotAllowedText
+                        style={[ss.agendaButtonText, {color: BackgroundColor.iconPrimary}]}>{isOnTop ? '取消置顶' : '置顶'}</ScalingNotAllowedText>
                 </Pressable>
                 <Pressable
                     style={[ss.agendaButton, {
@@ -310,12 +323,22 @@ const AgendaBox = forwardRef((
                     onPress={handleDelete}
                 >
                     <SvgXml xml={XMLResources.deleteAgenda} width={15} height={15}/>
-                    <Text style={[ss.agendaButtonText, {color: BackgroundColor.iconSecondary}]}>删除</Text>
+                    <ScalingNotAllowedText style={[ss.agendaButtonText, {color: BackgroundColor.iconSecondary}]}>删除</ScalingNotAllowedText>
 
                 </Pressable>
             </View>
         )
     }
+
+    useFocusEffect(useCallback(() => {
+        const timeoutId = setTimeout(() => {
+            setIsVisible(true);
+        }, 300);
+        return () => {
+            clearTimeout(timeoutId);
+            setIsVisible(false);
+        }
+    }, []))
 
     return (
         <Swipeable
