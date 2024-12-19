@@ -3,13 +3,14 @@ import {StyleSheet, Text, View} from "react-native";
 import {SingleScoreList} from "../../utils/scoreUtils.ts";
 import {Term} from "../../utils/enum.ts";
 import {FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
+import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 
 /**
  * 单学期成绩表组件
  * @param scoreList 单学期成绩表数据
  * @param term 学期
  */
-const SingleScore = ({scoreList, term}: { scoreList: SingleScoreList, term: number }) => {
+export const SingleScore = ({scoreList, term}: { scoreList: SingleScoreList, term: number }) => {
 
     const requiredList = <InfoBoard infos={scoreList.required}/>
     const electiveList = <InfoBoard infos={scoreList.elective}/>
@@ -26,6 +27,21 @@ const SingleScore = ({scoreList, term}: { scoreList: SingleScoreList, term: numb
             {requiredList}
             <Text style={[ss.tagText, {marginTop: 10}]}>选修</Text>
             {electiveList}
+        </View>
+    )
+}
+
+export const MinorScore = ({scoreList, term}: {scoreList: SingleScoreList, term: number}) => {
+
+    return (
+        <View style={ss.singleScoreContainer}>
+            <ScalingNotAllowedText style={ss.termText}>{Term[term]}</ScalingNotAllowedText>
+            <View style={[ss.infoContainer, {marginBottom: 20}]}>
+                <Text style={[ss.columnText, {width: '64%', textAlign: 'left'}]}>课程名称</Text>
+                <Text style={[ss.columnText, {width: '18%', textAlign: 'center'}]}>学分</Text>
+                <Text style={[ss.columnText, {width: '18%', textAlign: 'center'}]}>成绩</Text>
+            </View>
+            <InfoBoard infos={scoreList.required}/>
         </View>
     )
 }
@@ -102,5 +118,3 @@ const ss = StyleSheet.create({
         marginBottom: 10,
     }
 })
-
-export default SingleScore;

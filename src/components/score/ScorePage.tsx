@@ -4,21 +4,26 @@ import {SvgXml} from "react-native-svg";
 import XMLResources from "../../basic/XMLResources.ts";
 import React, {useState} from "react";
 import {NavigationProps} from "../home/homePage.tsx";
-import SingleScore from "./SingleScore.tsx";
+import {MinorScore, SingleScore} from "./SingleScore.tsx";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {
+    initMinorScoreList,
     initScoreList,
     selectAverageScore,
     selectClassRank,
     selectGpa,
     selectMajorRank,
-    selectScoreList,
+    selectMinorCredit,
+    selectMinorScoreList,
+    selectMinorTotalCredit,
+    selectScoreList, setMinorScoreOverview,
     setScoreOverview
 } from "../../app/slice/scoreSlice.ts";
 import {useQuery, useRealm} from "@realm/react";
 import GongUser from "../../dao/object/User.ts";
 import Resources, {ResourceMessage} from "../../basic/Resources.ts";
 import {ResourceCode} from "../../utils/enum.ts";
+import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 import ScrollView = Animated.ScrollView;
 
 const ScorePage = ({navigation}: NavigationProps) => {
@@ -28,6 +33,16 @@ const ScorePage = ({navigation}: NavigationProps) => {
     const user = useQuery<GongUser>('GongUser')[0];
 
     const [refreshing, setRefreshing] = useState<boolean>(false);
+    const [listIndex, setListIndex] = useState<number>(0);
+
+    const scoreList = useAppSelector(selectScoreList);
+    const minorScoreList = useAppSelector(selectMinorScoreList);
+    const averageScore = useAppSelector(selectAverageScore)
+    const gpa = useAppSelector(selectGpa);
+    const classRank = useAppSelector(selectClassRank);
+    const majorRank = useAppSelector(selectMajorRank);
+    const totalMinorCredit = useAppSelector(selectMinorTotalCredit)
+    const minorCredit = useAppSelector(selectMinorCredit);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -61,16 +76,24 @@ const ScorePage = ({navigation}: NavigationProps) => {
             } else {
                 ToastAndroid.showWithGravity('成绩表单获取失败！', 1500, ToastAndroid.BOTTOM);
             }
+
+            msg = await Resources.getMinorScore(user.token);
+            if(msg.code === ResourceCode.Successful) {
+                dispatch(initMinorScoreList(msg.data.scoreList));
+                dispatch(setMinorScoreOverview(msg.data.totalCredit));
+                realm.write(() => {
+                    user.minorScoreList = JSON.stringify(msg.data.scoreList);
+                    user.minorScoreOverview = JSON.stringify(msg.data.totalCredit);
+                })
+            } else if(msg.code === ResourceCode.PermissionDenied) {
+                ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
+            } else {
+                ToastAndroid.showWithGravity('辅修表单获取失败！', 1500, ToastAndroid.BOTTOM);
+            }
         }
 
         getData().then(() => setRefreshing(false));
     }
-
-    const scoreList = useAppSelector(selectScoreList);
-    const averageScore = useAppSelector(selectAverageScore)
-    const gpa = useAppSelector(selectGpa);
-    const classRank = useAppSelector(selectClassRank);
-    const majorRank = useAppSelector(selectMajorRank);
 
     const handleBack = () => {
         navigation.navigate('TabNavigation');
@@ -94,15 +117,43 @@ const ScorePage = ({navigation}: NavigationProps) => {
                 </View>
                 <View style={ss.mainContainer}>
                     <View style={ss.totalContainer}>
-                        <ScoreBox score={gpa} text={'平均绩点'}/>
-                        <ScoreBox score={classRank} text={'班级排名'}/>
-                        <ScoreBox score={majorRank} text={'年级排名'}/>
-                        <ScoreBox score={averageScore} text={'平均成绩'}/>
+                        {listIndex === 0 ? (
+                            <>
+                                <ScoreBox score={gpa} text={'平均绩点'}/>
+                                <ScoreBox score={classRank} text={'班级排名'}/>
+                                <ScoreBox score={majorRank} text={'年级排名'}/>
+                                <ScoreBox score={averageScore} text={'平均成绩'}/>
+                            </>
+                        ) : (
+                            <>
+                                <ScoreBox score={totalMinorCredit} text={'总学分'}/>
+                                <ScoreBox score={minorCredit} text={'已修学分'}/>
+                            </>
+                        )}
                     </View>
-                    <ScrollView style={ss.scoreListContainer} nestedScrollEnabled={true}>
+                    <View style={ss.buttonContainer}>
+                        <Pressable hitSlop={{top: 5, bottom: 5, left: 20, right: 20}} onPress={() => {
+                            if(listIndex !== 0) setListIndex(0)
+                        }}>
+                            <ScalingNotAllowedText style={{color: listIndex === 0 ? FontColor.dark : FontColor.grey}}>主修</ScalingNotAllowedText>
+                        </Pressable>
+                        <Pressable hitSlop={{top: 5, bottom: 5, left: 20, right: 20}}  onPress={() => {
+                            if(listIndex !== 1) setListIndex(1)
+                        }}>
+                            <ScalingNotAllowedText style={{color: listIndex === 1 ? FontColor.dark : FontColor.grey}}>辅修</ScalingNotAllowedText>
+                        </Pressable>
+                    </View>
+                    <ScrollView style={[ss.scoreListContainer, {display: listIndex === 0 ? 'flex' : 'none'}]} nestedScrollEnabled={true}>
                         {
                             scoreList.map((singleScore, index) => {
                                 return <SingleScore scoreList={singleScore} term={singleScore.term} key={index}/>
+                            })
+                        }
+                    </ScrollView>
+                    <ScrollView style={[ss.scoreListContainer, {display: listIndex === 1 ? 'flex' : 'none'}]} nestedScrollEnabled={true}>
+                        {
+                            minorScoreList.map((singleScore, index) => {
+                                return <MinorScore scoreList={singleScore} term={singleScore.term} key={index}/>
                             })
                         }
                     </ScrollView>
@@ -192,6 +243,16 @@ const ss = StyleSheet.create({
         marginTop: 15,
         display: 'flex',
         flexDirection: 'column',
+        borderRadius: 20,
+    },
+
+    buttonContainer: {
+        width: '86%',
+        marginTop: 15,
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-evenly',
     }
 })
 

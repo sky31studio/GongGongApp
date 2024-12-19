@@ -23,7 +23,7 @@ import Animated, {
 } from "react-native-reanimated";
 import LinearGradient from "react-native-linear-gradient";
 import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
-import {useQuery} from "@realm/react";
+import {useQuery, useRealm} from "@realm/react";
 import GongUser from "../../dao/object/User.ts";
 import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
 import {examChangedCountIncrement, selectShowAddBoard, updateExamAgendaList} from "../../app/slice/agendaSlice.ts";
@@ -31,6 +31,7 @@ import AddBoard from "./agenda/addBoard.tsx";
 import Resources, {ResourceMessage} from "../../basic/Resources.ts";
 import {ResourceCode} from "../../utils/enum.ts";
 import {useFocusEffect, useIsFocused} from "@react-navigation/native";
+import {setDate} from "../../app/slice/globalSlice.ts";
 
 export interface NavigationProps {
     navigation: {
@@ -43,6 +44,7 @@ const Home = ({navigation}: NavigationProps) => {
     const dispatch = useAppDispatch();
     const modalVisible = useAppSelector(selectShowAddBoard);
 
+    const realm = useRealm();
     const user = useQuery<GongUser>('GongUser')[0];
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
@@ -58,14 +60,28 @@ const Home = ({navigation}: NavigationProps) => {
         }
 
         const getData = async () => {
-            const msg: ResourceMessage = await Resources.getExam(user.token);
+            let msg: ResourceMessage = await Resources.getExam(user.token);
             if(msg.code === ResourceCode.Successful) {
                 dispatch(examChangedCountIncrement());
                 dispatch(updateExamAgendaList(msg.data));
+                realm.write(() => {
+                    user.scoreList = JSON.stringify(msg.data);
+                })
             } else if(msg.code === ResourceCode.PermissionDenied) {
                 ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
+                return;
             } else {
                 ToastAndroid.showWithGravity('考试信息获取失败！', 1500, ToastAndroid.BOTTOM);
+                return;
+            }
+
+            msg = await Resources.getFirstDate(user.token);
+            if(msg.code === ResourceCode.Successful) {
+                dispatch(setDate(msg.data));
+                realm.write(() => {
+                    user.firstDate = new Date(msg.data.start);
+                    user.termID = msg.data.termID;
+                })
             }
         }
 

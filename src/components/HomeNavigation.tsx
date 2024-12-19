@@ -16,7 +16,7 @@ import {
     writeSelfAgendaList
 } from "../app/slice/agendaSlice.ts";
 import {resetCurrentTime, setDate} from "../app/slice/globalSlice.ts";
-import {initScoreList, setScoreOverview} from "../app/slice/scoreSlice.ts";
+import {initMinorScoreList, initScoreList, setMinorScoreOverview, setScoreOverview} from "../app/slice/scoreSlice.ts";
 import {useAppDispatch, useAppSelector} from "../app/hooks.ts";
 import {initInfo} from "../app/slice/infoSlice.ts";
 import SpecificationPage from "./info/SpecificationPage.tsx";
@@ -168,6 +168,25 @@ const HomeNavigation = () => {
                 dispatch(initScoreList(JSON.parse(user.scoreList)));
             }
 
+            if(!user.minorScoreList) {
+                const msg: ResourceMessage = await Resources.getMinorScore(user.token);
+                if(msg.code === ResourceCode.Successful) {
+                    dispatch(initMinorScoreList(msg.data.scoreList));
+                    dispatch(setMinorScoreOverview(msg.data.totalCredit));
+                    console.log('writing minorScore in realm...');
+                    realm.write(() => {
+                        user.minorScoreList = JSON.stringify(msg.data.scoreList);
+                        user.minorScoreOverview = JSON.stringify(msg.data.totalCredit);
+                    })
+                    console.log('minorScore is written!');
+                } else {
+                    console.log('get minorScore failed!');
+                }
+            } else {
+                dispatch(initMinorScoreList(JSON.parse(user.minorScoreList)));
+                dispatch(setMinorScoreOverview(JSON.parse(user.minorScoreOverview!)));
+            }
+
             if(!user.firstDate) {
                 const msg: ResourceMessage = await Resources.getFirstDate(user.token);
                 if(msg.code === ResourceCode.Successful)  {
@@ -199,7 +218,6 @@ const HomeNavigation = () => {
     }
 
     useEffect(() => {
-        console.log(111);
         dispatch(resetCurrentTime());
         createChannel()
             .then(() => {

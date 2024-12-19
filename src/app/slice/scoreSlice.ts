@@ -8,7 +8,10 @@ interface initialState {
     classRank: number;
     majorRank: number;
     averageScore: number;
+    minorTotalCredit: number;
+    minorCredit: number;
     scoreList: SingleScoreList[];
+    minorScoreList: SingleScoreList[];
 }
 
 const initialState: initialState = {
@@ -17,6 +20,9 @@ const initialState: initialState = {
     majorRank: -1,
     averageScore: -1,
     scoreList: [],
+    minorScoreList: [],
+    minorTotalCredit: 0,
+    minorCredit: 0,
 }
 
 export const getScoreOverview = createAsyncThunk('score/getScore', async (token: string) => {
@@ -41,6 +47,15 @@ const scoreSlice = createSlice({
             state.averageScore = action.payload.average_score || -1;
         },
 
+        setMinorScoreOverview: (state, action) => {
+            state.minorTotalCredit = action.payload.totalCredit[0] || -1;
+            state.minorCredit = action.payload.totalCredit[1] || -1;
+        },
+
+        initMinorScoreList: (state, action) => {
+            state.minorScoreList = dealScore(action.payload);
+        },
+
         initScoreList: (state, action) => {
             state.scoreList = dealScore(action.payload);
         },
@@ -50,7 +65,10 @@ const scoreSlice = createSlice({
             state.classRank = -1;
             state.majorRank = -1;
             state.averageScore = -1;
+            state.minorTotalCredit = -1;
+            state.minorCredit = -1;
             state.scoreList = [];
+            state.minorScoreList = [];
         }
     },
     extraReducers: (builder) => {
@@ -69,7 +87,16 @@ export const selectGpa = (state: RootState) => state.score.gpa;
 export const selectClassRank = (state: RootState) => state.score.classRank;
 export const selectMajorRank = (state: RootState) => state.score.majorRank;
 export const selectScoreList = (state: RootState) => state.score.scoreList;
+export const selectMinorScoreList = (state: RootState) => state.score.minorScoreList;
+export const selectMinorTotalCredit = (state: RootState) => state.score.minorTotalCredit;
+export const selectMinorCredit = (state: RootState) => state.score.minorCredit;
 
-export const {setScoreOverview, initScoreList, clearScore}  = scoreSlice.actions;
+export const {
+    setScoreOverview,
+    initScoreList,
+    clearScore,
+    setMinorScoreOverview,
+    initMinorScoreList
+}  = scoreSlice.actions;
 
 export default scoreSlice.reducer;

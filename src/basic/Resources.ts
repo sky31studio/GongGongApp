@@ -152,6 +152,26 @@ class Resources {
         }
     }
 
+    public static async getMinorScore(token: string): Promise<ResourceMessage> {
+        const response = await this.getData(`${rootUrl}/minor/scores`, token, 1500);
+
+        if(response.code === ResourceCode.Successful) {
+            return {
+                code: ResourceCode.Successful,
+                data: {
+                    scoreList: response.data.scores,
+                    totalCredit: response.data.total_credit,
+                }
+            };
+        }
+
+        return {
+            code: response.code,
+            message: '获取辅修成绩失败'
+        }
+    }
+
+
     public static async getScoreOverview(token: string): Promise<ResourceMessage> {
         const response = await this.getData(`${rootUrl}/rank`, token, 2000);
 
