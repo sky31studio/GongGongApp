@@ -1,5 +1,5 @@
 import React from "react";
-import {StyleSheet, Text, View} from "react-native";
+import {StyleSheet, View} from "react-native";
 import {SingleScoreList} from "../../utils/scoreUtils.ts";
 import {Term} from "../../utils/enum.ts";
 import {FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
@@ -17,15 +17,15 @@ export const SingleScore = ({scoreList, term}: { scoreList: SingleScoreList, ter
 
     return (
         <View style={ss.singleScoreContainer}>
-            <Text style={ss.termText}>{Term[term]}</Text>
+            <ScalingNotAllowedText style={ss.termText}>{Term[term]}</ScalingNotAllowedText>
             <View style={[ss.infoContainer, {marginBottom: 20}]}>
-                <Text style={[ss.columnText, {width: '64%', textAlign: 'left'}]}>课程名称</Text>
-                <Text style={[ss.columnText, {width: '18%', textAlign: 'center'}]}>学分</Text>
-                <Text style={[ss.columnText, {width: '18%', textAlign: 'center'}]}>成绩</Text>
+                <ScalingNotAllowedText style={[ss.columnText, {width: '64%', textAlign: 'left'}]}>课程名称</ScalingNotAllowedText>
+                <ScalingNotAllowedText style={[ss.columnText, {width: '18%', textAlign: 'center'}]}>学分</ScalingNotAllowedText>
+                <ScalingNotAllowedText style={[ss.columnText, {width: '18%', textAlign: 'center'}]}>成绩</ScalingNotAllowedText>
             </View>
-            <Text style={ss.tagText}>必修</Text>
+            <ScalingNotAllowedText style={ss.tagText}>必修</ScalingNotAllowedText>
             {requiredList}
-            <Text style={[ss.tagText, {marginTop: 10}]}>选修</Text>
+            <ScalingNotAllowedText style={[ss.tagText, {marginTop: 10}]}>选修</ScalingNotAllowedText>
             {electiveList}
         </View>
     )
@@ -37,9 +37,9 @@ export const MinorScore = ({scoreList, term}: {scoreList: SingleScoreList, term:
         <View style={ss.singleScoreContainer}>
             <ScalingNotAllowedText style={ss.termText}>{Term[term]}</ScalingNotAllowedText>
             <View style={[ss.infoContainer, {marginBottom: 20}]}>
-                <Text style={[ss.columnText, {width: '64%', textAlign: 'left'}]}>课程名称</Text>
-                <Text style={[ss.columnText, {width: '18%', textAlign: 'center'}]}>学分</Text>
-                <Text style={[ss.columnText, {width: '18%', textAlign: 'center'}]}>成绩</Text>
+                <ScalingNotAllowedText style={[ss.columnText, {width: '64%', textAlign: 'left'}]}>课程名称</ScalingNotAllowedText>
+                <ScalingNotAllowedText style={[ss.columnText, {width: '18%', textAlign: 'center'}]}>学分</ScalingNotAllowedText>
+                <ScalingNotAllowedText style={[ss.columnText, {width: '18%', textAlign: 'center'}]}>成绩</ScalingNotAllowedText>
             </View>
             <InfoBoard infos={scoreList.required}/>
         </View>
@@ -58,9 +58,9 @@ const InfoBoard = ({infos}: { infos: any[] }) => {
                 infos.map((info, index) => {
                     return (
                         <View style={[ss.infoContainer]} key={index}>
-                            <Text style={[ss.infoText, {textAlign: 'left', width: '64%'}]}>{info.name}</Text>
-                            <Text style={[ss.infoText, {textAlign: 'center', width: '18%'}]}>{info.credit}</Text>
-                            <Text style={[ss.infoText, {textAlign: 'center', width: '18%'}]}>{info.score}</Text>
+                            <ScalingNotAllowedText style={[ss.infoText, {textAlign: 'left', width: '64%'}]}>{info.name}</ScalingNotAllowedText>
+                            <ScalingNotAllowedText style={[ss.infoText, {textAlign: 'center', width: '18%'}]}>{info.credit}</ScalingNotAllowedText>
+                            <ScalingNotAllowedText style={[ss.infoText, {textAlign: 'center', width: '18%'}]}>{info.score}</ScalingNotAllowedText>
                         </View>
                     )
                 })
@@ -83,7 +83,7 @@ const ss = StyleSheet.create({
 
     termText: {
         fontSize: FontSize.xxl,
-        fontWeight: '600',
+        fontWeight: '800',
         color: FontColor.dark,
         marginBottom: 25,
     },

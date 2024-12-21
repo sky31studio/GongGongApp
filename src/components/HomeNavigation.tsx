@@ -26,11 +26,11 @@ import GongUser from "../dao/object/User.ts";
 import Resources, {ResourceMessage} from "../basic/Resources.ts";
 import {ResourceCode} from "../utils/enum.ts";
 import notifee from "../../node_modules/@notifee/react-native";
-import {AndroidImportance} from "@notifee/react-native";
+import {AndroidImportance, TimestampTrigger, TriggerType} from "@notifee/react-native";
 import UserAgreePage from "./info/UserAgreePage.tsx";
 import PrivacyPolicyPage from "./info/PrivacyPolicyPage.tsx";
 import FeedbackPage from "./info/FeedbackPage.tsx";
-import {View} from "react-native";
+import {Alert, View} from "react-native";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
 
 const HomeNavigation = () => {
@@ -49,11 +49,20 @@ const HomeNavigation = () => {
 
     // 首次挂载创建通知通道
     const createChannel = async () => {
-        await notifee.createChannel({
-            id: 'exam-notification',
-            name: 'exam-notification',
-            importance: AndroidImportance.HIGH
-        });
+        const existingChannels = await notifee.getChannels();
+        const isChannelExists = existingChannels.some(channel => channel.id === 'exam-notification');
+
+        if(!isChannelExists) {
+            await notifee.createChannel({
+                id: 'exam-notification',
+                name: 'exam-notification',
+                importance: AndroidImportance.HIGH
+            });
+
+            console.log('exam-channel created');
+        } else {
+            console.log('exam-channel already exists');
+        }
     }
 
     // 首次挂载获取全局数据
@@ -171,12 +180,21 @@ const HomeNavigation = () => {
             if(!user.minorScoreList) {
                 const msg: ResourceMessage = await Resources.getMinorScore(user.token);
                 if(msg.code === ResourceCode.Successful) {
+                    console.log(msg.data);
                     dispatch(initMinorScoreList(msg.data.scoreList));
-                    dispatch(setMinorScoreOverview(msg.data.totalCredit));
+                    dispatch(setMinorScoreOverview({
+                        totalCredit: msg.data.totalCredit,
+                        minorGpa: msg.data.gpa,
+                        minorAverageScore: msg.data.averageScore
+                    }));
                     console.log('writing minorScore in realm...');
                     realm.write(() => {
                         user.minorScoreList = JSON.stringify(msg.data.scoreList);
-                        user.minorScoreOverview = JSON.stringify(msg.data.totalCredit);
+                        user.minorScoreOverview = JSON.stringify({
+                            totalCredit: msg.data.totalCredit,
+                            minorGpa: msg.data.gpa,
+                            minorAverageScore: msg.data.averageScore
+                        });
                     })
                     console.log('minorScore is written!');
                 } else {
@@ -205,6 +223,8 @@ const HomeNavigation = () => {
                     start: user.firstDate.toString(),
                     termID: user.termID,
                 }));
+
+                console.log(111);
             }
 
             if(user.selfAgendaList) {

@@ -5,9 +5,11 @@ import {dealScore, SingleScoreList} from "../../utils/scoreUtils.ts";
 
 interface initialState {
     gpa: number;
+    minorGpa: number;
     classRank: number;
     majorRank: number;
     averageScore: number;
+    minorAverageScore: number;
     minorTotalCredit: number;
     minorCredit: number;
     scoreList: SingleScoreList[];
@@ -16,9 +18,11 @@ interface initialState {
 
 const initialState: initialState = {
     gpa: -1,
+    minorGpa: -1,
     classRank: -1,
     majorRank: -1,
     averageScore: -1,
+    minorAverageScore: -1,
     scoreList: [],
     minorScoreList: [],
     minorTotalCredit: 0,
@@ -48,8 +52,10 @@ const scoreSlice = createSlice({
         },
 
         setMinorScoreOverview: (state, action) => {
-            state.minorTotalCredit = action.payload.totalCredit[0] || -1;
-            state.minorCredit = action.payload.totalCredit[1] || -1;
+            state.minorTotalCredit = Number(action.payload.totalCredit[0]) || -1;
+            state.minorCredit = Number(action.payload.totalCredit[1]) || -1;
+            state.minorGpa = Number(action.payload.minorGpa) || -1;
+            state.minorAverageScore = Number(action.payload.minorAverageScore) || -1;
         },
 
         initMinorScoreList: (state, action) => {
@@ -90,6 +96,8 @@ export const selectScoreList = (state: RootState) => state.score.scoreList;
 export const selectMinorScoreList = (state: RootState) => state.score.minorScoreList;
 export const selectMinorTotalCredit = (state: RootState) => state.score.minorTotalCredit;
 export const selectMinorCredit = (state: RootState) => state.score.minorCredit;
+export const selectMinorGpa = (state: RootState) => state.score.minorGpa;
+export const selectMinorAverageScore = (state: RootState) => state.score.minorAverageScore;
 
 export const {
     setScoreOverview,

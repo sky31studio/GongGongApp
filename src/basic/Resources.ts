@@ -161,6 +161,8 @@ class Resources {
                 data: {
                     scoreList: response.data.scores,
                     totalCredit: response.data.total_credit,
+                    gpa: response.data.gpa,
+                    averageScore: response.data.average_score
                 }
             };
         }

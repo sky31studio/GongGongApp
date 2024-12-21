@@ -12,8 +12,8 @@ import {
     selectAverageScore,
     selectClassRank,
     selectGpa,
-    selectMajorRank,
-    selectMinorCredit,
+    selectMajorRank, selectMinorAverageScore,
+    selectMinorCredit, selectMinorGpa,
     selectMinorScoreList,
     selectMinorTotalCredit,
     selectScoreList, setMinorScoreOverview,
@@ -43,6 +43,8 @@ const ScorePage = ({navigation}: NavigationProps) => {
     const majorRank = useAppSelector(selectMajorRank);
     const totalMinorCredit = useAppSelector(selectMinorTotalCredit)
     const minorCredit = useAppSelector(selectMinorCredit);
+    const minorAverageScore = useAppSelector(selectMinorAverageScore);
+    const minorGpa = useAppSelector(selectMinorGpa);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -54,6 +56,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
         }
 
         const getData = async () => {
+            console.log('begin to refresh');
             let msg: ResourceMessage = await Resources.getScoreOverview(user.token);
             if(msg.code === ResourceCode.Successful) {
                 dispatch(setScoreOverview(msg.data));
@@ -64,6 +67,8 @@ const ScorePage = ({navigation}: NavigationProps) => {
                 ToastAndroid.showWithGravity('总成绩获取失败', 1500, ToastAndroid.BOTTOM);
                 return;
             }
+
+            console.log('get scoreOverview');
 
             msg = await Resources.getScore(user.token);
             if(msg.code === ResourceCode.Successful) {
@@ -77,19 +82,31 @@ const ScorePage = ({navigation}: NavigationProps) => {
                 ToastAndroid.showWithGravity('成绩表单获取失败！', 1500, ToastAndroid.BOTTOM);
             }
 
+            console.log('get score');
+
             msg = await Resources.getMinorScore(user.token);
             if(msg.code === ResourceCode.Successful) {
                 dispatch(initMinorScoreList(msg.data.scoreList));
-                dispatch(setMinorScoreOverview(msg.data.totalCredit));
+                dispatch(setMinorScoreOverview({
+                    totalCredit: msg.data.totalCredit,
+                    minorGpa: msg.data.gpa,
+                    minorAverageScore: msg.data.averageScore
+                }));
                 realm.write(() => {
                     user.minorScoreList = JSON.stringify(msg.data.scoreList);
-                    user.minorScoreOverview = JSON.stringify(msg.data.totalCredit);
+                    user.minorScoreOverview = JSON.stringify({
+                        totalCredit: msg.data.totalCredit,
+                        minorGpa: msg.data.gpa,
+                        minorAverageScore: msg.data.averageScore
+                    });
                 })
             } else if(msg.code === ResourceCode.PermissionDenied) {
                 ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
             } else {
                 ToastAndroid.showWithGravity('辅修表单获取失败！', 1500, ToastAndroid.BOTTOM);
             }
+
+            console.log('get minorScore');
         }
 
         getData().then(() => setRefreshing(false));
@@ -126,8 +143,10 @@ const ScorePage = ({navigation}: NavigationProps) => {
                             </>
                         ) : (
                             <>
+                                <ScoreBox score={minorGpa} text={'平均绩点'}/>
                                 <ScoreBox score={totalMinorCredit} text={'总学分'}/>
                                 <ScoreBox score={minorCredit} text={'已修学分'}/>
+                                <ScoreBox score={minorAverageScore} text={'平均成绩'}/>
                             </>
                         )}
                     </View>
