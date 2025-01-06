@@ -123,14 +123,14 @@ const CountdownList = ({onlyExam}: { onlyExam: boolean }): React.JSX.Element => 
             .map((agenda: Agenda, index: number) => {
                 let comparedDate;
                 let countdown;
-                if(agenda.endTime !== '') {
+                if(agenda.startTime !== '') {
                     comparedDate = new Date(agenda.endTime);
-                } else if(agenda.startTime !== '') {
+                } else if(agenda.endTime !== '') {
                     comparedDate = new Date(agenda.startTime);
                 }
 
                 if(comparedDate) {
-                    countdown = Math.floor((comparedDate.getTime() - lastTime.getTime()) / (1000 * 3600 * 24));
+                    countdown = Math.floor(comparedDate.getTime() / (1000 * 3600 * 24)) - Math.floor(lastTime.getTime() / (1000 * 3600 * 24));
                 }
 
                 return (
