@@ -30,6 +30,7 @@ import {NavigationProps} from "../home/homePage.tsx";
 import {useRealm} from "@realm/react";
 import LoadingAnimation from "./LoadingAnimation.tsx";
 import {sleep} from "../../utils/globalUtils.ts";
+import {LoginCode} from "../../utils/enum.ts";
 
 
 const LoginContext = createContext<{
@@ -92,7 +93,7 @@ const LoginPage = ({navigation}: NavigationProps): React.JSX.Element => {
             await sleep(100);
         } else {
             const res = await Resources.login(username, password);
-            if (res.code === 0) {
+            if (res.code !== LoginCode.Successful) {
                 setAlertText(res.message);
                 alertAnimation();
                 await sleep(100);

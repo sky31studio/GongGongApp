@@ -86,5 +86,17 @@ export enum ResourceCode {
     LocalFailed,
     RemoteFailed,
     PermissionDenied,
-    Successful,
+    Successful = 200,
+    DataExpired = 203,
+    InvalidToken = 401,
+    AccountLocked = 423,
+    SYSTimeout = 503,
+    Timeout = 504,
+}
+
+export enum LoginCode {
+    Successful = 200,
+    Uninitialized = 409,
+    SYSTimeout = 503,
+    Timeout = 504,
 }
