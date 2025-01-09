@@ -19,10 +19,7 @@ import GongUser from "../../dao/object/User.ts";
 import Resources, {ResourceMessage} from "../../basic/Resources.ts";
 import {ResourceCode} from "../../utils/enum.ts";
 
-const location = ['逸夫楼', '兴湘C栋', '兴湘B栋', '一教', '北山', '南山', '文新院', '尚美楼', '土木楼', '图书馆南', '外语楼', '行远楼', '其他'];
-const remoteLocationName = ['逸夫楼', '兴教楼C', '兴教楼B', '一教楼', '北山阶梯', '南山阶梯', '文科楼', '尚美楼', '土木楼', '图书馆南', '外语楼', '行远楼', '其他'];
 const periods = ['1-2', '3-4', '5-6', '7-8', '9-11'];
-
 /**
  * 空教室页面
  * @param navigation 路由
@@ -51,14 +48,8 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
     // 从空教室数据中筛选出的选中地点以及选中课程节次的数据
     const locationData = useMemo(() => {
         const classData = isToday ? todayData : tomorrowData;
-        let selectedData: any[] = [];
-        for(let i = 0; i < classData.length; i++) {
+        let selectedData: any[] = classData[currentIndex].classroom;
 
-            if(classData[i].name === remoteLocationName[currentIndex]) {
-                selectedData = classData[i].classroom;
-                break;
-            }
-        }
         return selectedData.filter((item: any) => {
             for(let i = 0; i < 5; i++) {
                 if(currentPeriod[i] && !item.status[i]) {
@@ -123,9 +114,9 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
     }, [user.token]);
 
     // FlatList渲染需要使用的数据
-    const listData = location.map((place) => {
+    const listData = todayData.map((place) => {
         return {
-            location: place,
+            location: place.name,
         }
     })
 
@@ -201,7 +192,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                         handleLeft={leftHandler}
                         handleRight={rightHandler}
                         reset={clearCurrentPeriod}
-                        currentIndex={currentIndex}
+                        locationName={todayData[currentIndex].name}
                     />
                     <View style={ss.mainInfoContainer}>
                         <View style={{width: '100%', height: 40, display: 'flex', flexDirection: 'row'}}>
@@ -257,7 +248,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
     )
 }
 
-const FunctionField = memo(({handleLeft, handleRight, reset, currentIndex}: any) => {
+const FunctionField = memo(({handleLeft, handleRight, reset, locationName}: any) => {
     const [isToday, setIsToday] = useState<boolean>(true);
 
     const buttonAnimatedValue = useSharedValue<number>(0);
@@ -286,7 +277,7 @@ const FunctionField = memo(({handleLeft, handleRight, reset, currentIndex}: any)
     return (
         <View style={ss.functionFieldContainer}>
             <View style={ss.verticalContainer}>
-                <ScalingNotAllowedText style={ss.locationText}>{location[currentIndex]}</ScalingNotAllowedText>
+                <ScalingNotAllowedText style={ss.locationText}>{locationName}</ScalingNotAllowedText>
                 <Pressable style={ss.refreshButton} onPress={reset}>
                     <ScalingNotAllowedText style={{
                         color: FontColor.light,
