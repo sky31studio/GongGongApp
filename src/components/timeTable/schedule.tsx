@@ -1,5 +1,5 @@
 import React, {useCallback, useContext, useMemo} from "react";
-import {StyleSheet, Text, View} from "react-native";
+import {StyleSheet, View} from "react-native";
 import ClassBox from "./classBox";
 import TimeTableConfig from "../../config/TimeTableConfig";
 import {getAllCoursesByWeek} from "../../utils/tableUtils.ts";
@@ -12,6 +12,7 @@ import {FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
 import {CurrentTimeContext} from "../../../App.tsx";
 import {CNWeekDayShort} from "../../utils/enum.ts";
 import {ClassObject} from "./ClassObject.ts";
+import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
 
 export default function Schedule({week}: { week: number }): React.JSX.Element {
     const date = useAppSelector(selectFirstDate);
@@ -50,9 +51,9 @@ export default function Schedule({week}: { week: number }): React.JSX.Element {
 
         const view = (
             <View style={ss} key={index}>
-                <Text style={styleSheet.tItemBoldText}>{index + 1}</Text>
-                <Text style={styleSheet.tItemSlimText}>{item.start}</Text>
-                <Text style={styleSheet.tItemSlimText}>{item.end}</Text>
+                <ScalingNotAllowedText style={styleSheet.tItemBoldText}>{index + 1}</ScalingNotAllowedText>
+                <ScalingNotAllowedText style={styleSheet.tItemSlimText}>{item.start}</ScalingNotAllowedText>
+                <ScalingNotAllowedText style={styleSheet.tItemSlimText}>{item.end}</ScalingNotAllowedText>
             </View>
         );
 
@@ -68,8 +69,8 @@ export default function Schedule({week}: { week: number }): React.JSX.Element {
     // 左上角表示月份的单元格
     const monthItem = (
         <View style={styleSheet.monthItem}>
-            <Text style={styleSheet.monthText}>{currentMonth}</Text>
-            <Text style={styleSheet.monthText}>月</Text>
+            <ScalingNotAllowedText style={styleSheet.monthText}>{currentMonth}</ScalingNotAllowedText>
+            <ScalingNotAllowedText style={styleSheet.monthText}>月</ScalingNotAllowedText>
         </View>
     );
     timeListWithGap = [monthItem, ...timeListWithGap];
@@ -211,8 +212,8 @@ const WeekDaySchedule = ({courses, date}: {courses: any, date: Date}) => {
             {/* 日期单元格 */}
             <View style={styleSheet.weekdayItemWrapper}>
                 <View style={styleSheet.weekdayItem}>
-                    <Text style={[styleSheet.wItemBoldText, {color: dateTextColor}]}>{CNWeekDayShort[weekDay]}</Text>
-                    <Text style={[styleSheet.wItemSlimText, {color: dateTextColor}]}>{dateText}</Text>
+                    <ScalingNotAllowedText style={[styleSheet.wItemBoldText, {color: dateTextColor}]}>{CNWeekDayShort[weekDay]}</ScalingNotAllowedText>
+                    <ScalingNotAllowedText style={[styleSheet.wItemSlimText, {color: dateTextColor}]}>{dateText}</ScalingNotAllowedText>
                 </View>
             </View>
             {courseList()}
