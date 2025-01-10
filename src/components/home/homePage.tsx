@@ -304,6 +304,7 @@ const ShiftButton: React.ComponentType<ButtonProps> = ({id, text = '', initFocus
             <View style={styleSheet.shiftBox}>
                 <Animated.Text
                     numberOfLines={1}
+                    allowFontScaling={false}
                     style={[styleSheet.shiftBoxText, animatedStyle]}
                 >
                     {text}

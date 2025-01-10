@@ -26,11 +26,11 @@ import GongUser from "../dao/object/User.ts";
 import Resources, {ResourceMessage} from "../basic/Resources.ts";
 import {ResourceCode} from "../utils/enum.ts";
 import notifee from "../../node_modules/@notifee/react-native";
-import {AndroidImportance, TimestampTrigger, TriggerType} from "@notifee/react-native";
+import {AndroidImportance} from "@notifee/react-native";
 import UserAgreePage from "./info/UserAgreePage.tsx";
 import PrivacyPolicyPage from "./info/PrivacyPolicyPage.tsx";
 import FeedbackPage from "./info/FeedbackPage.tsx";
-import {Alert, View} from "react-native";
+import {View} from "react-native";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
 
 const HomeNavigation = () => {
@@ -50,12 +50,12 @@ const HomeNavigation = () => {
     // 首次挂载创建通知通道
     const createChannel = async () => {
         const existingChannels = await notifee.getChannels();
-        const isChannelExists = existingChannels.some(channel => channel.id === 'exam-notification');
+        const isChannelExists = existingChannels.some(channel => channel.id === 'exam-channel');
 
         if(!isChannelExists) {
             await notifee.createChannel({
-                id: 'exam-notification',
-                name: 'exam-notification',
+                id: 'exam-channel',
+                name: 'exam-channel',
                 importance: AndroidImportance.HIGH
             });
 
@@ -71,7 +71,7 @@ const HomeNavigation = () => {
             console.log('fetch data begin.......');
             if(!user.courses) {
                 const msg: ResourceMessage = await Resources.getClassData(user.token);
-                if(msg.code === ResourceCode.Successful) {
+                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
                     dispatch(initTable(msg.data));
                     console.log('writing courses in realm...');
                     realm.write(() => {
@@ -87,7 +87,7 @@ const HomeNavigation = () => {
 
             if(!user.info) {
                 const msg: ResourceMessage = await Resources.getInfo(user.token);
-                if(msg.code === ResourceCode.Successful) {
+                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
                     dispatch(initInfo(msg.data));
                     console.log('writing userInfo in realm...');
                     realm.write(() => {
@@ -103,7 +103,7 @@ const HomeNavigation = () => {
 
             if(!user.todayClassroom) {
                 const msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token);
-                if(msg.code === ResourceCode.Successful) {
+                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
                     dispatch(setTodayEmptyClassroomStatus(msg.data));
                     console.log('writing todayClassroom in realm...');
                     realm.write(() => {
@@ -119,7 +119,7 @@ const HomeNavigation = () => {
 
             if(!user.tomorrowClassroom) {
                 const msg: ResourceMessage = await Resources.getTomorrowClassroomStatus(user.token);
-                if(msg.code === ResourceCode.Successful) {
+                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
                     dispatch(setTomorrowEmptyClassroomStatus(msg.data));
                     console.log('writing tomorrowClassroom in realm...');
                     realm.write(() => {
@@ -135,7 +135,7 @@ const HomeNavigation = () => {
 
             if(!user.examAgendaList) {
                 const msg: ResourceMessage = await Resources.getExam(user.token);
-                if(msg.code === ResourceCode.Successful) {
+                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
                     dispatch(examChangedCountIncrement());
                     dispatch(initExam(msg.data))
                 } else {
@@ -147,7 +147,7 @@ const HomeNavigation = () => {
 
             if(!user.scoreOverview) {
                 const msg: ResourceMessage = await Resources.getScoreOverview(user.token);
-                if(msg.code === ResourceCode.Successful) {
+                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
                     dispatch(setScoreOverview(msg.data));
                     console.log('writing scoreOverview in realm...');
                     realm.write(() => {
@@ -163,7 +163,7 @@ const HomeNavigation = () => {
 
             if(!user.scoreList) {
                 const msg: ResourceMessage = await Resources.getScore(user.token);
-                if(msg.code === ResourceCode.Successful) {
+                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
                     dispatch(initScoreList(msg.data));
                     console.log('writing scoreList in realm...');
                     realm.write(() => {
@@ -179,7 +179,7 @@ const HomeNavigation = () => {
 
             if(!user.minorScoreList) {
                 const msg: ResourceMessage = await Resources.getMinorScore(user.token);
-                if(msg.code === ResourceCode.Successful) {
+                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
                     console.log(msg.data);
                     dispatch(initMinorScoreList(msg.data.scoreList));
                     dispatch(setMinorScoreOverview({
@@ -207,7 +207,7 @@ const HomeNavigation = () => {
 
             if(!user.firstDate) {
                 const msg: ResourceMessage = await Resources.getFirstDate(user.token);
-                if(msg.code === ResourceCode.Successful)  {
+                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired)  {
                     dispatch(setDate(msg.data));
                     console.log('writing firstDate in realm...');
                     realm.write(() => {

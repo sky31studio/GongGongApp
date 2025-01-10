@@ -11,6 +11,7 @@ import LoginNavigation from "./src/components/LoginNavigation.tsx";
 import {RealmProvider} from "@realm/react";
 import GongUser from "./src/dao/object/User.ts";
 import {configureReanimatedLogger, ReanimatedLogLevel,} from 'react-native-reanimated';
+import {createTestChannel, createTestNotificationWithDelay} from "./src/utils/notificationUtils.ts";
 
 configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -59,6 +60,12 @@ const SafeArea = () => {
         }, 8000);
 
         return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        createTestChannel().then(() => {
+            createTestNotificationWithDelay(5000).then();
+        })
     }, []);
 
     return (

@@ -94,7 +94,10 @@ const agendaSlice = createSlice({
             state.selfList.sort(compare);
 
             if(action.payload.startTime !== '') {
-                addExamNotification(new Date(action.payload.startTime), {id: id, title: '考试通知'});
+                addExamNotification(new Date(action.payload.startTime), {id: id, title: '考试通知'})
+                    .then(() => {
+                        console.log(`${action.payload.name}'s notification added!`);
+                    });
             }
         },
 
@@ -178,7 +181,10 @@ const agendaSlice = createSlice({
                     const id = generateID(exam.name, exam.startTime, exam.endTime);
 
                     if(exam.startTime !== '') {
-                        addExamNotification(new Date(exam.startTime), {id: id, title: '考试通知'});
+                        addExamNotification(new Date(exam.startTime), {id: id, title: '考试通知'})
+                            .then(() => {
+                                console.log(`${exam.name}'s notification added!`);
+                            });
                     }
 
                     return {
@@ -307,13 +313,6 @@ export const selectCurrentAgendaNumber = createSelector(
             }
         }
 
-        // for(let i = list.length - 1; i >= 0; i--) {
-        //     if(list[i].startTime !== '') {
-        //         right = i;
-        //         break;
-        //     }
-        // }
-
         return right - left + 1;
     }
 )
@@ -331,7 +330,6 @@ export const selectOnlyExamList = createSelector(
                 i--;
             }
         }
-
         return res;
     }
 );
