@@ -1,27 +1,47 @@
-import {Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, ToastAndroid, View} from "react-native";
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
-import {BackgroundColor, BorderColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
-import {selectTheWeek} from "../../app/slice/globalSlice.ts";
-import {SvgXml} from "react-native-svg";
-import XMLResources from "../../basic/XMLResources.ts";
-import Animated, {Easing, interpolate, useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
-import PagerView from "react-native-pager-view";
-import Schedule from "./schedule.tsx";
-import {NavigationProps} from "../home/homePage.tsx";
 import {
-    hideModal,
-    initTable,
-    lockModal,
-    selectCurrentTimeCourses,
-    selectModalVisible,
-    unlockModal
-} from "../../app/slice/scheduleSlice.ts";
-import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
-import {ENToCNWeekDay, ResourceCode} from "../../utils/enum.ts";
-import Resources, {ResourceMessage} from "../../basic/Resources.ts";
-import {useQuery, useRealm} from "@realm/react";
-import GongUser from "../../dao/object/User.ts";
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  ToastAndroid,
+  View,
+} from 'react-native';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useAppDispatch, useAppSelector} from '../../app/hooks.ts';
+import {
+  BackgroundColor,
+  BorderColor,
+  FontColor,
+  FontSize,
+} from '../../config/globalStyleSheetConfig.ts';
+import {selectTheWeek} from '../../app/slice/globalSlice.ts';
+import {SvgXml} from 'react-native-svg';
+import XMLResources from '../../basic/XMLResources.ts';
+import Animated, {
+  Easing,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import PagerView from 'react-native-pager-view';
+import Schedule from './schedule.tsx';
+import {NavigationProps} from '../home/homePage.tsx';
+import {
+  hideModal,
+  initTable,
+  lockModal,
+  selectCurrentTimeCourses,
+  selectModalVisible,
+  unlockModal,
+} from '../../app/slice/scheduleSlice.ts';
+import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
+import {ENToCNWeekDay, ResourceCode} from '../../utils/enum.ts';
+import Resources, {ResourceMessage} from '../../basic/Resources.ts';
+import {useQuery, useRealm} from '@realm/react';
+import GongUser from '../../dao/object/User.ts';
 
 export const TablePage = ({navigation}: NavigationProps) => {
     const realm = useRealm();
@@ -43,6 +63,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
 
     // pagerView ref
     const pagerViewRef = useRef<PagerView>(null);
+    const scrollViewRef = useRef<ScrollView>(null);
 
     const dropWeekListValue = useSharedValue<number>(0);
     const arrowAnimatedStyle = useAnimatedStyle(() => {
@@ -85,7 +106,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
                 realm.write(() => {
                     user.courses = JSON.stringify(msg.data);
                 });
-            } else if(msg.code === ResourceCode.PermissionDenied) {
+            } else if(msg.code === ResourceCode.InvalidToken) {
                 ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
             } else {
                 ToastAndroid.showWithGravity('课表获取失败！', 1500, ToastAndroid.BOTTOM);
@@ -166,8 +187,14 @@ export const TablePage = ({navigation}: NavigationProps) => {
         )
     }
 
+    useEffect(() => {
+        setRefreshing(true);
+        onRefresh();
+    }, []);
+
     return (
         <ScrollView
+            ref={scrollViewRef}
             contentContainerStyle={{flex: 1}}
             nestedScrollEnabled={true}
             refreshControl={

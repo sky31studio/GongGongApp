@@ -1,23 +1,23 @@
-import {FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, ToastAndroid, View} from "react-native";
-import {BackgroundColor, FontColor, FontFamily, FontSize} from "../../config/globalStyleSheetConfig.ts";
-import React, {memo, useCallback, useMemo, useState} from "react";
-import {SvgXml} from "react-native-svg";
-import XMLResources from "../../basic/XMLResources.ts";
-import {NavigationProps} from "../home/homePage.tsx";
-import {produce} from "immer";
-import Animated, {runOnJS, useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
-import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
+import {FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, ToastAndroid, View} from 'react-native';
+import {BackgroundColor, FontColor, FontFamily, FontSize} from '../../config/globalStyleSheetConfig.ts';
+import React, {memo, useCallback, useMemo, useState} from 'react';
+import {SvgXml} from 'react-native-svg';
+import XMLResources from '../../basic/XMLResources.ts';
+import {NavigationProps} from '../home/homePage.tsx';
+import {produce} from 'immer';
+import Animated, {runOnJS, useAnimatedStyle, useSharedValue, withTiming} from 'react-native-reanimated';
+import {useAppDispatch, useAppSelector} from '../../app/hooks.ts';
 import {
     selectTodayClassroomStatus,
     selectTomorrowClassroomStatus,
     setTodayEmptyClassroomStatus,
-    setTomorrowEmptyClassroomStatus
-} from "../../app/slice/classroomSlice.ts";
-import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
-import {useQuery, useRealm} from "@realm/react";
-import GongUser from "../../dao/object/User.ts";
-import Resources, {ResourceMessage} from "../../basic/Resources.ts";
-import {ResourceCode} from "../../utils/enum.ts";
+    setTomorrowEmptyClassroomStatus,
+} from '../../app/slice/classroomSlice.ts';
+import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
+import {useQuery, useRealm} from '@realm/react';
+import GongUser from '../../dao/object/User.ts';
+import Resources, {ResourceMessage} from '../../basic/Resources.ts';
+import {ResourceCode} from '../../utils/enum.ts';
 
 const periods = ['1-2', '3-4', '5-6', '7-8', '9-11'];
 /**
@@ -71,7 +71,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                 draftState[index] = !draftState[index];
             })
         );
-    }
+    };
 
     // 重置currentPeriod数组
     const clearCurrentPeriod = useCallback(() => {
@@ -94,7 +94,12 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                 dispatch(setTodayEmptyClassroomStatus(msg.data));
                 realm.write(() => {
                     user.todayClassroom = JSON.stringify(msg.data);
-                })
+                });
+            } else if(msg.code === ResourceCode.InvalidToken) {
+                ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
+                return;
+            } else {
+                ToastAndroid.showWithGravity('今日空教室信息获取失败！', 1500, ToastAndroid.BOTTOM);
             }
 
             msg = await Resources.getTomorrowClassroomStatus(user.token);
@@ -102,23 +107,24 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                 dispatch(setTomorrowEmptyClassroomStatus(msg.data));
                 realm.write(() => {
                     user.tomorrowClassroom = JSON.stringify(msg.data);
-                })
-            } else if(msg.code === ResourceCode.PermissionDenied) {
+                });
+            } else if(msg.code === ResourceCode.InvalidToken) {
                 ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
+                return;
             } else {
-                ToastAndroid.showWithGravity('空教室信息获取失败！', 1500, ToastAndroid.BOTTOM);
+                ToastAndroid.showWithGravity('明日空教室信息获取失败！', 1500, ToastAndroid.BOTTOM);
             }
-        }
+        };
 
         fetchData().then(() => setRefreshing(false));
-    }, [user.token]);
+    }, [dispatch, realm, user]);
 
     // FlatList渲染需要使用的数据
     const listData = todayData.map((place) => {
         return {
             location: place.name,
-        }
-    })
+        };
+    });
 
     // FlatList的item渲染函数
     const itemRenderer = (data: any) => {
@@ -128,11 +134,11 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                 <ScalingNotAllowedText style={[{
                     fontWeight: fontWeight,
                     color: FontColor.light,
-                    fontSize: FontSize.s
+                    fontSize: FontSize.s,
                 }]}>{data.item.location}</ScalingNotAllowedText>
             </Pressable>
-        )
-    }
+        );
+    };
 
     // 渲染课程节次列表
     const periodList = periods.map((period, index) => {
@@ -152,8 +158,8 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
             >
                 <ScalingNotAllowedText style={{color: color, textAlign: 'center'}}>{period}</ScalingNotAllowedText>
             </Pressable>
-        )
-    })
+        );
+    });
 
     return (
         <ScrollView
@@ -196,7 +202,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                     />
                     <View style={ss.mainInfoContainer}>
                         <View style={{width: '100%', height: 40, display: 'flex', flexDirection: 'row'}}>
-                            <View style={{width: 50, height: '100%'}}></View>
+                            <View style={{width: 50, height: '100%'}} />
                             <View style={{flex: 1, height: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
                                 {periodList.map((item) => (
                                     item
@@ -215,18 +221,18 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                                         <View
                                             style={{flex: 1, height: '25%', display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}
                                         >
-                                            <View style={ss.periodBackgroundBlock}></View>
+                                            <View style={ss.periodBackgroundBlock} />
                                             {location.status.map((status: boolean, index: number) => {
                                                 const backgroundColor = status ? BackgroundColor.iconPrimary : 'transparent';
                                                 return (
                                                     <View key={index} style={{flex: 1, alignItems: 'center'}}>
-                                                        <View style={[ss.periodItem, {backgroundColor: backgroundColor}]}></View>
+                                                        <View style={[ss.periodItem, {backgroundColor: backgroundColor}]} />
                                                     </View>
-                                                )
+                                                );
                                             })}
                                         </View>
                                     </View>
-                                )
+                                );
                             })}
                             {/* 无数据 */}
                             {locationData.length === 0 &&
@@ -237,7 +243,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                             <View style={{width: '100%', alignItems: 'center', marginTop: 25}}>
                                 <ScalingNotAllowedText style={{
                                     fontSize: FontSize.s,
-                                    color: FontColor.grey
+                                    color: FontColor.grey,
                                 }}>{locationData.length !== 0 ? '到底了哟 (´▽｀)~' : '没有找到诶＞︿＜，去其他地方看看吧~'}</ScalingNotAllowedText>
                             </View>
                         </ScrollView>
@@ -245,8 +251,8 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                 </View>
             </View>
         </ScrollView>
-    )
-}
+    );
+};
 
 const FunctionField = memo(({handleLeft, handleRight, reset, locationName}: any) => {
     const [isToday, setIsToday] = useState<boolean>(true);
@@ -254,9 +260,9 @@ const FunctionField = memo(({handleLeft, handleRight, reset, locationName}: any)
     const buttonAnimatedValue = useSharedValue<number>(0);
     const buttonAnimatedStyle = useAnimatedStyle(() => {
         return {
-            left: `${buttonAnimatedValue.value}%`
-        }
-    })
+            left: `${buttonAnimatedValue.value}%`,
+        };
+    });
 
     const toggleLeft = () => {
         handleLeft();
@@ -264,7 +270,7 @@ const FunctionField = memo(({handleLeft, handleRight, reset, locationName}: any)
         if(!isToday) {
             buttonAnimatedValue.value = withTiming(0, {duration: 300}, () => runOnJS(setIsToday)(true));
         }
-    }
+    };
 
     const toggleRight = () => {
         handleRight();
@@ -272,7 +278,7 @@ const FunctionField = memo(({handleLeft, handleRight, reset, locationName}: any)
         if(isToday) {
             buttonAnimatedValue.value = withTiming(50, {duration: 300}, () => runOnJS(setIsToday)(false));
         }
-    }
+    };
 
     return (
         <View style={ss.functionFieldContainer}>
@@ -283,7 +289,7 @@ const FunctionField = memo(({handleLeft, handleRight, reset, locationName}: any)
                         color: FontColor.light,
                         fontWeight: '800',
                         fontSize: FontSize.ss,
-                        transform: [{translateY: -1}]
+                        transform: [{translateY: -1}],
                     }}>重置</ScalingNotAllowedText>
                 </Pressable>
             </View>
@@ -295,8 +301,8 @@ const FunctionField = memo(({handleLeft, handleRight, reset, locationName}: any)
                         height: '100%',
                         borderRadius: 20,
                         position: 'absolute',
-                        left: 0
-                    }, buttonAnimatedStyle]}></Animated.View>
+                        left: 0,
+                    }, buttonAnimatedStyle]} />
                     <Pressable onPress={toggleLeft} style={{width: '50%'}}>
                         <ScalingNotAllowedText
                             style={[ss.shiftButtonText, {color: isToday ? FontColor.light : FontColor.dark}]}>今天</ScalingNotAllowedText>
@@ -312,18 +318,18 @@ const FunctionField = memo(({handleLeft, handleRight, reset, locationName}: any)
                         height: 10,
                         backgroundColor: BackgroundColor.iconPrimary,
                         borderRadius: 5,
-                        marginHorizontal: 5
-                    }}></View>
+                        marginHorizontal: 5,
+                    }} />
                     <ScalingNotAllowedText style={{
                         color: FontColor.grey,
                         fontSize: FontSize.s,
-                        transform: [{translateY: -2}]
+                        transform: [{translateY: -2}],
                     }}>可用教室</ScalingNotAllowedText>
                 </View>
             </View>
         </View>
-    )
-})
+    );
+});
 
 const ss = StyleSheet.create({
     titleBar: {
@@ -353,7 +359,7 @@ const ss = StyleSheet.create({
         fontSize: FontSize.ll,
         color: FontColor.light,
         fontWeight: '800',
-        fontFamily: FontFamily.main
+        fontFamily: FontFamily.main,
     },
 
     mainContainer: {
@@ -434,7 +440,7 @@ const ss = StyleSheet.create({
     periodItem: {
         height: '100%',
         width: '60%',
-        borderRadius: 15
+        borderRadius: 15,
     },
-})
+});
 export default EmptyClassroomPage;

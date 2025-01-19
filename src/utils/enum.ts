@@ -84,7 +84,6 @@ export enum Term {
 
 export enum ResourceCode {
     LocalFailed,
-    RemoteFailed,
     PermissionDenied,
     Successful = 200,
     DataExpired = 203,

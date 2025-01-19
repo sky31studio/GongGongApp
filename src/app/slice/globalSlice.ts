@@ -57,7 +57,8 @@ export const selectTheWeek = createSelector(
         const date = new Date(firstDate);
         const diff = diffDate(date, new Date(currentTime));
 
-        return Math.floor(diff / 7) + 1;
+        if(Math.floor(diff / 7) + 1 <= 21) return Math.floor(diff / 7) + 1;
+        return 21;
     }
 )
 

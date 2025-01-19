@@ -17,7 +17,7 @@ const FeedbackPage = ({navigation}: NavigationProps) => {
                 <Text style={ss.moreInfoTitle}>联系我们</Text>
             </View>
             <View style={{flex: 1, width: '100%', display: 'flex'}}>
-                <WebView style={{flex: 1}} source={{uri: 'http://175.178.63.53:8080/'}} nestedScrollEnabled={true}/>
+                <WebView style={{flex: 1}} source={{uri: 'http://feedback.leocoding.online'}} nestedScrollEnabled={true}/>
             </View>
         </View>
     )

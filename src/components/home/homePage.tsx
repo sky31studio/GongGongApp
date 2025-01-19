@@ -67,12 +67,11 @@ const Home = ({navigation}: NavigationProps) => {
                 realm.write(() => {
                     user.scoreList = JSON.stringify(msg.data);
                 })
-            } else if(msg.code === ResourceCode.PermissionDenied) {
+            } else if(msg.code === ResourceCode.InvalidToken) {
                 ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
                 return;
             } else {
                 ToastAndroid.showWithGravity('考试信息获取失败！', 1500, ToastAndroid.BOTTOM);
-                return;
             }
 
             msg = await Resources.getFirstDate(user.token);
@@ -82,6 +81,11 @@ const Home = ({navigation}: NavigationProps) => {
                     user.firstDate = new Date(msg.data.start);
                     user.termID = msg.data.termID;
                 })
+            } else if(msg.code === ResourceCode.InvalidToken) {
+                ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
+                return;
+            } else {
+                ToastAndroid.showWithGravity('日期信息获取失败！', 1500, ToastAndroid.BOTTOM);
             }
         }
 
