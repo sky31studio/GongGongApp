@@ -16,7 +16,13 @@ import {
     writeSelfAgendaList
 } from "../app/slice/agendaSlice.ts";
 import {resetCurrentTime, setDate} from "../app/slice/globalSlice.ts";
-import {initMinorScoreList, initScoreList, setMinorScoreOverview, setScoreOverview} from "../app/slice/scoreSlice.ts";
+import {
+    initMinorScoreList,
+    initScoreList,
+    setCompulsoryScoreOverview,
+    setMinorScoreOverview,
+    setScoreOverview
+} from "../app/slice/scoreSlice.ts";
 import {useAppDispatch, useAppSelector} from "../app/hooks.ts";
 import {initInfo} from "../app/slice/infoSlice.ts";
 import SpecificationPage from "./info/SpecificationPage.tsx";
@@ -161,6 +167,22 @@ const HomeNavigation = () => {
                 dispatch(setScoreOverview(JSON.parse(user.scoreOverview)));
             }
 
+            if(!user.compulsoryScoreOverview) {
+                const msg: ResourceMessage = await Resources.getCompulsoryScoreOverview(user.token);
+                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+                    dispatch(setCompulsoryScoreOverview(msg.data));
+                    console.log(' writing compulsoryScoreOverview...');
+                    realm.write(() => {
+                        user.compulsoryScoreOverview = JSON.stringify(msg.data);
+                    })
+                    console.log('compulsoryScoreOverview is written!');
+                } else {
+                    console.log('get compulsoryScoreOverview failed!');
+                }
+            } else {
+                dispatch(setCompulsoryScoreOverview(JSON.parse(user.compulsoryScoreOverview)));
+            }
+
             if(!user.scoreList) {
                 const msg: ResourceMessage = await Resources.getScore(user.token);
                 if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
@@ -180,7 +202,6 @@ const HomeNavigation = () => {
             if(!user.minorScoreList) {
                 const msg: ResourceMessage = await Resources.getMinorScore(user.token);
                 if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
-                    console.log(msg.data);
                     dispatch(initMinorScoreList(msg.data.scoreList));
                     dispatch(setMinorScoreOverview({
                         totalCredit: msg.data.totalCredit,
@@ -223,8 +244,6 @@ const HomeNavigation = () => {
                     start: user.firstDate.toString(),
                     termID: user.termID,
                 }));
-
-                console.log(111);
             }
 
             if(user.selfAgendaList) {

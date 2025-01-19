@@ -3,30 +3,55 @@ import Resources from "../../basic/Resources.ts";
 import {RootState} from "../store.ts";
 import {dealScore, SingleScoreList} from "../../utils/scoreUtils.ts";
 
+// TODO: 需要统一移动到overview字段中
 interface initialState {
-    gpa: number;
-    minorGpa: number;
-    classRank: number;
-    majorRank: number;
-    averageScore: number;
-    minorAverageScore: number;
-    minorTotalCredit: number;
-    minorCredit: number;
     scoreList: SingleScoreList[];
     minorScoreList: SingleScoreList[];
+    overview: {
+        compulsoryOverview: {
+            gpa: number;
+            classRank: number;
+            majorRank: number;
+            averageScore: number;
+        },
+        wholeOverview: {
+            gpa: number;
+            classRank: number;
+            majorRank: number;
+            averageScore: number;
+        },
+        minorOverview: {
+            averageScore: number;
+            totalCredit: number;
+            credit: number;
+            gpa: number;
+        }
+    };
 }
 
 const initialState: initialState = {
-    gpa: -1,
-    minorGpa: -1,
-    classRank: -1,
-    majorRank: -1,
-    averageScore: -1,
-    minorAverageScore: -1,
     scoreList: [],
     minorScoreList: [],
-    minorTotalCredit: 0,
-    minorCredit: 0,
+    overview: {
+        compulsoryOverview: {
+            gpa: -1,
+            classRank: -1,
+            majorRank: -1,
+            averageScore: -1,
+        },
+        wholeOverview: {
+            gpa: -1,
+            classRank: -1,
+            majorRank: -1,
+            averageScore: -1,
+        },
+        minorOverview: {
+            averageScore: -1,
+            totalCredit: -1,
+            credit: -1,
+            gpa: -1,
+        }
+    }
 }
 
 export const getScoreOverview = createAsyncThunk('score/getScore', async (token: string) => {
@@ -45,17 +70,24 @@ const scoreSlice = createSlice({
     initialState,
     reducers: {
         setScoreOverview: (state, action) => {
-            state.gpa = action.payload.gpa || -1;
-            state.classRank = action.payload.class_rank || -1;
-            state.majorRank = action.payload.major_rank || -1;
-            state.averageScore = action.payload.average_score || -1;
+            state.overview.wholeOverview.gpa = action.payload.gpa || -1;
+            state.overview.wholeOverview.classRank = action.payload.class_rank || -1;
+            state.overview.wholeOverview.majorRank = action.payload.major_rank || -1;
+            state.overview.wholeOverview.averageScore = action.payload.average_score || -1;
+        },
+
+        setCompulsoryScoreOverview: (state, action) => {
+            state.overview.compulsoryOverview.gpa = action.payload.gpa || -1;
+            state.overview.compulsoryOverview.classRank = action.payload.class_rank || -1;
+            state.overview.compulsoryOverview.majorRank = action.payload.major_rank || -1;
+            state.overview.compulsoryOverview.averageScore = action.payload.average_score || -1;
         },
 
         setMinorScoreOverview: (state, action) => {
-            state.minorTotalCredit = Number(action.payload.totalCredit[0]) || -1;
-            state.minorCredit = Number(action.payload.totalCredit[1]) || -1;
-            state.minorGpa = Number(action.payload.minorGpa) || -1;
-            state.minorAverageScore = Number(action.payload.minorAverageScore) || -1;
+            state.overview.minorOverview.averageScore = Number(action.payload.minorAverageScore) || -1;
+            state.overview.minorOverview.totalCredit = Number(action.payload.totalCredit[0]) || -1;
+            state.overview.minorOverview.credit = Number(action.payload.totalCredit[1]) || -1;
+            state.overview.minorOverview.gpa = Number(action.payload.minorGpa) || -1;
         },
 
         initMinorScoreList: (state, action) => {
@@ -67,12 +99,26 @@ const scoreSlice = createSlice({
         },
 
         clearScore: (state) => {
-            state.gpa = -1;
-            state.classRank = -1;
-            state.majorRank = -1;
-            state.averageScore = -1;
-            state.minorTotalCredit = -1;
-            state.minorCredit = -1;
+            state.overview = {
+                compulsoryOverview: {
+                    gpa: -1,
+                    classRank: -1,
+                    majorRank: -1,
+                    averageScore: -1,
+                },
+                wholeOverview: {
+                    gpa: -1,
+                    classRank: -1,
+                    majorRank: -1,
+                    averageScore: -1,
+                },
+                minorOverview: {
+                    averageScore: -1,
+                    totalCredit: -1,
+                    credit: -1,
+                    gpa: -1,
+                }
+            }
             state.scoreList = [];
             state.minorScoreList = [];
         }
@@ -88,19 +134,13 @@ const scoreSlice = createSlice({
     }
 })
 
-export const selectAverageScore = (state: RootState) => state.score.averageScore;
-export const selectGpa = (state: RootState) => state.score.gpa;
-export const selectClassRank = (state: RootState) => state.score.classRank;
-export const selectMajorRank = (state: RootState) => state.score.majorRank;
 export const selectScoreList = (state: RootState) => state.score.scoreList;
 export const selectMinorScoreList = (state: RootState) => state.score.minorScoreList;
-export const selectMinorTotalCredit = (state: RootState) => state.score.minorTotalCredit;
-export const selectMinorCredit = (state: RootState) => state.score.minorCredit;
-export const selectMinorGpa = (state: RootState) => state.score.minorGpa;
-export const selectMinorAverageScore = (state: RootState) => state.score.minorAverageScore;
+export const selectOverview = (state: RootState) => state.score.overview;
 
 export const {
     setScoreOverview,
+    setCompulsoryScoreOverview,
     initScoreList,
     clearScore,
     setMinorScoreOverview,

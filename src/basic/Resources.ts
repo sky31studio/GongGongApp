@@ -1,7 +1,7 @@
-import axios from "axios";
-import {hostUrl} from "../config/UrlConfig.ts";
-import {sleep} from "../utils/globalUtils.ts";
-import {LoginCode, ResourceCode} from "../utils/enum.ts";
+import axios from 'axios';
+import {hostUrl} from '../config/UrlConfig.ts';
+import {sleep} from '../utils/globalUtils.ts';
+import {LoginCode, ResourceCode} from '../utils/enum.ts';
 
 const rootUrl = hostUrl;
 const MAX_ATTEMPTS = 5;
@@ -48,27 +48,30 @@ class Resources {
             while(true) {
                 const response = await axios.get(url, {
                     headers: {
-                        'token': token
-                    }
+                        'token': token,
+                    },
                 });
 
                 const status: number = response.status;
                 if(status === 200) {
                     return {
                         code: ResourceCode.Successful,
-                        data: response.data.data
-                    }
+                        data: response.data.data,
+                    };
                 }
 
+                // TODO: 把过期数据塞进去
                 if(status === 203) {
                     const retryResult = await this.retryGetData(url, token, 1000, 5);
-                    if(retryResult) return retryResult;
+                    if(retryResult) {return retryResult;}
                 }
 
                 count++;
-                if(count >= MAX_ATTEMPTS) return {
-                    code: status,
-                    message: GET_MSG[status] || '未知错误',
+                if(count >= MAX_ATTEMPTS) {
+                    return {
+                        code: status,
+                        message: GET_MSG[status] || '未知错误',
+                    };
                 }
 
                 await sleep(interval);
@@ -77,8 +80,8 @@ class Resources {
         } catch(error) {
             return {
                 code: ResourceCode.LocalFailed,
-                data: error
-            }
+                data: error,
+            };
         }
     }
 
@@ -94,12 +97,12 @@ class Resources {
             while(cnt--) {
                 response = await axios.get(url, {
                     headers: {
-                        'token': token
-                    }
+                        'token': token,
+                    },
                 });
 
                 const status: number = response.status;
-                if(status == 203) {
+                if(status === 203) {
                     await sleep(interval);
                     continue;
                 }
@@ -107,30 +110,30 @@ class Resources {
                 if(status === 200) {
                     return {
                         code: ResourceCode.Successful,
-                        data: response.data.data
-                    }
+                        data: response.data.data,
+                    };
                 }
 
                 return {
                     code: status,
                     message: GET_MSG[status] || '未知错误',
-                }
+                };
             }
 
             if(response) {
                 return {
                     code: response.status,
                     data: response.data.data,
-                    message: GET_MSG[response.status]
-                }
+                    message: GET_MSG[response.status],
+                };
             }
 
         } catch(error) {
             console.log(error);
             return {
                 code: -1,
-                message: 'axios error'
-            }
+                message: 'axios error',
+            };
         }
     }
 
@@ -145,14 +148,14 @@ class Resources {
             return {
                 code: response.code,
                 data: response.data.courses,
-                message: response.message
-            }
+                message: response.message,
+            };
         }
 
         return {
             code: response.code,
-            message: response.message
-        }
+            message: response.message,
+        };
     }
 
     /**
@@ -167,31 +170,31 @@ class Resources {
                 password: password,
             }, {
                 headers: {
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/json',
+                },
             });
 
             // response状态码
             const status = response.status;
             if (status === 200) {
                 return {
-                    token: response.data.data['token'],
+                    token: response.data.data.token,
                     code: LoginCode.Successful,
                     message: LOGIN_MSG[status],
-                }
+                };
             }
 
             return {
                 code: LoginCode[status],
-                message: LOGIN_MSG[status]
+                message: LOGIN_MSG[status],
             };
 
         } catch (error) {
             console.log(error);
             return {
                 code: -1,
-                message: 'axios error'
-            }
+                message: 'axios error',
+            };
         }
     }
 
@@ -206,14 +209,14 @@ class Resources {
             return {
                 code: response.code,
                 data: response.data.exams,
-                message: response.message
-            }
+                message: response.message,
+            };
         }
 
         return {
             code: response.code,
-            message: response.message
-        }
+            message: response.message,
+        };
     }
 
     /**
@@ -227,14 +230,14 @@ class Resources {
             return {
                 code: response.code,
                 data: response.data.scores,
-                message: response.message
-            }
+                message: response.message,
+            };
         }
 
         return {
             code: response.code,
-            message: response.message
-        }
+            message: response.message,
+        };
     }
 
     /**
@@ -245,22 +248,24 @@ class Resources {
         const response = await this.getData(`${rootUrl}/minor/scores`, token, 1500);
 
         if(response.data) {
+            console.log('MinorScore');
+            console.log(response.data);
             return {
                 code: response.code,
                 data: {
                     scoreList: response.data.scores,
                     totalCredit: response.data.total_credit,
                     gpa: response.data.gpa,
-                    averageScore: response.data.average_score
+                    averageScore: response.data.average_score,
                 },
-                message: response.message
-            }
+                message: response.message,
+            };
         }
 
         return {
             code: response.code,
-            message: response.message
-        }
+            message: response.message,
+        };
     }
 
     /**
@@ -271,16 +276,41 @@ class Resources {
         const response = await this.getData(`${rootUrl}/rank`, token, 2000);
 
         if(response.data) {
+            console.log('ScoreOverview');
+            console.log(response.data);
             return {
                 code: response.code,
                 data: response.data,
-                message: response.message
+                message: response.message,
+            };
+        }
+
+        return {
+            code: response.code,
+            message: response.message,
+        };
+    }
+
+    /**
+     * 获取必修成绩总览
+     * @param token
+     */
+    public static async getCompulsoryScoreOverview(token: string): Promise<ResourceMessage> {
+        const response = await this.getData(`${rootUrl}/compulsory/rank`, token, 2000);
+
+        if(response.data) {
+            console.log('CompulsoryScore');
+            console.log(response.data);
+            return {
+                code: response.code,
+                data: response.data,
+                message: response.message,
             }
         }
 
         return {
             code: response.code,
-            message: response.message
+            message: response.message,
         }
     }
 
@@ -295,14 +325,14 @@ class Resources {
             return {
                 code: response.code,
                 data: response.data,
-                message: response.message
-            }
+                message: response.message,
+            };
         }
 
         return {
             code: response.code,
-            message: response.message
-        }
+            message: response.message,
+        };
     }
 
     /**
@@ -316,14 +346,14 @@ class Resources {
             return {
                 code: response.code,
                 data: response.data,
-                message: response.message
-            }
+                message: response.message,
+            };
         }
 
         return {
             code: response.code,
-            message: response.message
-        }
+            message: response.message,
+        };
     }
 
     /**
@@ -337,14 +367,14 @@ class Resources {
             return {
                 code: response.code,
                 data: response.data.classrooms,
-                message: response.message
-            }
+                message: response.message,
+            };
         }
 
         return {
             code: response.code,
-            message: response.message
-        }
+            message: response.message,
+        };
     }
 
     /**
@@ -358,14 +388,14 @@ class Resources {
             return {
                 code: response.code,
                 data: response.data.classrooms,
-                message: response.message
-            }
+                message: response.message,
+            };
         }
 
         return {
             code: response.code,
-            message: response.message
-        }
+            message: response.message,
+        };
     }
 }
 
