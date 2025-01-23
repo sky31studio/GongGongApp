@@ -31,7 +31,7 @@ import AddBoard from "./agenda/addBoard.tsx";
 import Resources, {ResourceMessage} from "../../basic/Resources.ts";
 import {ResourceCode} from "../../utils/enum.ts";
 import {useFocusEffect, useIsFocused} from "@react-navigation/native";
-import {setDate} from "../../app/slice/globalSlice.ts";
+import {logoutSuccessful, setDate} from "../../app/slice/globalSlice.ts";
 
 export interface NavigationProps {
     navigation: {
@@ -125,9 +125,18 @@ const Home = ({navigation}: NavigationProps) => {
 }
 
 const FunctionBar = ({navigation, isFocused}: {navigation: any, isFocused: boolean}) => {
+    const user = useQuery<GongUser>('GongUser')[0];
+
+    const dispatch = useAppDispatch();
+
     const [disabled, setDisabled] = useState<boolean>(false);
 
     const toEmptyClassroomPage = useCallback(() => {
+        if(!user) {
+            dispatch(logoutSuccessful());
+            ToastAndroid.showWithGravity('暂未登录！', 1500, ToastAndroid.BOTTOM);
+        }
+
         if(!disabled) {
             setDisabled(true);
             navigation.navigate("EmptyClassroomPage");
@@ -135,6 +144,12 @@ const FunctionBar = ({navigation, isFocused}: {navigation: any, isFocused: boole
     }, [disabled]);
 
     const toTablePage = useCallback(() => {
+        if(!user) {
+            dispatch(logoutSuccessful());
+            ToastAndroid.showWithGravity('暂未登录！', 1500, ToastAndroid.BOTTOM);
+            return;
+        }
+
         if(!disabled) {
             setDisabled(true);
             navigation.navigate("TablePage");
@@ -142,9 +157,16 @@ const FunctionBar = ({navigation, isFocused}: {navigation: any, isFocused: boole
     }, [disabled]);
 
     const toScorePage = useCallback(() => {
+        if(!user) {
+            dispatch(logoutSuccessful());
+            ToastAndroid.showWithGravity('暂未登录！', 1500, ToastAndroid.BOTTOM);
+            return;
+        }
+
         if(!disabled) {
             setDisabled(true);
             navigation.navigate("ScorePage");
+            return;
         }
     }, [disabled]);
 
