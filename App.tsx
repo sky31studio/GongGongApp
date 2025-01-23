@@ -1,21 +1,30 @@
 import React, {createContext, useEffect} from 'react';
-import {Dimensions, SafeAreaView, StatusBar, StyleSheet, useColorScheme, View,} from 'react-native';
-import {Colors,} from 'react-native/Libraries/NewAppScreen';
-import {NavigationContainer} from "@react-navigation/native";
-import {Provider} from "react-redux";
-import {store} from "./src/app/store.ts";
-import HomeNavigation from "./src/components/HomeNavigation.tsx";
-import {useAppSelector} from "./src/app/hooks.ts";
-import {selectIsLogin} from "./src/app/slice/globalSlice.ts";
-import LoginNavigation from "./src/components/LoginNavigation.tsx";
-import {RealmProvider} from "@realm/react";
-import GongUser from "./src/dao/object/User.ts";
-import {configureReanimatedLogger, ReanimatedLogLevel,} from 'react-native-reanimated';
-import {createTestChannel, createTestNotificationWithDelay} from "./src/utils/notificationUtils.ts";
+import {
+  Dimensions,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
+import {NavigationContainer} from '@react-navigation/native';
+import {Provider} from 'react-redux';
+import {store} from './src/app/store.ts';
+import HomeNavigation from './src/components/HomeNavigation.tsx';
+import {useAppSelector} from './src/app/hooks.ts';
+import {selectIsLogin} from './src/app/slice/globalSlice.ts';
+import LoginNavigation from './src/components/LoginNavigation.tsx';
+import {RealmProvider} from '@realm/react';
+import GongUser from './src/dao/object/User.ts';
+import {
+  configureReanimatedLogger,
+  ReanimatedLogLevel,
+} from 'react-native-reanimated';
 
 configureReanimatedLogger({
-    level: ReanimatedLogLevel.warn,
-    strict: false,
+  level: ReanimatedLogLevel.warn,
+  strict: false,
 });
 
 const {height: screenHeight} = Dimensions.get('window');
@@ -60,12 +69,6 @@ const SafeArea = () => {
         }, 8000);
 
         return () => clearInterval(timer);
-    }, []);
-
-    useEffect(() => {
-        createTestChannel().then(() => {
-            createTestNotificationWithDelay(5000).then();
-        })
     }, []);
 
     return (

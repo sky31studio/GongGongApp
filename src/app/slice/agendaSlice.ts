@@ -3,7 +3,6 @@ import Resources from "../../basic/Resources.ts";
 import {RootState} from "../store.ts";
 import {dealExams, generateID} from "../../utils/agendaUtils.ts";
 import {selectCurrentTime} from "./globalSlice.ts";
-import {addExamNotification, removeNotification} from "../../utils/notificationUtils.ts";
 
 export const fetchExamData = createAsyncThunk('exam/fetchExamData', async (token: string) => {
     const response = await Resources.getExam(token);
@@ -92,20 +91,11 @@ const agendaSlice = createSlice({
             action.payload.id = id;
             state.selfList.push({...action.payload});
             state.selfList.sort(compare);
-
-            if(action.payload.startTime !== '') {
-                addExamNotification(new Date(action.payload.startTime), {id: id, title: '考试通知'})
-                    .then(() => {
-                        console.log(`${action.payload.name}'s notification added!`);
-                    });
-            }
         },
 
         removeSelf: (state, action) => {
             for(let self of state.selfList) {
                 if(self.id === action.payload) {
-                    if(self.startTime !== '') removeNotification(self.id).then();
-
                     state.selfList.splice(state.selfList.indexOf(self), 1);
                     return;
                 }
@@ -179,13 +169,6 @@ const agendaSlice = createSlice({
                 })
                 .map((exam: any) => {
                     const id = generateID(exam.name, exam.startTime, exam.endTime);
-
-                    if(exam.startTime !== '') {
-                        addExamNotification(new Date(exam.startTime), {id: id, title: '考试通知'})
-                            .then(() => {
-                                console.log(`${exam.name}'s notification added!`);
-                            });
-                    }
 
                     return {
                         id: id,

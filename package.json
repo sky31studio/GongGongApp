@@ -10,7 +10,6 @@
     "test": "jest"
   },
   "dependencies": {
-    "@notifee/react-native": "^9.1.2",
     "@react-native-async-storage/async-storage": "^2.0.0",
     "@react-native-community/datetimepicker": "^8.2.0",
     "@react-navigation/bottom-tabs": "^6.6.1",
