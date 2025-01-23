@@ -60,10 +60,13 @@ class Resources {
                     };
                 }
 
-                // TODO: 把过期数据塞进去
                 if(status === 203) {
-                    const retryResult = await this.retryGetData(url, token, 1000, 5);
-                    if(retryResult) {return retryResult;}
+                    return {
+                        code: ResourceCode.DataExpired,
+                        data: response.data.data,
+                        message: GET_MSG[status],
+                    }
+                    // if(retryResult) {return retryResult;}
                 }
 
                 count++;
@@ -85,57 +88,57 @@ class Resources {
         }
     }
 
-    public static async retryGetData(
-        url: string,
-        token: string,
-        interval: number,
-        cnt: number
-    ): Promise<ResourceMessage | undefined> {
-        try {
-
-            let response;
-            while(cnt--) {
-                response = await axios.get(url, {
-                    headers: {
-                        'token': token,
-                    },
-                });
-
-                const status: number = response.status;
-                if(status === 203) {
-                    await sleep(interval);
-                    continue;
-                }
-
-                if(status === 200) {
-                    return {
-                        code: ResourceCode.Successful,
-                        data: response.data.data,
-                    };
-                }
-
-                return {
-                    code: status,
-                    message: GET_MSG[status] || '未知错误',
-                };
-            }
-
-            if(response) {
-                return {
-                    code: response.status,
-                    data: response.data.data,
-                    message: GET_MSG[response.status],
-                };
-            }
-
-        } catch(error) {
-            console.log(error);
-            return {
-                code: -1,
-                message: 'axios error',
-            };
-        }
-    }
+    // public static async retryGetData(
+    //     url: string,
+    //     token: string,
+    //     interval: number,
+    //     cnt: number
+    // ): Promise<ResourceMessage | undefined> {
+    //     try {
+    //
+    //         let response;
+    //         while(cnt--) {
+    //             response = await axios.get(url, {
+    //                 headers: {
+    //                     'token': token,
+    //                 },
+    //             });
+    //
+    //             const status: number = response.status;
+    //             if(status === 203) {
+    //                 await sleep(interval);
+    //                 continue;
+    //             }
+    //
+    //             if(status === 200) {
+    //                 return {
+    //                     code: ResourceCode.Successful,
+    //                     data: response.data.data,
+    //                 };
+    //             }
+    //
+    //             return {
+    //                 code: status,
+    //                 message: GET_MSG[status] || '未知错误',
+    //             };
+    //         }
+    //
+    //         if(response) {
+    //             return {
+    //                 code: response.status,
+    //                 data: response.data.data,
+    //                 message: GET_MSG[response.status],
+    //             };
+    //         }
+    //
+    //     } catch(error) {
+    //         console.log(error);
+    //         return {
+    //             code: -1,
+    //             message: 'axios error',
+    //         };
+    //     }
+    // }
 
     /**
      * 获取课表信息
@@ -248,8 +251,6 @@ class Resources {
         const response = await this.getData(`${rootUrl}/minor/scores`, token, 1500);
 
         if(response.data) {
-            console.log('MinorScore');
-            console.log(response.data);
             return {
                 code: response.code,
                 data: {
@@ -276,8 +277,6 @@ class Resources {
         const response = await this.getData(`${rootUrl}/rank`, token, 2000);
 
         if(response.data) {
-            console.log('ScoreOverview');
-            console.log(response.data);
             return {
                 code: response.code,
                 data: response.data,
@@ -299,8 +298,6 @@ class Resources {
         const response = await this.getData(`${rootUrl}/compulsory/rank`, token, 2000);
 
         if(response.data) {
-            console.log('CompulsoryScore');
-            console.log(response.data);
             return {
                 code: response.code,
                 data: response.data,
