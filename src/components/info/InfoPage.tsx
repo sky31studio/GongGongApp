@@ -1,21 +1,42 @@
-import React, {useCallback, useEffect, useLayoutEffect, useMemo, useState} from "react";
-import {Image, Modal, Pressable, StyleSheet, Text, View} from "react-native";
-import {BackgroundColor, FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
-import {SvgXml} from "react-native-svg";
-import XMLResources from "../../basic/XMLResources.ts";
-import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
-import {agendaResetAll, selectCurrentAgendaNumber} from "../../app/slice/agendaSlice.ts";
-import {resetSchedule, selectCurrentCourseNumber} from "../../app/slice/scheduleSlice.ts";
-import {clearInfo, selectStudentID, selectStudentName} from "../../app/slice/infoSlice.ts";
-import {logoutSuccessful, selectIsLogin, selectTokenIsValid} from "../../app/slice/globalSlice.ts";
-import {NavigationProps} from "../home/homePage.tsx";
-import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
-import {useQuery, useRealm} from "@realm/react";
-import GongUser from "../../dao/object/User.ts";
-import {getVersion} from "react-native-device-info";
-import {clearScore} from "../../app/slice/scoreSlice.ts";
-import {useFocusEffect} from "@react-navigation/native";
-import Animated, {interpolate, useAnimatedStyle, useSharedValue, withDelay, withTiming} from "react-native-reanimated";
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import {Image, Modal, Pressable, StyleSheet, Text, View} from 'react-native';
+import {
+  BackgroundColor,
+  FontColor,
+  FontSize,
+} from '../../config/globalStyleSheetConfig.ts';
+import {SvgXml} from 'react-native-svg';
+import XMLResources from '../../basic/XMLResources.ts';
+import {useAppDispatch, useAppSelector} from '../../app/hooks.ts';
+import {
+  agendaResetAll,
+  selectCurrentAgendaNumber,
+} from '../../app/slice/agendaSlice.ts';
+import {
+  resetSchedule,
+  selectCurrentCourseNumber,
+} from '../../app/slice/scheduleSlice.ts';
+import {
+  clearInfo,
+  selectStudentID,
+  selectStudentName,
+} from '../../app/slice/infoSlice.ts';
+import {logoutSuccessful} from '../../app/slice/globalSlice.ts';
+import {NavigationProps} from '../home/homePage.tsx';
+import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
+import {useQuery, useRealm} from '@realm/react';
+import GongUser from '../../dao/object/User.ts';
+import {getVersion} from 'react-native-device-info';
+import {clearScore} from '../../app/slice/scoreSlice.ts';
+import {useFocusEffect} from '@react-navigation/native';
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
+import {downloadAndInstallApk} from "../../utils/AndoridModuleUtils.ts";
 
 const InfoPage = ({navigation}: NavigationProps) => {
     // realm
@@ -69,6 +90,10 @@ const InfoPage = ({navigation}: NavigationProps) => {
 
     const toLogin = () => {
         dispatch(logoutSuccessful());
+    }
+
+    const handleCheck = () => {
+        downloadAndInstallApk("http://app.leocoding.online/app.apk");
     }
 
     useEffect(() => {
@@ -156,7 +181,8 @@ const InfoPage = ({navigation}: NavigationProps) => {
                     <NavigationBox title='用户协议' handleNavigation={() => navigation.navigate('UserAgreementPage')}/>
                     <NavigationBox title='隐私条款' handleNavigation={() => navigation.navigate('PrivacyPolicyPage')}/>
                     {/*<NavigationBox title='社区规范' handleNavigation={() => navigation.navigate('SpecificationPage')}/>*/}
-                    <View
+                    <Pressable
+                        onPress={handleCheck}
                         style={{
                             width: '100%',
                             paddingVertical: 12,
@@ -181,7 +207,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                                 color: FontColor.dark,
                             }}
                         >{version}</ScalingNotAllowedText>
-                    </View>
+                    </Pressable>
                 </Animated.View>
                 {/* 登录/退出登录 按钮 */}
                 <Pressable
