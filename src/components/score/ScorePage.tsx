@@ -19,21 +19,23 @@ import {NavigationProps} from '../home/homePage.tsx';
 import {MinorScore, SingleScore} from './SingleScore.tsx';
 import {useAppDispatch, useAppSelector} from '../../app/hooks.ts';
 import {
-    initMinorScoreList,
-    initScoreList,
-    selectMinorScoreList,
-    selectOverview,
-    selectScoreList, setCompulsoryScoreOverview,
-    setMinorScoreOverview,
-    setScoreOverview,
+  initMinorScoreList,
+  initScoreList,
+  selectMinorScoreList,
+  selectOverview,
+  selectScoreList,
+  setCompulsoryScoreOverview,
+  setMinorScoreOverview,
+  setScoreOverview,
 } from '../../app/slice/scoreSlice.ts';
 import {useQuery, useRealm} from '@realm/react';
 import GongUser from '../../dao/object/User.ts';
-import Resources, {ResourceMessage} from '../../basic/Resources.ts';
+import Resources from '../../basic/Resources.ts';
 import {ResourceCode} from '../../utils/enum.ts';
 import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
+import {AnimatedScrollView} from 'react-native-reanimated/lib/typescript/component/ScrollView';
+import {sleep} from '../../utils/globalUtils.ts';
 import ScrollView = Animated.ScrollView;
-import {AnimatedScrollView} from "react-native-reanimated/lib/typescript/component/ScrollView";
 
 const ScorePage = ({navigation}: NavigationProps) => {
   const dispatch = useAppDispatch();
@@ -60,50 +62,57 @@ const ScorePage = ({navigation}: NavigationProps) => {
       return;
     }
 
-    const getData = async () => {
-      console.log('begin to refresh');
-      let msg: ResourceMessage = await Resources.getScoreOverview(user.token);
-      if (msg.code === ResourceCode.Successful) {
+    const scoreOverviewPromise = new Promise(async (resolve, reject) => {
+      const msg = await Resources.getScoreOverview(user.token);
+      if (
+        msg.code === ResourceCode.Successful ||
+        msg.code === ResourceCode.DataExpired
+      ) {
         dispatch(setScoreOverview(msg.data));
         realm.write(() => {
           user.scoreOverview = JSON.stringify(msg.data);
         });
+        resolve({
+          code: msg.code,
+          msg: msg.code === 200 ? undefined : '成绩总览数据更新中',
+        });
+      } else if (msg.code === ResourceCode.InvalidToken) {
+        reject('身份失效，请重新登录！');
       } else {
-        ToastAndroid.showWithGravity(
-          '总成绩获取失败',
-          1500,
-          ToastAndroid.BOTTOM,
-        );
-        return;
+        resolve('成绩总览获取失败');
       }
+    });
 
-      console.log('get scoreOverview');
-
-      msg = await Resources.getScore(user.token);
-      if (msg.code === ResourceCode.Successful) {
+    const scoreListPromise = new Promise(async (resolve, reject) => {
+      const msg = await Resources.getScore(user.token);
+      if (
+        msg.code === ResourceCode.Successful ||
+        msg.code === ResourceCode.DataExpired
+      ) {
         dispatch(initScoreList(msg.data));
         realm.write(() => {
           user.scoreList = JSON.stringify(msg.data);
         });
+        resolve({
+          code: msg.code,
+          msg: msg.code === 200 ? undefined : '成绩表单数据更新中',
+        });
       } else if (msg.code === ResourceCode.InvalidToken) {
-        ToastAndroid.showWithGravity(
-          '身份失效，请重新登录！',
-          1500,
-          ToastAndroid.BOTTOM,
-        );
-        return;
+        reject('身份失效，请重新登录！');
       } else {
-        ToastAndroid.showWithGravity(
-          '成绩表单获取失败！',
-          1500,
-          ToastAndroid.BOTTOM,
-        );
+        resolve({
+            code: msg.code,
+            msg: '成绩表单获取失败',
+        });
       }
+    });
 
-      console.log('get score');
-
-      msg = await Resources.getMinorScore(user.token);
-      if (msg.code === ResourceCode.Successful) {
+    const minorScoreListPromise = new Promise(async (resolve, reject) => {
+      const msg = await Resources.getMinorScore(user.token);
+      if (
+        msg.code === ResourceCode.Successful ||
+        msg.code === ResourceCode.DataExpired
+      ) {
         dispatch(initMinorScoreList(msg.data.scoreList));
         dispatch(
           setMinorScoreOverview({
@@ -120,47 +129,75 @@ const ScorePage = ({navigation}: NavigationProps) => {
             minorAverageScore: msg.data.averageScore,
           });
         });
+        resolve({
+          code: msg.code,
+          msg: msg.code === 200 ? undefined : '辅修表单数据更新中',
+        });
       } else if (msg.code === ResourceCode.InvalidToken) {
-        ToastAndroid.showWithGravity(
-          '身份失效，请重新登录！',
-          1500,
-          ToastAndroid.BOTTOM,
-        );
-        return;
+        reject('身份失效，请重新登录！');
       } else {
-        ToastAndroid.showWithGravity(
-          '辅修表单获取失败！',
-          1500,
-          ToastAndroid.BOTTOM,
-        );
+        resolve({
+            code: msg.code,
+            msg: '辅修表单获取失败',
+        });
       }
+    });
 
-      console.log('get minorScore');
-
-      msg = await Resources.getCompulsoryScoreOverview(user.token);
-      if (msg.code === ResourceCode.Successful) {
+    const compulsoryOverviewPromise = new Promise(async (resolve, reject) => {
+      const msg = await Resources.getCompulsoryScoreOverview(user.token);
+      if (
+        msg.code === ResourceCode.Successful ||
+        msg.code === ResourceCode.DataExpired
+      ) {
         console.log('compulsoryOverview');
         dispatch(setCompulsoryScoreOverview(msg.data));
-          realm.write(() => {
-              user.compulsoryScoreOverview = JSON.stringify(msg.data);
-          });
+        realm.write(() => {
+          user.compulsoryScoreOverview = JSON.stringify(msg.data);
+        });
+        resolve({
+          code: msg.code,
+          msg: msg.code === 200 ? undefined : '必修成绩总览数据更新中',
+        });
       } else if (msg.code === ResourceCode.InvalidToken) {
-          ToastAndroid.showWithGravity(
-              '身份失效，请重新登录！',
-              1500,
-              ToastAndroid.BOTTOM,
-          );
-          return;
+        reject('身份失效，请重新登录！');
       } else {
-          ToastAndroid.showWithGravity(
-              '必修成绩总览获取失败！',
-              1500,
-              ToastAndroid.BOTTOM,
-          );
+        resolve({
+            code: msg.code,
+            msg: '必修成绩总览获取失败',
+        });
       }
-    };
+    });
 
-    getData().then(() => setRefreshing(false));
+    Promise.all([
+      scoreOverviewPromise,
+      scoreListPromise,
+      minorScoreListPromise,
+      compulsoryOverviewPromise,
+    ])
+      .then(async (results: any[]) => {
+        let flag = false;
+        for (let result of results) {
+          if (result.code !== 200) {
+            ToastAndroid.showWithGravity(result.msg, 1500, ToastAndroid.BOTTOM);
+            flag = true;
+            await sleep(1500);
+          }
+        }
+
+        if (!flag) {
+          ToastAndroid.showWithGravity(
+            '数据刷新完成',
+            1500,
+            ToastAndroid.BOTTOM,
+          );
+        }
+
+        setRefreshing(false);
+      })
+      .catch((error: string) => {
+        ToastAndroid.showWithGravity(error, 1500, ToastAndroid.BOTTOM);
+        setRefreshing(false);
+      });
   };
 
   const handleExchange = () => {
@@ -171,14 +208,14 @@ const ScorePage = ({navigation}: NavigationProps) => {
     navigation.navigate('TabNavigation');
   };
 
-    useEffect(() => {
-        setRefreshing(true);
-        onRefresh();
-    }, []);
+  useEffect(() => {
+    setRefreshing(true);
+    onRefresh();
+  }, []);
 
   return (
     <ScrollView
-        ref={scrollViewRef}
+      ref={scrollViewRef}
       contentContainerStyle={{flex: 1}}
       nestedScrollEnabled={true}
       refreshControl={
@@ -201,28 +238,36 @@ const ScorePage = ({navigation}: NavigationProps) => {
         </View>
         <View style={ss.mainContainer}>
           <View style={ss.totalContainer}>
-              {listIndex == 0 ? (
-                  <Pressable
-                      onPress={handleExchange}
-                      style={{
-                          width: 40,
-                          height: 20,
-                          backgroundColor: BackgroundColor.primary,
-                          borderRadius: 10,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                      }}>
-                      <ScalingNotAllowedText
-                          style={{fontSize: FontSize.s, color: FontColor.light}}>
-                          切换
-                      </ScalingNotAllowedText>
-                  </Pressable>
-              ) : (
-                  <></>
-              )}
+            {listIndex == 0 ? (
+              <Pressable
+                hitSlop={{top: 5, bottom: 5, left: 10, right: 10}}
+                onPress={handleExchange}
+                style={{
+                  alignSelf: 'flex-end',
+                  marginTop: 10,
+                  marginRight: 15,
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <SvgXml
+                  style={{marginRight: 5}}
+                  xml={isCompulsory ? XMLResources.exam : XMLResources.notExam}
+                  width="12"
+                  height="12"
+                />
+                <ScalingNotAllowedText
+                  style={{fontSize: FontSize.s, color: FontColor.grey}}>
+                  仅必修
+                </ScalingNotAllowedText>
+              </Pressable>
+            ) : (
+              <></>
+            )}
             {listIndex === 0 ? (
               isCompulsory ? (
-                <>
+                <View style={ss.overviewContainer}>
                   <ScoreBox
                     score={overview.compulsoryOverview.gpa}
                     text={'必修绩点'}
@@ -239,9 +284,9 @@ const ScorePage = ({navigation}: NavigationProps) => {
                     score={overview.compulsoryOverview.averageScore}
                     text={'平均成绩'}
                   />
-                </>
+                </View>
               ) : (
-                <>
+                <View style={ss.overviewContainer}>
                   <ScoreBox
                     score={overview.wholeOverview.gpa}
                     text={'平均绩点'}
@@ -258,10 +303,10 @@ const ScorePage = ({navigation}: NavigationProps) => {
                     score={overview.wholeOverview.averageScore}
                     text={'平均成绩'}
                   />
-                </>
+                </View>
               )
             ) : (
-              <>
+              <View style={ss.overviewContainer}>
                 <ScoreBox
                   score={overview.minorOverview.gpa}
                   text={'平均绩点'}
@@ -278,7 +323,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
                   score={overview.minorOverview.averageScore}
                   text={'平均成绩'}
                 />
-              </>
+              </View>
             )}
           </View>
           <View style={ss.buttonContainer}>
@@ -404,9 +449,17 @@ const ss = StyleSheet.create({
 
     totalContainer: {
         width: '86%',
-        height: 70,
+        height: 90,
         borderRadius: 13,
         backgroundColor: '#fff',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+    },
+
+    overviewContainer: {
+        width: '100%',
+        height: 70,
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-around',

@@ -1,6 +1,6 @@
 import {FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, ToastAndroid, View} from 'react-native';
 import {BackgroundColor, FontColor, FontFamily, FontSize} from '../../config/globalStyleSheetConfig.ts';
-import React, {memo, useCallback, useMemo, useState} from 'react';
+import React, {memo, useCallback, useEffect, useMemo, useState} from 'react';
 import {SvgXml} from 'react-native-svg';
 import XMLResources from '../../basic/XMLResources.ts';
 import {NavigationProps} from '../home/homePage.tsx';
@@ -18,6 +18,9 @@ import {useQuery, useRealm} from '@realm/react';
 import GongUser from '../../dao/object/User.ts';
 import Resources, {ResourceMessage} from '../../basic/Resources.ts';
 import {ResourceCode} from '../../utils/enum.ts';
+import {sleep} from "../../utils/globalUtils.ts";
+
+// TODO 没有登录的情况下，进入的界面
 
 const periods = ['1-2', '3-4', '5-6', '7-8', '9-11'];
 /**
@@ -48,6 +51,13 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
     // 从空教室数据中筛选出的选中地点以及选中课程节次的数据
     const locationData = useMemo(() => {
         const classData = isToday ? todayData : tomorrowData;
+
+        console.log(classData[0].classroom);
+
+        if(classData.length === 0) {
+            return [];
+        }
+
         let selectedData: any[] = classData[currentIndex].classroom;
 
         return selectedData.filter((item: any) => {
@@ -88,6 +98,48 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
             return;
         }
 
+        const todayPromise = new Promise(async (resolve, reject) => {
+            const msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token);
+            if(msg.code === ResourceCode.Successful || msg.code === ResourceCode.DataExpired) {
+                dispatch(setTodayEmptyClassroomStatus(msg.data));
+                realm.write(() => {
+                    user.todayClassroom = JSON.stringify(msg.data);
+                });
+                resolve({
+                    code: msg.code,
+                    msg: msg.code === 200 ? undefined : '今日空教室数据更新中',
+                })
+            } else if(msg.code === ResourceCode.InvalidToken) {
+                reject('身份失效，请重新登录！');
+            } else {
+                resolve({
+                    code: msg.code,
+                    msg: '今日空教室信息获取失败！',
+                });
+            }
+        })
+
+        const tomorrowPromise = new Promise(async (resolve, reject) => {
+            const msg: ResourceMessage = await Resources.getTomorrowClassroomStatus(user.token);
+            if(msg.code === ResourceCode.Successful || msg.code === ResourceCode.DataExpired) {
+                dispatch(setTodayEmptyClassroomStatus(msg.data));
+                realm.write(() => {
+                    user.todayClassroom = JSON.stringify(msg.data);
+                });
+                resolve({
+                    code: msg.code,
+                    msg: msg.code === 200 ? undefined : '明日空教室数据更新中',
+                })
+            } else if(msg.code === ResourceCode.InvalidToken) {
+                reject('身份失效，请重新登录！');
+            } else {
+                resolve({
+                    code: msg.code,
+                    msg: '明日空教室信息获取失败！',
+                });
+            }
+        })
+
         const fetchData = async () => {
             let msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token);
             if(msg.code === ResourceCode.Successful) {
@@ -116,15 +168,38 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
             }
         };
 
+        Promise.all([todayPromise, tomorrowPromise])
+            .then(async (results: any[]) => {
+                let flag = false;
+                for(let result of results) {
+                    if(result.code !== 200) {
+                        ToastAndroid.showWithGravity(result.msg, 1500, ToastAndroid.BOTTOM);
+                        flag = true;
+                        await sleep(1500);
+                    }
+                }
+
+                if(!flag) {
+                    ToastAndroid.showWithGravity('数据更新完成！', 1500, ToastAndroid.BOTTOM);
+                }
+
+                setRefreshing(false);
+            })
+            .catch((error: any) => {
+                ToastAndroid.showWithGravity(error, 1500, ToastAndroid.BOTTOM);
+                setRefreshing(false);
+            })
+
         fetchData().then(() => setRefreshing(false));
     }, [dispatch, realm, user]);
 
     // FlatList渲染需要使用的数据
-    const listData = todayData.map((place) => {
-        return {
-            location: place.name,
-        };
-    });
+    const listData = todayData.length === 0 ? [] :
+        todayData.map((place) => {
+            return {
+                location: place.name,
+            };
+        });
 
     // FlatList的item渲染函数
     const itemRenderer = (data: any) => {
@@ -160,6 +235,11 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
             </Pressable>
         );
     });
+
+    useEffect(() => {
+        setRefreshing(true);
+        onRefresh();
+    }, []);
 
     return (
         <ScrollView

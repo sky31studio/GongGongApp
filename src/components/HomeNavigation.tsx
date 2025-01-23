@@ -31,8 +31,6 @@ import {useQuery, useRealm} from "@realm/react";
 import GongUser from "../dao/object/User.ts";
 import Resources, {ResourceMessage} from "../basic/Resources.ts";
 import {ResourceCode} from "../utils/enum.ts";
-import notifee from "../../node_modules/@notifee/react-native";
-import {AndroidImportance} from "@notifee/react-native";
 import UserAgreePage from "./info/UserAgreePage.tsx";
 import PrivacyPolicyPage from "./info/PrivacyPolicyPage.tsx";
 import FeedbackPage from "./info/FeedbackPage.tsx";
@@ -53,192 +51,197 @@ const HomeNavigation = () => {
 
     const Stack = createNativeStackNavigator();
 
-    // 首次挂载创建通知通道
-    const createChannel = async () => {
-        const existingChannels = await notifee.getChannels();
-        const isChannelExists = existingChannels.some(channel => channel.id === 'exam-channel');
-
-        if(!isChannelExists) {
-            await notifee.createChannel({
-                id: 'exam-channel',
-                name: 'exam-channel',
-                importance: AndroidImportance.HIGH
-            });
-
-            console.log('exam-channel created');
-        } else {
-            console.log('exam-channel already exists');
-        }
-    }
-
     // 首次挂载获取全局数据
-    const fetchAllData = async () => {
+    const fetchAllData = () => {
         if(user) {
             console.log('fetch data begin.......');
             if(!user.courses) {
-                const msg: ResourceMessage = await Resources.getClassData(user.token);
-                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
-                    dispatch(initTable(msg.data));
-                    console.log('writing courses in realm...');
-                    realm.write(() => {
-                        user.courses = JSON.stringify(msg.data);
-                    });
-                    console.log('courses is written!')
-                } else {
-                    console.log('get courses failed!');
-                }
+                Resources.getClassData(user.token)
+                    .then((msg: ResourceMessage) => {
+                        if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+                            dispatch(initTable(msg.data));
+                            console.log('writing courses in realm...');
+                            realm.write(() => {
+                                user.courses = JSON.stringify(msg.data);
+                            });
+                            console.log('courses is written!')
+                        } else {
+                            console.log('get courses failed!');
+                        }
+                    })
             } else {
                 dispatch(initTable(JSON.parse(user.courses)));
             }
 
             if(!user.info) {
-                const msg: ResourceMessage = await Resources.getInfo(user.token);
-                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
-                    dispatch(initInfo(msg.data));
-                    console.log('writing userInfo in realm...');
-                    realm.write(() => {
-                        user.info = JSON.stringify(msg.data);
+                Resources.getInfo(user.token)
+                    .then((msg: ResourceMessage) => {
+                        if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+                            dispatch(initInfo(msg.data));
+                            console.log('writing userInfo in realm...');
+                            realm.write(() => {
+                                user.info = JSON.stringify(msg.data);
+                            })
+                            console.log('userInfo is written!');
+                        } else {
+                            console.log('get info failed!');
+                        }
                     })
-                    console.log('userInfo is written!')
-                } else {
-                    console.log('get info failed!');
-                }
             } else {
                 dispatch(initInfo(JSON.parse(user.info)));
             }
 
             if(!user.todayClassroom) {
-                const msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token);
-                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
-                    dispatch(setTodayEmptyClassroomStatus(msg.data));
-                    console.log('writing todayClassroom in realm...');
-                    realm.write(() => {
-                        user.todayClassroom = JSON.stringify(msg.data);
+                Resources.getTodayClassroomStatus(user.token)
+                    .then((msg: ResourceMessage) => {
+                        if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+                            dispatch(setTodayEmptyClassroomStatus(msg.data));
+                            console.log('writing todayClassroom in realm...');
+                            realm.write(() => {
+                                user.todayClassroom = JSON.stringify(msg.data);
+                            })
+                            console.log('todayClassroom is written!');
+                        } else {
+                            console.log('get todayClassroom failed!');
+                        }
                     })
-                    console.log('todayClassroom is written!');
-                } else {
-                    console.log('get todayClassroom failed!');
-                }
             } else {
                 dispatch(setTodayEmptyClassroomStatus(JSON.parse(user.todayClassroom)));
             }
 
             if(!user.tomorrowClassroom) {
-                const msg: ResourceMessage = await Resources.getTomorrowClassroomStatus(user.token);
-                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
-                    dispatch(setTomorrowEmptyClassroomStatus(msg.data));
-                    console.log('writing tomorrowClassroom in realm...');
-                    realm.write(() => {
-                        user.tomorrowClassroom = JSON.stringify(msg.data);
+                Resources.getTomorrowClassroomStatus(user.token)
+                    .then((msg: ResourceMessage) => {
+                        if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+                            dispatch(setTomorrowEmptyClassroomStatus(msg.data));
+                            console.log('writing tomorrowClassroom in realm...');
+                            realm.write(() => {
+                                user.tomorrowClassroom = JSON.stringify(msg.data);
+                            })
+                            console.log('tomorrowClassroom is written!');
+                        } else {
+                            console.log('get tomorrowClassroom failed!');
+                        }
                     })
-                    console.log('tomorrowClassroom is written!');
-                } else {
-                    console.log('get tomorrowClassroom failed!');
-                }
+
+                console.log("no tomorrowClassroom...");
             } else {
+                console.log("have tomorrowClassroom...")
                 dispatch(setTomorrowEmptyClassroomStatus(JSON.parse(user.tomorrowClassroom)));
             }
 
             if(!user.examAgendaList) {
-                const msg: ResourceMessage = await Resources.getExam(user.token);
-                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
-                    dispatch(examChangedCountIncrement());
-                    dispatch(initExam(msg.data))
-                } else {
-                    console.log('get examAgendaList failed!');
-                }
+                Resources.getExam(user.token)
+                    .then((msg: ResourceMessage) => {
+                        if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+                            dispatch(examChangedCountIncrement());
+                            dispatch(initExam(msg.data))
+                        } else {
+                            console.log('get examAgendaList failed!');
+                        }
+                    })
             } else {
                 dispatch(writeExamAgendaList(JSON.parse(user.examAgendaList)));
             }
 
             if(!user.scoreOverview) {
-                const msg: ResourceMessage = await Resources.getScoreOverview(user.token);
-                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
-                    dispatch(setScoreOverview(msg.data));
-                    console.log('writing scoreOverview in realm...');
-                    realm.write(() => {
-                        user.scoreOverview = JSON.stringify(msg.data);
+                Resources.getScoreOverview(user.token)
+                    .then((msg: ResourceMessage) => {
+                        if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+                            dispatch(setScoreOverview(msg.data));
+                            console.log('writing scoreOverview in realm...');
+                            realm.write(() => {
+                                user.scoreOverview = JSON.stringify(msg.data);
+                            })
+                            console.log('scoreOverview is written!');
+                        } else {
+                            console.log('get scoreOverview failed!');
+                        }
                     })
-                    console.log('scoreOverview is written!');
-                } else {
-                    console.log('get scoreOverview failed!');
-                }
             } else {
                 dispatch(setScoreOverview(JSON.parse(user.scoreOverview)));
             }
 
             if(!user.compulsoryScoreOverview) {
-                const msg: ResourceMessage = await Resources.getCompulsoryScoreOverview(user.token);
-                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
-                    dispatch(setCompulsoryScoreOverview(msg.data));
-                    console.log(' writing compulsoryScoreOverview...');
-                    realm.write(() => {
-                        user.compulsoryScoreOverview = JSON.stringify(msg.data);
-                    })
-                    console.log('compulsoryScoreOverview is written!');
-                } else {
-                    console.log('get compulsoryScoreOverview failed!');
-                }
+                Resources.getCompulsoryScoreOverview(user.token)
+                    .then((msg: ResourceMessage) => {
+                        if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+                            dispatch(setCompulsoryScoreOverview(msg.data));
+                            console.log(' writing compulsoryScoreOverview...');
+                            realm.write(() => {
+                                user.compulsoryScoreOverview = JSON.stringify(msg.data);
+                            })
+                            console.log('compulsoryScoreOverview is written!');
+                        } else {
+                            console.log('get compulsoryScoreOverview failed!');
+                        }
+                    });
             } else {
                 dispatch(setCompulsoryScoreOverview(JSON.parse(user.compulsoryScoreOverview)));
             }
 
             if(!user.scoreList) {
-                const msg: ResourceMessage = await Resources.getScore(user.token);
-                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
-                    dispatch(initScoreList(msg.data));
-                    console.log('writing scoreList in realm...');
-                    realm.write(() => {
-                        user.scoreList = JSON.stringify(msg.data);
+                Resources.getScore(user.token)
+                    .then((msg: ResourceMessage) => {
+                        if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+                            dispatch(initScoreList(msg.data));
+                            console.log('writing scoreList in realm...');
+                            realm.write(() => {
+                                user.scoreList = JSON.stringify(msg.data);
+                            })
+                            console.log('scoreList is written!');
+                        } else {
+                            console.log('get scoreList failed!');
+                        }
                     })
-                    console.log('scoreList is written!');
-                } else {
-                    console.log('get scoreList failed!');
-                }
             } else {
                 dispatch(initScoreList(JSON.parse(user.scoreList)));
             }
 
             if(!user.minorScoreList) {
-                const msg: ResourceMessage = await Resources.getMinorScore(user.token);
-                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
-                    dispatch(initMinorScoreList(msg.data.scoreList));
-                    dispatch(setMinorScoreOverview({
-                        totalCredit: msg.data.totalCredit,
-                        minorGpa: msg.data.gpa,
-                        minorAverageScore: msg.data.averageScore
-                    }));
-                    console.log('writing minorScore in realm...');
-                    realm.write(() => {
-                        user.minorScoreList = JSON.stringify(msg.data.scoreList);
-                        user.minorScoreOverview = JSON.stringify({
-                            totalCredit: msg.data.totalCredit,
-                            minorGpa: msg.data.gpa,
-                            minorAverageScore: msg.data.averageScore
-                        });
+                Resources.getMinorScore(user.token)
+                    .then((msg: ResourceMessage) => {
+                        if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+                            dispatch(initMinorScoreList(msg.data.scoreList));
+                            dispatch(setMinorScoreOverview({
+                                totalCredit: msg.data.totalCredit,
+                                minorGpa: msg.data.gpa,
+                                minorAverageScore: msg.data.averageScore
+                            }));
+                            console.log('writing minorScore in realm...');
+                            realm.write(() => {
+                                user.minorScoreList = JSON.stringify(msg.data.scoreList);
+                                user.minorScoreOverview = JSON.stringify({
+                                    totalCredit: msg.data.totalCredit,
+                                    minorGpa: msg.data.gpa,
+                                    minorAverageScore: msg.data.averageScore
+                                });
+                            })
+                            console.log('minorScore is written!');
+                        } else {
+                            console.log('get minorScore failed!');
+                        }
                     })
-                    console.log('minorScore is written!');
-                } else {
-                    console.log('get minorScore failed!');
-                }
             } else {
                 dispatch(initMinorScoreList(JSON.parse(user.minorScoreList)));
                 dispatch(setMinorScoreOverview(JSON.parse(user.minorScoreOverview!)));
             }
 
             if(!user.firstDate) {
-                const msg: ResourceMessage = await Resources.getFirstDate(user.token);
-                if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired)  {
-                    dispatch(setDate(msg.data));
-                    console.log('writing firstDate in realm...');
-                    realm.write(() => {
-                        user.firstDate = new Date(msg.data.start);
-                        user.termID = msg.data.termID;
+                Resources.getFirstDate(user.token)
+                    .then((msg: ResourceMessage) => {
+                        if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired)  {
+                            dispatch(setDate(msg.data));
+                            console.log('writing firstDate in realm...');
+                            realm.write(() => {
+                                user.firstDate = new Date(msg.data.start);
+                                user.termID = msg.data.termID;
+                            })
+                            console.log('firstDate is written!');
+                        } else {
+                            console.log('get firstDate failed!');
+                        }
                     })
-                    console.log('firstDate is written!');
-                } else {
-                    console.log('get firstDate failed!');
-                }
             } else {
                 dispatch(setDate({
                     start: user.firstDate.toString(),
@@ -251,17 +254,12 @@ const HomeNavigation = () => {
                 dispatch(writeSelfAgendaList(JSON.parse(user.selfAgendaList)));
                 console.log('selfAgendaList is initialized!');
             }
-
-            console.log('fetch successful!');
         }
     }
 
     useEffect(() => {
         dispatch(resetCurrentTime());
-        createChannel()
-            .then(() => {
-                fetchAllData().then();
-            })
+        fetchAllData();
     }, []);
 
     // 错误案例: 这样的话会在组件刚挂载时执行，导致空的selfList表格会先写覆盖user.selfAgendaList。
