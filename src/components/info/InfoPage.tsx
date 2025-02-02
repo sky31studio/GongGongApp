@@ -36,7 +36,7 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import {downloadAndInstallApk} from "../../utils/AndoridModuleUtils.ts";
+import {downloadAndInstallApk, navigateToPicSelectPage} from "../../utils/AndoridModuleUtils.ts";
 
 const InfoPage = ({navigation}: NavigationProps) => {
     // realm
@@ -131,7 +131,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                             <View style={{width: 35, height: 35, borderRadius: 20, overflow: 'hidden'}}>
                                 <Image source={require('../../assets/png/avatar.png')} style={{height: '100%', width: '100%'}}/>
                             </View>
-                            <Pressable style={{height: '100%', paddingHorizontal: 12}} onPress={isLogin ? null : handleReLogin}>
+                            <Pressable style={{height: '100%', paddingHorizontal: 12}} onPress={isLogin ? navigateToPicSelectPage : handleReLogin}>
                                 <ScalingNotAllowedText>{isLogin ? name : '点击登录'}</ScalingNotAllowedText>
                             </Pressable>
                         </View>

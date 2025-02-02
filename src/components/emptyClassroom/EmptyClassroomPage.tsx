@@ -20,8 +20,6 @@ import Resources, {ResourceMessage} from '../../basic/Resources.ts';
 import {ResourceCode} from '../../utils/enum.ts';
 import {sleep} from "../../utils/globalUtils.ts";
 
-// TODO 没有登录的情况下，进入的界面
-
 const periods = ['1-2', '3-4', '5-6', '7-8', '9-11'];
 /**
  * 空教室页面
