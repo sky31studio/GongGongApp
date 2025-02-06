@@ -1,41 +1,45 @@
 import {
-  Modal,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  ToastAndroid,
-  View,
+    Modal,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    ToastAndroid,
+    View,
 } from 'react-native';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useAppDispatch, useAppSelector} from '../../app/hooks.ts';
 import {
-  BackgroundColor,
-  BorderColor,
-  FontColor,
-  FontSize,
+    BackgroundColor,
+    BorderColor,
+    FontColor,
+    FontSize,
 } from '../../config/globalStyleSheetConfig.ts';
-import {selectTheWeek} from '../../app/slice/globalSlice.ts';
+import {
+    selectTheWeek,
+    selectTotalWeeks,
+    setCalendar,
+} from '../../app/slice/globalSlice.ts';
 import {SvgXml} from 'react-native-svg';
 import XMLResources from '../../basic/XMLResources.ts';
 import Animated, {
-  Easing,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
+    Easing,
+    interpolate,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
 } from 'react-native-reanimated';
 import PagerView from 'react-native-pager-view';
 import Schedule from './schedule.tsx';
 import {NavigationProps} from '../home/homePage.tsx';
 import {
-  hideModal,
-  initTable,
-  lockModal,
-  selectCurrentTimeCourses,
-  selectModalVisible,
-  unlockModal,
+    hideModal,
+    initTable,
+    lockModal,
+    selectCurrentTimeCourses,
+    selectModalVisible,
+    unlockModal,
 } from '../../app/slice/scheduleSlice.ts';
 import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
 import {ENToCNWeekDay, ResourceCode} from '../../utils/enum.ts';
@@ -47,14 +51,9 @@ export const TablePage = ({navigation}: NavigationProps) => {
     const realm = useRealm();
     const user = useQuery<GongUser>('GongUser')[0];
 
-    const weekData = Array.from({length: 21}, (_, index) => {
-        return {
-            week: index + 1,
-        }
-    });
-
     const dispatch = useAppDispatch();
     const theWeek = useAppSelector(selectTheWeek);
+    const totalWeeks = useAppSelector(selectTotalWeeks);
     const modalVisible = useAppSelector(selectModalVisible);
     const courseList = useAppSelector(selectCurrentTimeCourses);
 
@@ -65,76 +64,132 @@ export const TablePage = ({navigation}: NavigationProps) => {
     const pagerViewRef = useRef<PagerView>(null);
     const scrollViewRef = useRef<ScrollView>(null);
 
+    const weekData = useMemo(() => {
+        if (totalWeeks === 0) {
+            return [];
+        }
+        return Array.from({length: totalWeeks}, (_, index) => {
+            return {
+                week: index + 1,
+            };
+        });
+    }, [totalWeeks]);
+
     const dropWeekListValue = useSharedValue<number>(0);
     const arrowAnimatedStyle = useAnimatedStyle(() => {
         return {
-            transform: [{
-                rotate: `${interpolate(dropWeekListValue.value, [0, 1], [-90, 90])}deg`
-            }]
-        }
-    })
+            transform: [
+                {
+                    rotate: `${interpolate(
+                        dropWeekListValue.value,
+                        [0, 1],
+                        [-90, 90],
+                    )}deg`,
+                },
+            ],
+        };
+    });
 
     const weekListAnimatedStyle = useAnimatedStyle(() => {
         return {
-            maxHeight: interpolate(dropWeekListValue.value, [0, 1], [0, 50])
-        }
-    })
+            maxHeight: interpolate(dropWeekListValue.value, [0, 1], [0, 50]),
+        };
+    });
 
     const pagerViewList = useMemo(
         () =>
-            weekData
-                .map((item, index) => {
-                    // 防止卡顿
-                    if(index + 2 < currentWeek || index > currentWeek) {
-                        return null;
-                    }
-                    return (
-                        <View key={index} style={{flex: 1}}>
-                            <Schedule week={item.week}></Schedule>
-                        </View>
-                    )
+            weekData.map((item, index) => {
+                // 防止卡顿
+                if (index + 2 < currentWeek || index > currentWeek) {
+                    return null;
+                }
+                return (
+                    <View key={index} style={{flex: 1}}>
+                        <Schedule week={item.week}></Schedule>
+                    </View>
+                );
             }),
-        [weekData, currentWeek]);
+        [weekData, currentWeek],
+    );
 
     const onRefresh = () => {
         setRefreshing(true);
 
         const getData = async () => {
-            const msg: ResourceMessage = await Resources.getClassData(user.token);
-            if(msg.code === ResourceCode.Successful) {
+            let msg: ResourceMessage = await Resources.getCalendar(user.token);
+            if (
+                msg.code === ResourceCode.Successful ||
+                ResourceCode.DataExpired
+            ) {
+                dispatch(setCalendar(msg.data));
+                realm.write(() => {
+                    user.firstDate = new Date(msg.data.start);
+                    user.termID = msg.data.termID;
+                    user.totalWeeks = msg.data.weeks;
+                });
+            } else if (msg.code === ResourceCode.InvalidToken) {
+                ToastAndroid.showWithGravity(
+                    '身份失效，请重新登录！',
+                    1500,
+                    ToastAndroid.BOTTOM,
+                );
+            } else {
+                ToastAndroid.showWithGravity(
+                    '课表获取失败！',
+                    1500,
+                    ToastAndroid.BOTTOM,
+                );
+            }
+
+            msg = await Resources.getClassData(user.token);
+            if (
+                msg.code === ResourceCode.Successful ||
+                ResourceCode.DataExpired
+            ) {
                 dispatch(initTable(msg.data));
                 realm.write(() => {
                     user.courses = JSON.stringify(msg.data);
                 });
-            } else if(msg.code === ResourceCode.InvalidToken) {
-                ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
+            } else if (msg.code === ResourceCode.InvalidToken) {
+                ToastAndroid.showWithGravity(
+                    '身份失效，请重新登录！',
+                    1500,
+                    ToastAndroid.BOTTOM,
+                );
             } else {
-                ToastAndroid.showWithGravity('课表获取失败！', 1500, ToastAndroid.BOTTOM);
+                ToastAndroid.showWithGravity(
+                    '课表获取失败！',
+                    1500,
+                    ToastAndroid.BOTTOM,
+                );
             }
-        }
+        };
 
         getData().then(() => setRefreshing(false));
-    }
+    };
 
     const handleGoBack = () => {
         navigation.navigate('TabNavigation');
-    }
+    };
 
     const toggleWeekList = () => {
-        dropWeekListValue.value = withTiming(dropWeekListValue.value === 0 ? 1 : 0, {
-            duration: 300,
-            easing: Easing.ease,
-        });
-    }
+        dropWeekListValue.value = withTiming(
+            dropWeekListValue.value === 0 ? 1 : 0,
+            {
+                duration: 300,
+                easing: Easing.ease,
+            },
+        );
+    };
 
     const handlePageSelected = useCallback((e: any) => {
-        const index= e.nativeEvent.position;
+        const index = e.nativeEvent.position;
         setCurrentWeek(index + 1);
     }, []);
 
     // 防止在滑动时点开Modal
     const handleScrollStateChanged = useCallback((event: any) => {
-        if(event.nativeEvent.pageScrollState === 'idle') {
+        if (event.nativeEvent.pageScrollState === 'idle') {
             dispatch(unlockModal());
         } else {
             dispatch(lockModal());
@@ -142,16 +197,19 @@ export const TablePage = ({navigation}: NavigationProps) => {
     }, []);
 
     const weekListRenderItem = (data: any) => {
-        const color = currentWeek === data.item.week ? FontColor.secondary : FontColor.grey;
+        const color =
+            currentWeek === data.item.week
+                ? FontColor.secondary
+                : FontColor.grey;
         let backgroundColor = 'transparent';
         if (theWeek === data.item.week) backgroundColor = BackgroundColor.grey;
-        if (currentWeek === data.item.week) backgroundColor = BackgroundColor.focused;
+        if (currentWeek === data.item.week)
+            backgroundColor = BackgroundColor.focused;
 
-        // TODO: 滚动
         const handleClick = () => {
             setCurrentWeek(data.item.week);
             pagerViewRef.current?.setPage(data.item.week - 1);
-        }
+        };
 
         return (
             <Pressable
@@ -167,25 +225,45 @@ export const TablePage = ({navigation}: NavigationProps) => {
                     marginHorizontal: 5,
                     display: 'flex',
                     flexDirection: 'column',
-                }}
-            >
+                }}>
                 <View
                     style={{
                         display: 'flex',
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'center',
-                    }}
-                >
-                    <ScalingNotAllowedText style={{fontSize: FontSize.m, color: color}}>第</ScalingNotAllowedText>
-                    <ScalingNotAllowedText style={{fontSize: FontSize.l, letterSpacing: 4, color: color, fontWeight: 600}}>{data.item.week}</ScalingNotAllowedText>
-                    <ScalingNotAllowedText style={{fontSize: FontSize.m, color: color}}>周</ScalingNotAllowedText>
+                    }}>
+                    <ScalingNotAllowedText
+                        style={{fontSize: FontSize.m, color: color}}>
+                        第
+                    </ScalingNotAllowedText>
+                    <ScalingNotAllowedText
+                        style={{
+                            fontSize: FontSize.l,
+                            letterSpacing: 4,
+                            color: color,
+                            fontWeight: 600,
+                        }}>
+                        {data.item.week}
+                    </ScalingNotAllowedText>
+                    <ScalingNotAllowedText
+                        style={{fontSize: FontSize.m, color: color}}>
+                        周
+                    </ScalingNotAllowedText>
                 </View>
-                {theWeek === data.item.week && <Text style={{fontSize: FontSize.xxs, color: color, textAlign: 'center'}}>(本周)</Text>}
-
+                {theWeek === data.item.week && (
+                    <Text
+                        style={{
+                            fontSize: FontSize.xxs,
+                            color: color,
+                            textAlign: 'center',
+                        }}>
+                        (本周)
+                    </Text>
+                )}
             </Pressable>
-        )
-    }
+        );
+    };
 
     useEffect(() => {
         setRefreshing(true);
@@ -198,31 +276,50 @@ export const TablePage = ({navigation}: NavigationProps) => {
             contentContainerStyle={{flex: 1}}
             nestedScrollEnabled={true}
             refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[BackgroundColor.primary]}/>
-            }
-        >
-            <View style={{
-                width: '100%',
-                flex: 1,
-                flexDirection: 'column',
-            }}>
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    colors={[BackgroundColor.primary]}
+                />
+            }>
+            <View
+                style={{
+                    width: '100%',
+                    flex: 1,
+                    flexDirection: 'column',
+                }}>
                 <View style={styleSheet.guideBar}>
-                    <Pressable onPress={handleGoBack} style={styleSheet.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
-                        <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
+                    <Pressable
+                        onPress={handleGoBack}
+                        style={styleSheet.backButton}
+                        hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
+                        <SvgXml
+                            xml={XMLResources.backArrow}
+                            width={10}
+                            height={18}
+                        />
                     </Pressable>
                     <View style={styleSheet.weekBox}>
-                        <Pressable onPress={toggleWeekList} style={styleSheet.textBox}>
-                            <ScalingNotAllowedText style={{
-                                color: FontColor.light,
-                                height: 20,
-                                lineHeight: 20,
-                                fontSize: 18,
-                                fontWeight: '600'
-                            }}>第{currentWeek}周</ScalingNotAllowedText>
-                            <ScalingNotAllowedText style={{
-                                color: FontColor.light,
-                                fontSize: 12
-                            }}>{theWeek === currentWeek ? '本周' : '非本周'}</ScalingNotAllowedText>
+                        <Pressable
+                            onPress={toggleWeekList}
+                            style={styleSheet.textBox}>
+                            <ScalingNotAllowedText
+                                style={{
+                                    color: FontColor.light,
+                                    height: 20,
+                                    lineHeight: 20,
+                                    fontSize: 18,
+                                    fontWeight: '600',
+                                }}>
+                                第{refreshing ? '--' : currentWeek}周
+                            </ScalingNotAllowedText>
+                            <ScalingNotAllowedText
+                                style={{
+                                    color: FontColor.light,
+                                    fontSize: 12,
+                                }}>
+                                {theWeek === currentWeek ? '本周' : '非本周'}
+                            </ScalingNotAllowedText>
                             <Animated.View
                                 style={[
                                     arrowAnimatedStyle,
@@ -230,13 +327,13 @@ export const TablePage = ({navigation}: NavigationProps) => {
                                         position: 'absolute',
                                         right: -20,
                                         top: 0,
-                                    }
-                                ]}
-                            >
+                                    },
+                                ]}>
                                 <View>
                                     <SvgXml
                                         xml={XMLResources.backArrow}
-                                        width={14} height={14}
+                                        width={14}
+                                        height={14}
                                     />
                                 </View>
                             </Animated.View>
@@ -258,67 +355,160 @@ export const TablePage = ({navigation}: NavigationProps) => {
                     initialPage={currentWeek - 1}
                     onPageSelected={handlePageSelected}
                     onPageScrollStateChanged={handleScrollStateChanged}
-                    offscreenPageLimit={1}
-                >
+                    offscreenPageLimit={1}>
                     {pagerViewList}
                 </PagerView>
                 <Modal
                     visible={modalVisible}
                     transparent={true}
-                    animationType={'fade'}
-                >
-                    <View style={{
-                        flex: 1,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: BackgroundColor.modalShadow
-                    }}>
+                    animationType={'fade'}>
+                    <View
+                        style={{
+                            flex: 1,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: BackgroundColor.modalShadow,
+                        }}>
                         <View style={styleSheet.modalContainer}>
-                            <View style={{width: '100%', height: 30, display: 'flex', alignItems: 'flex-end'}}>
+                            <View
+                                style={{
+                                    width: '100%',
+                                    height: 30,
+                                    display: 'flex',
+                                    alignItems: 'flex-end',
+                                }}>
                                 {/* 关闭按钮 */}
-                                <Pressable onPress={() => dispatch(hideModal())}>
-                                    <SvgXml xml={XMLResources.closeAddBoard} width="20" height="20"/>
+                                <Pressable
+                                    onPress={() => dispatch(hideModal())}>
+                                    <SvgXml
+                                        xml={XMLResources.closeAddBoard}
+                                        width="20"
+                                        height="20"
+                                    />
                                 </Pressable>
                             </View>
                             <ScrollView style={{width: '100%', height: 400}}>
-                                {courseList ?
-                                    courseList.map((course, index) => {
-                                        const periodStart = course.placeInfo.periodStart;
-                                        const weekDay = ENToCNWeekDay[course.placeInfo.day as keyof typeof ENToCNWeekDay];
-                                        const periodText = `${weekDay} ${periodStart}-${periodStart + course.placeInfo.periodDuration - 1}节`;
-                                        let weekText = '';
-                                        for(let info of course.placeInfo.weekInfo) {
-                                            if(info.weekStart === info.weekEnd) {
-                                                weekText = weekText.concat(`${info.weekStart},`);
-                                            } else {
-                                                weekText = weekText.concat(`${info.weekStart}-${info.weekEnd},`);
-                                            }
-                                        }
-                                        weekText = weekText.slice(0, -1);
-                                        weekText = weekText.concat(' 周');
-                                        return (
-                                            <View key={index} style={{width: '100%', marginVertical: 15, borderBottomColor: BorderColor.grey, borderBottomWidth: .8}}>
-                                                <View style={{marginBottom: 15}}>
-                                                    <ScalingNotAllowedText style={{fontSize: FontSize.ll, color: FontColor.dark, fontWeight: '700'}}>{course.name}</ScalingNotAllowedText>
-                                                </View>
-                                                <View style={{display: 'flex', flexDirection: 'row'}}>
-                                                    <View style={{marginRight: 20}}>
-                                                        <ScalingNotAllowedText style={styleSheet.modalSubTitle}>教室</ScalingNotAllowedText>
-                                                        <ScalingNotAllowedText style={styleSheet.modalSubTitle}>周次</ScalingNotAllowedText>
-                                                        <ScalingNotAllowedText style={styleSheet.modalSubTitle}>节数</ScalingNotAllowedText>
-                                                        <ScalingNotAllowedText style={styleSheet.modalSubTitle}>老师</ScalingNotAllowedText>
-                                                    </View>
-                                                    <View>
-                                                        <ScalingNotAllowedText style={styleSheet.modalSubText}>{course.classroom}</ScalingNotAllowedText>
-                                                        <ScalingNotAllowedText style={styleSheet.modalSubText}>{weekText}</ScalingNotAllowedText>
-                                                        <ScalingNotAllowedText style={styleSheet.modalSubText}>{periodText}</ScalingNotAllowedText>
-                                                        <ScalingNotAllowedText style={styleSheet.modalSubText}>{course.teacher}</ScalingNotAllowedText>
-                                                    </View>
-                                                </View>
-                                            </View>
-                                        )
-                                    }) : null
-                                }
+                                {courseList
+                                    ? courseList.map((course, index) => {
+                                          const periodStart =
+                                              course.placeInfo.periodStart;
+                                          const weekDay =
+                                              ENToCNWeekDay[
+                                                  course.placeInfo
+                                                      .day as keyof typeof ENToCNWeekDay
+                                              ];
+                                          const periodText = `${weekDay} ${periodStart}-${
+                                              periodStart +
+                                              course.placeInfo.periodDuration -
+                                              1
+                                          }节`;
+                                          let weekText = '';
+                                          for (let info of course.placeInfo
+                                              .weekInfo) {
+                                              if (
+                                                  info.weekStart ===
+                                                  info.weekEnd
+                                              ) {
+                                                  weekText = weekText.concat(
+                                                      `${info.weekStart},`,
+                                                  );
+                                              } else {
+                                                  weekText = weekText.concat(
+                                                      `${info.weekStart}-${info.weekEnd},`,
+                                                  );
+                                              }
+                                          }
+                                          weekText = weekText.slice(0, -1);
+                                          weekText = weekText.concat(' 周');
+                                          return (
+                                              <View
+                                                  key={index}
+                                                  style={{
+                                                      width: '100%',
+                                                      marginVertical: 15,
+                                                      borderBottomColor:
+                                                          BorderColor.grey,
+                                                      borderBottomWidth: 0.8,
+                                                  }}>
+                                                  <View
+                                                      style={{
+                                                          marginBottom: 15,
+                                                      }}>
+                                                      <ScalingNotAllowedText
+                                                          style={{
+                                                              fontSize:
+                                                                  FontSize.ll,
+                                                              color: FontColor.dark,
+                                                              fontWeight: '700',
+                                                          }}>
+                                                          {course.name}
+                                                      </ScalingNotAllowedText>
+                                                  </View>
+                                                  <View
+                                                      style={{
+                                                          display: 'flex',
+                                                          flexDirection: 'row',
+                                                      }}>
+                                                      <View
+                                                          style={{
+                                                              marginRight: 20,
+                                                          }}>
+                                                          <ScalingNotAllowedText
+                                                              style={
+                                                                  styleSheet.modalSubTitle
+                                                              }>
+                                                              教室
+                                                          </ScalingNotAllowedText>
+                                                          <ScalingNotAllowedText
+                                                              style={
+                                                                  styleSheet.modalSubTitle
+                                                              }>
+                                                              周次
+                                                          </ScalingNotAllowedText>
+                                                          <ScalingNotAllowedText
+                                                              style={
+                                                                  styleSheet.modalSubTitle
+                                                              }>
+                                                              节数
+                                                          </ScalingNotAllowedText>
+                                                          <ScalingNotAllowedText
+                                                              style={
+                                                                  styleSheet.modalSubTitle
+                                                              }>
+                                                              老师
+                                                          </ScalingNotAllowedText>
+                                                      </View>
+                                                      <View>
+                                                          <ScalingNotAllowedText
+                                                              style={
+                                                                  styleSheet.modalSubText
+                                                              }>
+                                                              {course.classroom}
+                                                          </ScalingNotAllowedText>
+                                                          <ScalingNotAllowedText
+                                                              style={
+                                                                  styleSheet.modalSubText
+                                                              }>
+                                                              {weekText}
+                                                          </ScalingNotAllowedText>
+                                                          <ScalingNotAllowedText
+                                                              style={
+                                                                  styleSheet.modalSubText
+                                                              }>
+                                                              {periodText}
+                                                          </ScalingNotAllowedText>
+                                                          <ScalingNotAllowedText
+                                                              style={
+                                                                  styleSheet.modalSubText
+                                                              }>
+                                                              {course.teacher}
+                                                          </ScalingNotAllowedText>
+                                                      </View>
+                                                  </View>
+                                              </View>
+                                          );
+                                      })
+                                    : null}
                             </ScrollView>
                         </View>
                     </View>
@@ -326,7 +516,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
             </View>
         </ScrollView>
     );
-}
+};
 
 const styleSheet = StyleSheet.create({
     guideBar: {

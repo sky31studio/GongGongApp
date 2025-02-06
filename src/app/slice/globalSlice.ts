@@ -4,6 +4,7 @@ import {diffDate} from "../../utils/tableUtils.ts";
 
 interface InitialState {
     date: string,
+    totalWeeks: number,
     termID: string,
     currentTime: string,
     isLogin: boolean,
@@ -12,6 +13,7 @@ interface InitialState {
 
 const initialState: InitialState = {
     date: "",
+    totalWeeks: 0,
     termID: "",
     currentTime: (new Date()).toString(),
     isLogin: true,
@@ -22,9 +24,10 @@ const globalSlice = createSlice({
     name: 'global',
     initialState,
     reducers: {
-        setDate: (state, action) => {
+        setCalendar: (state, action) => {
             state.date = action.payload.start;
             state.termID = action.payload.termID;
+            state.totalWeeks = action.payload.weeks;
         },
         setTermID: (state, action) => {
             state.termID = action.payload.termID;
@@ -44,23 +47,26 @@ const globalSlice = createSlice({
 })
 
 export const selectFirstDate = (state: RootState) => state.global.date;
+export const selectTotalWeeks = (state: RootState) => state.global.totalWeeks;
 export const selectTerm = (state: RootState) => state.global.termID;
 export const selectCurrentTime = (state: RootState) => state.global.currentTime;
 export const selectIsLogin = (state: RootState) => state.global.isLogin;
 export const selectTokenIsValid = (state: RootState) => state.global.tokenIsValid;
 
 export const selectTheWeek = createSelector(
-    [selectFirstDate, selectCurrentTime],
-    (firstDate, currentTime) => {
-        if(!firstDate) return -1;
+    [selectFirstDate, selectTotalWeeks, selectCurrentTime],
+    (firstDate, totalWeeks, currentTime) => {
+        if(firstDate === '' || totalWeeks === 0) return -1;
 
         const date = new Date(firstDate);
         const diff = diffDate(date, new Date(currentTime));
 
-        if(Math.floor(diff / 7) + 1 <= 21) return Math.floor(diff / 7) + 1;
-        return 21;
+        if(diff < 0) return 1;
+        else if(Math.floor(diff / 7) + 1 <= totalWeeks) return Math.floor(diff / 7) + 1;
+
+        return totalWeeks;
     }
 )
 
-export const {setDate, setTermID, resetCurrentTime, loginSuccessful, logoutSuccessful} = globalSlice.actions;
+export const {setCalendar, setTermID, resetCurrentTime, loginSuccessful, logoutSuccessful} = globalSlice.actions;
 export default globalSlice.reducer;

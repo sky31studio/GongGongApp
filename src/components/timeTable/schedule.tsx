@@ -1,18 +1,18 @@
-import React, {useCallback, useContext, useMemo} from "react";
-import {StyleSheet, View} from "react-native";
-import ClassBox from "./classBox";
-import TimeTableConfig from "../../config/TimeTableConfig";
-import {getAllCoursesByWeek} from "../../utils/tableUtils.ts";
-import {useAppSelector} from "../../app/hooks.ts";
-import {selectTable} from "../../app/slice/scheduleSlice.ts";
-import {selectFirstDate} from "../../app/slice/globalSlice.ts";
-import {transTo2Digits} from "../../utils/agendaUtils.ts";
-import Animated from "react-native-reanimated";
-import {FontColor, FontSize} from "../../config/globalStyleSheetConfig.ts";
-import {CurrentTimeContext} from "../../../App.tsx";
-import {CNWeekDayShort} from "../../utils/enum.ts";
-import {ClassObject} from "./ClassObject.ts";
-import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
+import React, {useCallback, useContext, useMemo} from 'react';
+import {StyleSheet, View} from 'react-native';
+import ClassBox from './classBox';
+import TimeTableConfig from '../../config/TimeTableConfig';
+import {getAllCoursesByWeek} from '../../utils/tableUtils.ts';
+import {useAppSelector} from '../../app/hooks.ts';
+import {selectTable} from '../../app/slice/scheduleSlice.ts';
+import {selectFirstDate} from '../../app/slice/globalSlice.ts';
+import {transTo2Digits} from '../../utils/agendaUtils.ts';
+import Animated from 'react-native-reanimated';
+import {FontColor, FontSize} from '../../config/globalStyleSheetConfig.ts';
+import {CurrentTimeContext} from '../../../App.tsx';
+import {CNWeekDayShort} from '../../utils/enum.ts';
+import {ClassObject} from './ClassObject.ts';
+import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
 
 export default function Schedule({week}: { week: number }): React.JSX.Element {
     const date = useAppSelector(selectFirstDate);
@@ -126,6 +126,14 @@ const WeekDaySchedule = ({courses, date}: {courses: any, date: Date}) => {
                 backgroundColor: '#fafafa'
             };
         }
+
+        if(date.getMonth() > currentTime.getMonth()) {
+            return {
+                dateTextColor: FontColor.dark,
+                backgroundColor: '#fafafa'
+            };
+        }
+
         if(date.getDate() < currentTime.getDate()) {
             return {
                 dateTextColor: FontColor.grey,

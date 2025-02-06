@@ -16,6 +16,7 @@ class GongUser extends Realm.Object<GongUser>{
     minorScoreList?: string;
     scoreList?: string;
     firstDate?: Date;
+    totalWeeks?: number;
     termID?: string;
 
     static schema: ObjectSchema = {
@@ -36,6 +37,7 @@ class GongUser extends Realm.Object<GongUser>{
             minorScoreList: 'string?',
             scoreList: 'string?',
             firstDate: 'date?',
+            totalWeeks: 'int?',
             termID: 'string?',
         },
         primaryKey: 'token'

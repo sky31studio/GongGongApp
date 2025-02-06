@@ -1,6 +1,5 @@
-import axios from 'axios';
-import {hostUrl} from '../config/UrlConfig.ts';
-import {sleep} from '../utils/globalUtils.ts';
+import axios, {CancelToken} from 'axios';
+import {checkUrl, hostUrl} from '../config/UrlConfig.ts';
 import {LoginCode, ResourceCode} from '../utils/enum.ts';
 
 const rootUrl = hostUrl;
@@ -35,51 +34,39 @@ class Resources {
      * 获取数据
      * @param url       请求url
      * @param token     内存中的token
-     * @param interval  请求重试间隔
      * @private
      */
     private static async getData(
         url: string,
         token: string,
-        interval: number
     ): Promise<ResourceMessage> {
         try {
-            let count = 0;
-            while(true) {
-                const response = await axios.get(url, {
-                    headers: {
-                        'token': token,
-                    },
-                });
+            const response = await axios.get(url, {
+                headers: {
+                    'Authorization': token,
+                },
+            });
 
-                const status: number = response.status;
-                if(status === 200) {
-                    return {
-                        code: ResourceCode.Successful,
-                        data: response.data.data,
-                    };
-                }
-
-                if(status === 203) {
-                    return {
-                        code: ResourceCode.DataExpired,
-                        data: response.data.data,
-                        message: GET_MSG[status],
-                    }
-                    // if(retryResult) {return retryResult;}
-                }
-
-                count++;
-                if(count >= MAX_ATTEMPTS) {
-                    return {
-                        code: status,
-                        message: GET_MSG[status] || '未知错误',
-                    };
-                }
-
-                await sleep(interval);
+            const status: number = response.status;
+            if(status === 200) {
+                return {
+                    code: ResourceCode.Successful,
+                    data: response.data.data,
+                };
             }
 
+            if(status === 203) {
+                return {
+                    code: ResourceCode.DataExpired,
+                    data: response.data.data,
+                    message: GET_MSG[status],
+                }
+            }
+
+            return {
+                code: status,
+                message: GET_MSG[status] || '未知错误',
+            };
         } catch(error) {
             return {
                 code: ResourceCode.LocalFailed,
@@ -88,64 +75,12 @@ class Resources {
         }
     }
 
-    // public static async retryGetData(
-    //     url: string,
-    //     token: string,
-    //     interval: number,
-    //     cnt: number
-    // ): Promise<ResourceMessage | undefined> {
-    //     try {
-    //
-    //         let response;
-    //         while(cnt--) {
-    //             response = await axios.get(url, {
-    //                 headers: {
-    //                     'token': token,
-    //                 },
-    //             });
-    //
-    //             const status: number = response.status;
-    //             if(status === 203) {
-    //                 await sleep(interval);
-    //                 continue;
-    //             }
-    //
-    //             if(status === 200) {
-    //                 return {
-    //                     code: ResourceCode.Successful,
-    //                     data: response.data.data,
-    //                 };
-    //             }
-    //
-    //             return {
-    //                 code: status,
-    //                 message: GET_MSG[status] || '未知错误',
-    //             };
-    //         }
-    //
-    //         if(response) {
-    //             return {
-    //                 code: response.status,
-    //                 data: response.data.data,
-    //                 message: GET_MSG[response.status],
-    //             };
-    //         }
-    //
-    //     } catch(error) {
-    //         console.log(error);
-    //         return {
-    //             code: -1,
-    //             message: 'axios error',
-    //         };
-    //     }
-    // }
-
     /**
      * 获取课表信息
      * @param token
      */
     public static async getClassData(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/courses`, token, 1500);
+        const response = await this.getData(`${rootUrl}/courses`, token);
 
         if(response.data) {
             return {
@@ -173,7 +108,7 @@ class Resources {
                 password: password,
             }, {
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
             });
 
@@ -181,7 +116,7 @@ class Resources {
             const status = response.status;
             if (status === 200) {
                 return {
-                    token: response.data.data.token,
+                    token: `${response.data.token_type} ${response.data.access_token}`,
                     code: LoginCode.Successful,
                     message: LOGIN_MSG[status],
                 };
@@ -206,7 +141,7 @@ class Resources {
      * @param token
      */
     public static async getExam(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/exams`, token, 1500);
+        const response = await this.getData(`${rootUrl}/exams`, token);
 
         if(response.data) {
             return {
@@ -227,7 +162,7 @@ class Resources {
      * @param token
      */
     public static async getScore(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/scores`, token, 1500);
+        const response = await this.getData(`${rootUrl}/scores`, token);
 
         if(response.data) {
             return {
@@ -248,7 +183,7 @@ class Resources {
      * @param token
      */
     public static async getMinorScore(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/minor/scores`, token, 1500);
+        const response = await this.getData(`${rootUrl}/minor/scores`, token);
 
         if(response.data) {
             return {
@@ -274,7 +209,7 @@ class Resources {
      * @param token
      */
     public static async getScoreOverview(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/rank`, token, 2000);
+        const response = await this.getData(`${rootUrl}/rank`, token);
 
         if(response.data) {
             return {
@@ -295,7 +230,7 @@ class Resources {
      * @param token
      */
     public static async getCompulsoryScoreOverview(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/compulsory/rank`, token, 2000);
+        const response = await this.getData(`${rootUrl}/compulsory/rank`, token);
 
         if(response.data) {
             return {
@@ -315,8 +250,8 @@ class Resources {
      * 获取学期初数据
      * @param token
      */
-    public static async getFirstDate(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/calendar`, token, 1500);
+    public static async getCalendar(token: string): Promise<ResourceMessage> {
+        const response = await this.getData(`${rootUrl}/calendar`, token);
 
         if(response.data) {
             return {
@@ -337,7 +272,7 @@ class Resources {
      * @param token
      */
     public static async getInfo(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/info`, token, 1500);
+        const response = await this.getData(`${rootUrl}/info`, token);
 
         if(response.data) {
             return {
@@ -358,7 +293,7 @@ class Resources {
      * @param token
      */
     public static async getTodayClassroomStatus(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/classroom/today`, token, 1500);
+        const response = await this.getData(`${rootUrl}/classroom/today`, token);
 
         if(response.data) {
             return {
@@ -379,7 +314,7 @@ class Resources {
      * @param token
      */
     public static async getTomorrowClassroomStatus(token: string) {
-        const response = await this.getData(`${rootUrl}/classroom/tomorrow`, token, 1500);
+        const response = await this.getData(`${rootUrl}/classroom/tomorrow`, token);
 
         if(response.data) {
             return {
@@ -393,6 +328,38 @@ class Resources {
             code: response.code,
             message: response.message,
         };
+    }
+
+    /**
+     * 获取最新版本数据
+     * @param cancelToken 外部用于中断请求
+     */
+    public static async getUpdateInfo(cancelToken: CancelToken) {
+        try {
+            let count = MAX_ATTEMPTS;
+            let status: number = 0;
+            while(count--) {
+                const response = await axios.get(checkUrl, {cancelToken: cancelToken});
+                status = response.status;
+
+                if(status === 200) {
+                    return {
+                        code: 200,
+                        data: response.data,
+                    }
+                }
+            }
+
+            return {
+                code: status,
+                message: GET_MSG[status] || '未知错误',
+            }
+        } catch(error) {
+            return {
+                code: ResourceCode.LocalFailed,
+                data: error
+            }
+        }
     }
 }
 
