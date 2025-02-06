@@ -89,8 +89,6 @@ class PicSelectActivity: ComponentActivity() {
         AsyncImage(
             model = uri,
             contentDescription = null,
-            placeholder = painterResource(R.drawable.loading),
-            error = painterResource(R.drawable.loading),
             modifier = Modifier
                 .background(Color.Black)
                 .width(100.dp)
