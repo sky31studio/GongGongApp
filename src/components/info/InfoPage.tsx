@@ -1,5 +1,13 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {Image, Modal, Pressable, StyleSheet, Text, View} from 'react-native';
+import {
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  ToastAndroid,
+  View,
+} from 'react-native';
 import {
   BackgroundColor,
   FontColor,
@@ -36,7 +44,22 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import {downloadAndInstallApk, navigateToPicSelectPage} from "../../utils/AndoridModuleUtils.ts";
+import {
+  downloadAndInstallApk,
+  navigateToPicSelectPage,
+} from '../../utils/AndoridModuleUtils.ts';
+import Resources from '../../basic/Resources.ts';
+import {checkUpdate} from '../../utils/infoUtils.tsx';
+import axios, {CancelTokenSource} from 'axios';
+
+interface UpdateInfo {
+    last_version: string,
+    least_version: string,
+    update_url: string,
+    update_title: string,
+    update_notice: string,
+    update_date: string,
+}
 
 const InfoPage = ({navigation}: NavigationProps) => {
     // realm
@@ -54,6 +77,9 @@ const InfoPage = ({navigation}: NavigationProps) => {
 
     // state
     const [modalVisible, setModalVisible] = useState<boolean>(false);
+    const [updateModalVisible, setUpdateModalVisible] = useState<boolean>(false);
+    const [updateInfo, setUpdateInfo] = useState<UpdateInfo | undefined>(undefined);
+    const [axiosSource, setAxiosSource] = useState<CancelTokenSource | undefined>(undefined);
     const [version, setVersion] = useState<string>('--');
 
     const cardAnimatedValue = useSharedValue(0);
@@ -92,8 +118,32 @@ const InfoPage = ({navigation}: NavigationProps) => {
         dispatch(logoutSuccessful());
     }
 
-    const handleCheck = () => {
-        downloadAndInstallApk("http://app.leocoding.online/app.apk");
+    const handleCheck = async () => {
+        const source = axios.CancelToken.source();
+        setAxiosSource(source);
+        const response = await Resources.getUpdateInfo(source.token);
+
+        if(response.code !== 200) {
+            ToastAndroid.showWithGravity('更新信息获取失败！', 1500, ToastAndroid.BOTTOM);
+        } else {
+            const status = checkUpdate(version, response.data.last_version);
+
+            if(status === 0) {
+                ToastAndroid.showWithGravity('当前版本已经是最新版本！', 1500, ToastAndroid.BOTTOM);
+            } else if(status === -1) {
+                setUpdateModalVisible(true);
+                setUpdateInfo(response.data);
+            }
+        }
+    }
+
+    const handleConfirmUpdate = () => {
+        downloadAndInstallApk(updateInfo?.update_url!);
+        setUpdateModalVisible(false);
+    }
+
+    const handleCancelUpdate = () => {
+        setUpdateModalVisible(false);
     }
 
     useEffect(() => {
@@ -108,6 +158,10 @@ const InfoPage = ({navigation}: NavigationProps) => {
         return () => {
             cardAnimatedValue.value = 0;
             listAnimatedValue.value = 0;
+
+            if(axiosSource !== undefined) {
+                axiosSource.cancel('getUpdateInfo is cancelled');
+            }
         }
     }, []))
 
@@ -115,13 +169,6 @@ const InfoPage = ({navigation}: NavigationProps) => {
         <View style={{flex: 1}}>
             <View style={ss.titleBar}>
                 <ScalingNotAllowedText style={ss.titleText}>我的</ScalingNotAllowedText>
-                {/*<Pressable style={{*/}
-                {/*    position: 'absolute',*/}
-                {/*    top: 46,*/}
-                {/*    right: 20,*/}
-                {/*}}>*/}
-                {/*    <SvgXml xml={XMLResources.more} width={35} height={35}/>*/}
-                {/*</Pressable>*/}
             </View>
             <View style={ss.mainContainer}>
                 {/* 个人信息 */}
@@ -239,23 +286,15 @@ const InfoPage = ({navigation}: NavigationProps) => {
                 transparent={true}
                 animationType={'fade'}
             >
-                <View style={{
-                    flex: 1,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: 'rgba(0, 0, 0, .2)'
-                }}>
+                <View style={ss.modalBackgroundBox}>
                     <View
-                        style={{
+                        style={[
+                            {
                             width: '70%',
-                            backgroundColor:
-                            BackgroundColor.mainLight,
-                            borderRadius: 15,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
+                            backgroundColor: BackgroundColor.mainLight,
+                            }
+                            , ss.modalWrapper
+                        ]}
                     >
                         <ScalingNotAllowedText style={{
                             fontSize: FontSize.ll,
@@ -294,6 +333,12 @@ const InfoPage = ({navigation}: NavigationProps) => {
                     </View>
                 </View>
             </Modal>
+            <UpdateModal
+                visible={updateModalVisible}
+                data={updateInfo}
+                handleCancel={handleCancelUpdate}
+                handleConfirm={handleConfirmUpdate}
+            />
         </View>
     )
 }
@@ -332,6 +377,82 @@ const NavigationBox = ({title, handleNavigation}: {
                 <SvgXml xml={XMLResources.infoArrow} width={10} height={10}/>
             </Pressable>
         </View>
+    )
+}
+
+const UpdateModal = ({visible, data, handleCancel, handleConfirm}:
+                         {
+                             visible: boolean,
+                             data: UpdateInfo | undefined,
+                             handleCancel: () => void,
+                             handleConfirm: () => void
+                         }) => {
+
+    console.log(data);
+
+    return (
+        <Modal
+            visible={visible}
+            transparent={true}
+            animationType={'fade'}
+        >
+            <View style={ss.modalBackgroundBox}>
+                <View
+                    style={[
+                        ss.modalWrapper,
+                        {
+                            width: '80%',
+                            backgroundColor: BackgroundColor.mainLight,
+                            paddingTop: 20
+                        }
+                    ]}
+                >
+                    <View style={{width: '90%'}}>
+                        <ScalingNotAllowedText style={{fontSize: FontSize.xxl, fontWeight: '800'}}>{data?.update_title}</ScalingNotAllowedText>
+                        <View style={{flexDirection: 'row'}}>
+                            <ScalingNotAllowedText style={{fontSize: FontSize.s, color: FontColor.grey, marginRight: 10}}>{data?.update_date}</ScalingNotAllowedText>
+                            <ScalingNotAllowedText style={{fontSize: FontSize.s, color: FontColor.grey}}>{data?.last_version}</ScalingNotAllowedText>
+                        </View>
+                    </View>
+
+                    <View style={{width: '90%', marginTop: 15}}>
+                        <ScalingNotAllowedText style={{fontSize: FontSize.ll, fontWeight: '800', color: FontColor.primary}}>Notice</ScalingNotAllowedText>
+                        <ScalingNotAllowedText>{data?.update_notice}</ScalingNotAllowedText>
+                    </View>
+
+                    <View style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        width: '100%',
+                        marginTop: 10,
+                        borderTopWidth: 1,
+                        borderTopColor: BackgroundColor.grey
+                    }}>
+                        <Pressable style={{
+                            width: '50%',
+                            alignItems: 'center',
+                            borderRightWidth: 1,
+                            borderRightColor: BackgroundColor.grey,
+                            paddingVertical: 15
+                        }} onPress={handleCancel}>
+                            <ScalingNotAllowedText
+                                style={{
+                                    color: FontColor.grey,
+                                    fontSize: FontSize.l
+                                }}>暂不更新</ScalingNotAllowedText>
+                        </Pressable>
+                        <Pressable style={{width: '50%', alignItems: 'center', paddingVertical: 15}}
+                                   onPress={handleConfirm}>
+                            <ScalingNotAllowedText
+                                style={{
+                                    color: FontColor.primary,
+                                    fontSize: FontSize.l
+                                }}>更新</ScalingNotAllowedText>
+                        </Pressable>
+                    </View>
+                </View>
+            </View>
+        </Modal>
     )
 }
 
@@ -401,6 +522,21 @@ const ss = StyleSheet.create({
         paddingHorizontal: 5,
         // borderRadius: 10,
     },
+
+    modalBackgroundBox: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, .2)'
+    },
+
+    modalWrapper: {
+        borderRadius: 15,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+    }
 })
 
 export default InfoPage;

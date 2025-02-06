@@ -1,0 +1,7 @@
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-files-path
+        name="download_files"
+        path="Android/data/com.gonggongapp/files/Download/" />
+
+    <external-files-path name="." path="/" />
+</paths>
