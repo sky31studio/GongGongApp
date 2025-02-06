@@ -1,37 +1,51 @@
-import React, {createContext, useCallback, useContext, useEffect, useState} from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import {
-    Modal,
-    Pressable,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    ToastAndroid,
-    useWindowDimensions,
-    View
-} from "react-native";
-import {SvgXml} from "react-native-svg";
-import {BackgroundColor, FontColor} from "../../config/globalStyleSheetConfig.ts";
-import {AgendaList} from "./agenda/agendaList.tsx";
-import ClassList from "./course/classList.tsx";
-import XMLResources from "../../basic/XMLResources.ts";
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  ToastAndroid,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import {SvgXml} from 'react-native-svg';
+import {
+  BackgroundColor,
+  FontColor,
+} from '../../config/globalStyleSheetConfig.ts';
+import {AgendaList} from './agenda/agendaList.tsx';
+import ClassList from './course/classList.tsx';
+import XMLResources from '../../basic/XMLResources.ts';
 import Animated, {
-    Easing, interpolate,
-    interpolateColor,
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming
-} from "react-native-reanimated";
-import LinearGradient from "react-native-linear-gradient";
-import ScalingNotAllowedText from "../global/ScalingNotAllowedText.tsx";
-import {useQuery, useRealm} from "@realm/react";
-import GongUser from "../../dao/object/User.ts";
-import {useAppDispatch, useAppSelector} from "../../app/hooks.ts";
-import {examChangedCountIncrement, selectShowAddBoard, updateExamAgendaList} from "../../app/slice/agendaSlice.ts";
-import AddBoard from "./agenda/addBoard.tsx";
-import Resources, {ResourceMessage} from "../../basic/Resources.ts";
-import {ResourceCode} from "../../utils/enum.ts";
-import {useFocusEffect, useIsFocused} from "@react-navigation/native";
-import {logoutSuccessful, setDate} from "../../app/slice/globalSlice.ts";
+  Easing,
+  interpolate,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import LinearGradient from 'react-native-linear-gradient';
+import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
+import {useQuery, useRealm} from '@realm/react';
+import GongUser from '../../dao/object/User.ts';
+import {useAppDispatch, useAppSelector} from '../../app/hooks.ts';
+import {
+  examChangedCountIncrement,
+  selectShowAddBoard,
+  updateExamAgendaList,
+} from '../../app/slice/agendaSlice.ts';
+import AddBoard from './agenda/addBoard.tsx';
+import Resources, {ResourceMessage} from '../../basic/Resources.ts';
+import {ResourceCode} from '../../utils/enum.ts';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
+import {logoutSuccessful, setCalendar} from '../../app/slice/globalSlice.ts';
 
 export interface NavigationProps {
     navigation: {
@@ -61,7 +75,7 @@ const Home = ({navigation}: NavigationProps) => {
 
         const getData = async () => {
             let msg: ResourceMessage = await Resources.getExam(user.token);
-            if(msg.code === ResourceCode.Successful) {
+            if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
                 dispatch(examChangedCountIncrement());
                 dispatch(updateExamAgendaList(msg.data));
                 realm.write(() => {
@@ -74,12 +88,13 @@ const Home = ({navigation}: NavigationProps) => {
                 ToastAndroid.showWithGravity('考试信息获取失败！', 1500, ToastAndroid.BOTTOM);
             }
 
-            msg = await Resources.getFirstDate(user.token);
-            if(msg.code === ResourceCode.Successful) {
-                dispatch(setDate(msg.data));
+            msg = await Resources.getCalendar(user.token);
+            if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+                dispatch(setCalendar(msg.data));
                 realm.write(() => {
                     user.firstDate = new Date(msg.data.start);
                     user.termID = msg.data.termID;
+                    user.totalWeeks = msg.data.weeks;
                 })
             } else if(msg.code === ResourceCode.InvalidToken) {
                 ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);

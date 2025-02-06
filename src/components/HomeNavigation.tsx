@@ -1,41 +1,44 @@
-import {createNativeStackNavigator} from "@react-navigation/native-stack";
-import TabNavigation from "./TabNavigation.tsx";
-import ScorePage from "./score/ScorePage.tsx";
-import {TablePage} from "./timeTable/tablePage.tsx";
-import EmptyClassroomPage from "./emptyClassroom/EmptyClassroomPage.tsx";
-import React, {useEffect} from "react";
-import {initTable} from "../app/slice/scheduleSlice.ts";
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import TabNavigation from './TabNavigation.tsx';
+import ScorePage from './score/ScorePage.tsx';
+import {TablePage} from './timeTable/tablePage.tsx';
+import EmptyClassroomPage from './emptyClassroom/EmptyClassroomPage.tsx';
+import React, {useEffect} from 'react';
+import {initTable} from '../app/slice/scheduleSlice.ts';
 import {
-    examChangedCountIncrement,
-    initExam,
-    selectExamChangedCount,
-    selectExamList,
-    selectSelfChangedCount,
-    selectSelfList,
-    writeExamAgendaList,
-    writeSelfAgendaList
-} from "../app/slice/agendaSlice.ts";
-import {resetCurrentTime, setDate} from "../app/slice/globalSlice.ts";
+  examChangedCountIncrement,
+  initExam,
+  selectExamChangedCount,
+  selectExamList,
+  selectSelfChangedCount,
+  selectSelfList,
+  writeExamAgendaList,
+  writeSelfAgendaList,
+} from '../app/slice/agendaSlice.ts';
+import {resetCurrentTime, setCalendar} from '../app/slice/globalSlice.ts';
 import {
-    initMinorScoreList,
-    initScoreList,
-    setCompulsoryScoreOverview,
-    setMinorScoreOverview,
-    setScoreOverview
-} from "../app/slice/scoreSlice.ts";
-import {useAppDispatch, useAppSelector} from "../app/hooks.ts";
-import {initInfo} from "../app/slice/infoSlice.ts";
-import SpecificationPage from "./info/SpecificationPage.tsx";
-import {setTodayEmptyClassroomStatus, setTomorrowEmptyClassroomStatus} from "../app/slice/classroomSlice.ts";
-import {useQuery, useRealm} from "@realm/react";
-import GongUser from "../dao/object/User.ts";
-import Resources, {ResourceMessage} from "../basic/Resources.ts";
-import {ResourceCode} from "../utils/enum.ts";
-import UserAgreePage from "./info/UserAgreePage.tsx";
-import PrivacyPolicyPage from "./info/PrivacyPolicyPage.tsx";
-import FeedbackPage from "./info/FeedbackPage.tsx";
-import {View} from "react-native";
-import {GestureHandlerRootView} from "react-native-gesture-handler";
+  initMinorScoreList,
+  initScoreList,
+  setCompulsoryScoreOverview,
+  setMinorScoreOverview,
+  setScoreOverview,
+} from '../app/slice/scoreSlice.ts';
+import {useAppDispatch, useAppSelector} from '../app/hooks.ts';
+import {initInfo} from '../app/slice/infoSlice.ts';
+import SpecificationPage from './info/SpecificationPage.tsx';
+import {
+  setTodayEmptyClassroomStatus,
+  setTomorrowEmptyClassroomStatus,
+} from '../app/slice/classroomSlice.ts';
+import {useQuery, useRealm} from '@realm/react';
+import GongUser from '../dao/object/User.ts';
+import Resources, {ResourceMessage} from '../basic/Resources.ts';
+import {ResourceCode} from '../utils/enum.ts';
+import UserAgreePage from './info/UserAgreePage.tsx';
+import PrivacyPolicyPage from './info/PrivacyPolicyPage.tsx';
+import FeedbackPage from './info/FeedbackPage.tsx';
+import {View} from 'react-native';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 const HomeNavigation = () => {
     const realm = useRealm();
@@ -228,14 +231,15 @@ const HomeNavigation = () => {
             }
 
             if(!user.firstDate) {
-                Resources.getFirstDate(user.token)
+                Resources.getCalendar(user.token)
                     .then((msg: ResourceMessage) => {
                         if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired)  {
-                            dispatch(setDate(msg.data));
+                            dispatch(setCalendar(msg.data));
                             console.log('writing firstDate in realm...');
                             realm.write(() => {
                                 user.firstDate = new Date(msg.data.start);
                                 user.termID = msg.data.termID;
+                                user.totalWeeks = msg.data.weeks;
                             })
                             console.log('firstDate is written!');
                         } else {
@@ -243,9 +247,10 @@ const HomeNavigation = () => {
                         }
                     })
             } else {
-                dispatch(setDate({
+                dispatch(setCalendar({
                     start: user.firstDate.toString(),
                     termID: user.termID,
+                    totalWeeks: user.totalWeeks
                 }));
             }
 
@@ -261,18 +266,6 @@ const HomeNavigation = () => {
         dispatch(resetCurrentTime());
         fetchAllData();
     }, []);
-
-    // 错误案例: 这样的话会在组件刚挂载时执行，导致空的selfList表格会先写覆盖user.selfAgendaList。
-    // useEffect(() => {
-    //     if(selfList.length === 0) return;
-    //     console.log('start to write selfAgendaList into realm!');
-    //     realm.write(() => {
-    //         user.selfAgendaList = JSON.stringify(selfList);
-    //     })
-    //     console.log('write selfAgendaList into realm!');
-    //     console.log('result:')
-    //     console.log(user.selfAgendaList);
-    // }, [selfList]);
 
     useEffect(() => {
         if(selfChangedCount === 0) return;
