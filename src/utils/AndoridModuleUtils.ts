@@ -1,4 +1,4 @@
-import {NativeModules} from "react-native";
+import {NativeModules, ToastAndroid} from "react-native";
 
 const { ApkDownloader, MediaModule } = NativeModules;
 
@@ -7,6 +7,14 @@ export const downloadAndInstallApk = (url: string) => {
     ApkDownloader.downloadApk(url)
 };
 
-export const navigateToPicSelectPage = () => {
-    MediaModule.navigateToPicSelectPage()
+export const navigateToPicSelectScreen = () => {
+    MediaModule.navigateToPicSelectScreen(
+        (msg: string) => {
+            console.log(msg);
+        },
+        (msg: string) => {
+            console.log(msg);
+            ToastAndroid.showWithGravity("权限被拒绝", 1500, ToastAndroid.BOTTOM)
+        }
+    )
 }

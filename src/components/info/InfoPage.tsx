@@ -1,33 +1,28 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
-  Image,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  ToastAndroid,
-  View,
+    Image,
+    Modal,
+    Pressable,
+    StatusBar,
+    StyleSheet,
+    Text,
+    ToastAndroid,
+    View,
 } from 'react-native';
 import {
-  BackgroundColor,
-  FontColor,
-  FontSize,
+    BackgroundColor,
+    FontColor,
+    FontSize,
 } from '../../config/globalStyleSheetConfig.ts';
 import {SvgXml} from 'react-native-svg';
 import XMLResources from '../../basic/XMLResources.ts';
 import {useAppDispatch, useAppSelector} from '../../app/hooks.ts';
+import {agendaResetAll} from '../../app/slice/agendaSlice.ts';
+import {resetSchedule} from '../../app/slice/scheduleSlice.ts';
 import {
-  agendaResetAll,
-  selectCurrentAgendaNumber,
-} from '../../app/slice/agendaSlice.ts';
-import {
-  resetSchedule,
-  selectCurrentCourseNumber,
-} from '../../app/slice/scheduleSlice.ts';
-import {
-  clearInfo,
-  selectStudentID,
-  selectStudentName,
+    clearInfo,
+    selectStudentID,
+    selectStudentName,
 } from '../../app/slice/infoSlice.ts';
 import {logoutSuccessful} from '../../app/slice/globalSlice.ts';
 import {NavigationProps} from '../home/homePage.tsx';
@@ -38,27 +33,29 @@ import {getVersion} from 'react-native-device-info';
 import {clearScore} from '../../app/slice/scoreSlice.ts';
 import {useFocusEffect} from '@react-navigation/native';
 import Animated, {
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withTiming,
+    interpolate,
+    interpolateColor,
+    runOnJS,
+    useAnimatedStyle,
+    useSharedValue,
+    withDelay,
+    withTiming,
 } from 'react-native-reanimated';
 import {
-  downloadAndInstallApk,
-  navigateToPicSelectPage,
+    downloadAndInstallApk,
+    navigateToPicSelectScreen,
 } from '../../utils/AndoridModuleUtils.ts';
 import Resources from '../../basic/Resources.ts';
 import {checkUpdate} from '../../utils/infoUtils.tsx';
 import axios, {CancelTokenSource} from 'axios';
 
 interface UpdateInfo {
-    last_version: string,
-    least_version: string,
-    update_url: string,
-    update_title: string,
-    update_notice: string,
-    update_date: string,
+    last_version: string;
+    least_version: string;
+    update_url: string;
+    update_title: string;
+    update_notice: string;
+    update_date: string;
 }
 
 const InfoPage = ({navigation}: NavigationProps) => {
@@ -68,8 +65,6 @@ const InfoPage = ({navigation}: NavigationProps) => {
 
     // redux
     const dispatch = useAppDispatch();
-    const agendaNumber = useAppSelector(selectCurrentAgendaNumber);
-    const courseNumber = useAppSelector(selectCurrentCourseNumber);
     const studentID = useAppSelector(selectStudentID);
     const name = useAppSelector(selectStudentName);
     // const major = useAppSelector(selectStudentMajor);
@@ -78,19 +73,13 @@ const InfoPage = ({navigation}: NavigationProps) => {
     // state
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [updateModalVisible, setUpdateModalVisible] = useState<boolean>(false);
+    const [avatarModalVisible, setAvatarModalVisible] = useState<boolean>(false);
     const [updateInfo, setUpdateInfo] = useState<UpdateInfo | undefined>(undefined);
     const [axiosSource, setAxiosSource] = useState<CancelTokenSource | undefined>(undefined);
     const [version, setVersion] = useState<string>('--');
 
     const cardAnimatedValue = useSharedValue(0);
     const listAnimatedValue = useSharedValue(0);
-
-    const cardAnimatedStyle = useAnimatedStyle(() => {
-        return {
-            opacity: interpolate(cardAnimatedValue.value, [0, 1], [0, 1]),
-            transform: [{translateY: interpolate(cardAnimatedValue.value, [0, 1], [40, 0])}]
-        }
-    })
 
     const listAnimatedStyle = useAnimatedStyle(() => {
         return {
@@ -138,12 +127,21 @@ const InfoPage = ({navigation}: NavigationProps) => {
     }
 
     const handleConfirmUpdate = () => {
+        ToastAndroid.showWithGravity('正在下载更新...', 2000, ToastAndroid.BOTTOM);
         downloadAndInstallApk(updateInfo?.update_url!);
         setUpdateModalVisible(false);
     }
 
     const handleCancelUpdate = () => {
         setUpdateModalVisible(false);
+    }
+
+    const handleShowAvatarModal = () => {
+        setAvatarModalVisible(true);
+    }
+
+    const handleDismissAvatarModal = () => {
+        setAvatarModalVisible(false);
     }
 
     useEffect(() => {
@@ -167,57 +165,58 @@ const InfoPage = ({navigation}: NavigationProps) => {
 
     return (
         <View style={{flex: 1}}>
-            <View style={ss.titleBar}>
-                <ScalingNotAllowedText style={ss.titleText}>我的</ScalingNotAllowedText>
-            </View>
             <View style={ss.mainContainer}>
                 {/* 个人信息 */}
-                <Animated.View style={[ss.infoContainer, cardAnimatedStyle]}>
-                    <View style={ss.innerInfoContainer}>
-                        <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 6}}>
-                            <View style={{width: 35, height: 35, borderRadius: 20, overflow: 'hidden'}}>
-                                <Image source={require('../../assets/png/avatar.png')} style={{height: '100%', width: '100%'}}/>
-                            </View>
-                            <Pressable style={{height: '100%', paddingHorizontal: 12}} onPress={isLogin ? navigateToPicSelectPage : handleReLogin}>
-                                <ScalingNotAllowedText>{isLogin ? name : '点击登录'}</ScalingNotAllowedText>
-                            </Pressable>
-                        </View>
-
-                        <Pressable style={ss.editInfoButton}>
-                            <ScalingNotAllowedText
-                                style={{
-                                    fontSize: FontSize.ss,
-                                    fontWeight: '700',
-                                    letterSpacing: 1,
-                                    width: '100%',
-                                    textAlign: 'center',
-                                    height: '100%',
-                                    lineHeight: 17,
-                                }}
-                            >{studentID}</ScalingNotAllowedText>
-                        </Pressable>
-
-                    </View>
-                    <View style={[ss.innerInfoContainer, {marginTop: 25}]}>
-                        <View style={ss.infoBox}>
-                            <ScalingNotAllowedText>{courseNumber}</ScalingNotAllowedText>
-                            <ScalingNotAllowedText style={ss.infoBoxText}>今日课程</ScalingNotAllowedText>
-                        </View>
-                        <View style={ss.infoBox}>
-                            <ScalingNotAllowedText>{agendaNumber}</ScalingNotAllowedText>
-                            <ScalingNotAllowedText style={ss.infoBoxText}>倒计时</ScalingNotAllowedText>
-                        </View>
-                    </View>
-                </Animated.View>
-                <ScalingNotAllowedText
-                    style={{
-                        fontSize: FontSize.l,
-                        color: FontColor.dark,
-                        marginVertical: 15,
-                        alignSelf: 'flex-start',
-                        fontWeight: '600'
+                <View style={ss.innerInfoContainer}>
+                    <Pressable
+                        style={{
+                            width: 120,
+                            height: 120,
+                            borderRadius: 60,
+                            overflow: 'hidden',
+                            borderWidth: 2,
+                            borderColor: 'white',
+                            backgroundColor: 'rgba(200, 200, 200, .1)'
                     }}
-                >小Tips</ScalingNotAllowedText>
+                        onPress={isLogin ? handleShowAvatarModal : handleReLogin}
+                    >
+                        <Image source={require('../../assets/png/avatar.png')} style={{height: '100%', width: '100%'}}/>
+                    </Pressable>
+                    <View style={{marginTop: 25}}>
+                        <ScalingNotAllowedText
+                            style={{
+                                color: FontColor.light,
+                                fontSize: FontSize.ll,
+                                fontWeight: '700',
+                                letterSpacing: 2,
+                            }}
+                        >{isLogin ? name : '点击登录'}</ScalingNotAllowedText>
+                    </View>
+                    <ScalingNotAllowedText
+                        style={{
+                            fontSize: FontSize.m,
+                            color: FontColor.light,
+                            fontWeight: '600',
+                            letterSpacing: 1,
+                            width: '100%',
+                            textAlign: 'center',
+                            lineHeight: 17,
+                            marginVertical: 9
+                        }}
+                    >ID: {studentID}</ScalingNotAllowedText>
+                </View>
+
+                <View style={{width: '90%', marginTop: 15}}>
+                    <ScalingNotAllowedText
+                        style={{
+                            fontSize: FontSize.m,
+                            color: FontColor.dark,
+                            marginVertical: 15,
+                            alignSelf: 'flex-start',
+                            fontWeight: '700',
+                        }}
+                    >小Tips</ScalingNotAllowedText>
+                </View>
 
                 {/* 更多信息 */}
                 <Animated.View style={[ss.infoContainer, {paddingTop: 5, paddingBottom: 40, paddingHorizontal: 0}, listAnimatedStyle]}>
@@ -260,7 +259,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                 <Pressable
                     style={{
                         height: 43,
-                        width: '100%',
+                        width: '90%',
                         borderRadius: 12,
                         justifyContent: 'center',
                         alignItems: 'center',
@@ -338,6 +337,10 @@ const InfoPage = ({navigation}: NavigationProps) => {
                 data={updateInfo}
                 handleCancel={handleCancelUpdate}
                 handleConfirm={handleConfirmUpdate}
+            />
+            <AvtarModal
+                visible={avatarModalVisible}
+                dismiss={handleDismissAvatarModal}
             />
         </View>
     )
@@ -456,6 +459,106 @@ const UpdateModal = ({visible, data, handleCancel, handleConfirm}:
     )
 }
 
+const AvtarModal = ({visible, dismiss}: {visible: boolean, dismiss: () => void}) => {
+    const [modalHeight, setModalHeight] = useState(0);
+    const backgroundValue = useSharedValue(0);
+
+    const backgroundStyle = useAnimatedStyle(() => {
+        return {
+            backgroundColor: interpolateColor(backgroundValue.value, [0, 1], ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, .4)']),
+        }
+    })
+
+    const translateStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{translateY: interpolate(backgroundValue.value, [0, 1], [modalHeight, 0])}]
+        }
+    })
+
+    const handleChooseGallery = () => {
+        backgroundValue.value = withTiming(0, {duration: 400}, (finished) => {
+            if(finished) {
+                runOnJS(dismiss)()
+            }
+        });
+        navigateToPicSelectScreen();
+    }
+
+    const handleDismiss = () => {
+        backgroundValue.value = withTiming(0, {duration: 400}, (finished) => {
+            if(finished) {
+                runOnJS(dismiss)()
+            }
+        });
+    }
+
+    useEffect(() => {
+        if(visible && modalHeight !== undefined) {
+            backgroundValue.value = withTiming(1, {duration: 200});
+        }
+    }, [visible, modalHeight]);
+
+    return (
+        <Modal
+            visible={visible}
+            transparent={true}
+        >
+            <Animated.View style={[{flex: 1}, backgroundStyle]}>
+                <Pressable
+                    onPress={handleDismiss}
+                    style={ss.modalTransparentBackgroundWrapper}
+                >
+                    <Animated.View
+                        style={[
+                            translateStyle,
+                            {
+                                paddingVertical: 15,
+                                paddingHorizontal: 15,
+                                borderTopRightRadius: 15,
+                                borderTopLeftRadius: 15,
+                                width: '100%',
+                                backgroundColor: BackgroundColor.mainLight,
+                            }
+                        ]}
+                        onLayout={({nativeEvent}) => {
+                            setModalHeight(nativeEvent.layout.height);
+                        }}
+                    >
+                        <Pressable
+                            onPress={(event) => event.stopPropagation()}
+                            style={{
+                                width: '100%',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <View style={{width: '100%', height: 30, display: 'flex', alignItems: 'flex-end'}}>
+                                <Pressable onPress={handleDismiss} hitSlop={{top: 4, bottom: 4, left: 8, right: 8}}>
+                                    <SvgXml xml={XMLResources.closeAddBoard} width="20" height="20"/>
+                                </Pressable>
+                            </View>
+
+                            <Pressable
+                                onPress={handleChooseGallery}
+                                style={ss.avatarModalButton}
+                            >
+                                <ScalingNotAllowedText style={ss.avatarModalButtonText}>从相册中选择</ScalingNotAllowedText>
+                            </Pressable>
+
+                            <Pressable
+                                onPress={() => {}} // TODO 相机
+                                style={ss.avatarModalButton}
+                            >
+                                <ScalingNotAllowedText style={ss.avatarModalButtonText}>拍照上传照片</ScalingNotAllowedText>
+                            </Pressable>
+                        </Pressable>
+                    </Animated.View>
+                </Pressable>
+            </Animated.View>
+        </Modal>
+    )
+}
+
 const ss = StyleSheet.create({
     titleBar: {
         width: '100%',
@@ -482,11 +585,10 @@ const ss = StyleSheet.create({
         flexDirection: 'column',
         alignItems: 'center',
         transform: [{translateY: -35}],
-        paddingHorizontal: '7%',
     },
 
     infoContainer: {
-        width: '100%',
+        width: '90%',
         paddingVertical: 15,
         paddingHorizontal: 20,
         borderRadius: 13,
@@ -498,10 +600,13 @@ const ss = StyleSheet.create({
 
     innerInfoContainer: {
         width: '100%',
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        justifyContent: 'flex-end',
+        backgroundColor: BackgroundColor.primary,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+        paddingTop: StatusBar.currentHeight! * 3,
+        paddingBottom: 20,
     },
 
     infoBox: {
@@ -515,19 +620,24 @@ const ss = StyleSheet.create({
         color: FontColor.grey,
     },
 
-    editInfoButton: {
-        // borderWidth: 1,
-        // borderColor: BorderColor.grey,
-        height: 20,
-        paddingHorizontal: 5,
-        // borderRadius: 10,
-    },
-
     modalBackgroundBox: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'rgba(0, 0, 0, .2)'
+    },
+
+    modalTransparentBackgroundWrapper: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+    },
+
+    avatarModalContainer: {
+        width: '100%',
+        height: 100,
+        borderTopLeftRadius: 15,
+        borderTopRightRadius: 15,
     },
 
     modalWrapper: {
@@ -536,6 +646,23 @@ const ss = StyleSheet.create({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+    },
+
+    avatarModalButton: {
+        width: '90%',
+        height: 40,
+        marginVertical: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 15,
+        backgroundColor: BackgroundColor.primary
+    },
+
+    avatarModalButtonText: {
+        fontSize: FontSize.l,
+        color: FontColor.light,
+        fontWeight: '700',
+        letterSpacing: 1,
     }
 })
 
