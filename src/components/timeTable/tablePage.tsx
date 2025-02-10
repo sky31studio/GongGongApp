@@ -5,7 +5,6 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    ToastAndroid,
     View,
 } from 'react-native';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
@@ -42,10 +41,11 @@ import {
     unlockModal,
 } from '../../app/slice/scheduleSlice.ts';
 import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
-import {ENToCNWeekDay, ResourceCode} from '../../utils/enum.ts';
-import Resources, {ResourceMessage} from '../../basic/Resources.ts';
+import {ENToCNWeekDay} from '../../utils/enum.ts';
+import Resources from '../../basic/Resources.ts';
 import {useQuery, useRealm} from '@realm/react';
 import GongUser from '../../dao/object/User.ts';
+import {getPromise, getPromiseAllSettled} from '../../utils/ResourceUtils.ts';
 
 export const TablePage = ({navigation}: NavigationProps) => {
     const realm = useRealm();
@@ -115,64 +115,33 @@ export const TablePage = ({navigation}: NavigationProps) => {
     const onRefresh = () => {
         setRefreshing(true);
 
-        const getData = async () => {
-            let msg: ResourceMessage = await Resources.getCalendar(user.token);
-
-            if (
-                msg.code === ResourceCode.Successful ||
-                msg.code === ResourceCode.DataExpired
-            ) {
-                dispatch(setCalendar(msg.data));
+        const calendarPromise = getPromise(
+            () => Resources.getCalendar(user.token),
+            data => {
+                dispatch(setCalendar(data));
                 realm.write(() => {
-                    user.firstDate = new Date(msg.data.start);
-                    user.termID = msg.data.termID;
-                    user.totalWeeks = msg.data.weeks;
+                    user.firstDate = new Date(data.start);
+                    user.termID = data.termID;
+                    user.totalWeeks = data.weeks;
                 });
-            } else if (msg.code === ResourceCode.InvalidToken) {
-                ToastAndroid.showWithGravity(
-                    '身份失效，请重新登录！',
-                    1500,
-                    ToastAndroid.BOTTOM,
-                );
+            },
+            '校历获取失败！',
+        );
 
-                return;
-            } else {
-                ToastAndroid.showWithGravity(
-                    '课表获取失败！',
-                    1500,
-                    ToastAndroid.BOTTOM,
-                );
-            }
-
-            msg = await Resources.getClassData(user.token);
-            if (
-                msg.code === ResourceCode.Successful ||
-                msg.code === ResourceCode.DataExpired
-            ) {
-                dispatch(initTable(msg.data));
+        const classDataPromise = getPromise(
+            () => Resources.getClassData(user.token),
+            data => {
+                dispatch(initTable(data));
                 realm.write(() => {
-                    user.courses = JSON.stringify(msg.data);
+                    user.courses = JSON.stringify(data);
                 });
-            } else if (msg.code === ResourceCode.InvalidToken) {
-                ToastAndroid.showWithGravity(
-                    '身份失效，请重新登录！',
-                    1500,
-                    ToastAndroid.BOTTOM,
-                );
+            },
+            '课表获取失败！',
+        );
 
-                return;
-            } else {
-                ToastAndroid.showWithGravity(
-                    '课表获取失败！',
-                    1500,
-                    ToastAndroid.BOTTOM,
-                );
-            }
-        };
-
-        getData()
-            .then(() => setRefreshing(false))
-            .catch(() => setRefreshing(false))
+        getPromiseAllSettled([calendarPromise, classDataPromise], () =>
+            setRefreshing(false),
+        );
     };
 
     const handleGoBack = () => {

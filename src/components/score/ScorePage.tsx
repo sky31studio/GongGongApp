@@ -31,12 +31,10 @@ import {
 import {useQuery, useRealm} from '@realm/react';
 import GongUser from '../../dao/object/User.ts';
 import Resources from '../../basic/Resources.ts';
-import {ResourceCode} from '../../utils/enum.ts';
 import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
 import {AnimatedScrollView} from 'react-native-reanimated/lib/typescript/component/ScrollView';
-import {sleep} from '../../utils/globalUtils.ts';
+import {getPromise, getPromiseAllSettled} from '../../utils/ResourceUtils.ts';
 import ScrollView = Animated.ScrollView;
-import {getPromise} from "../../utils/ResourceUtils.ts";
 
 const ScorePage = ({navigation}: NavigationProps) => {
     const dispatch = useAppDispatch();
@@ -67,165 +65,71 @@ const ScorePage = ({navigation}: NavigationProps) => {
             return;
         }
 
-        const scoreOverviewPromise = new Promise(async (resolve, reject) => {
-            const msg = await Resources.getScoreOverview(user.token);
-            console.log(msg);
-            if (
-                msg.code === ResourceCode.Successful ||
-                msg.code === ResourceCode.DataExpired
-            ) {
-                dispatch(setScoreOverview(msg.data));
+        const scoreOverviewPromise = getPromise(
+            () => Resources.getScoreOverview(user.token),
+            data => {
+                dispatch(setScoreOverview(data));
                 realm.write(() => {
-                    user.scoreOverview = JSON.stringify(msg.data);
+                    user.scoreOverview = JSON.stringify(data);
                 });
-                resolve({
-                    code: msg.code,
-                    msg: msg.code === 200 ? undefined : '成绩总览数据更新中',
-                });
-            } else if (msg.code === ResourceCode.InvalidToken) {
-                reject(msg.code);
-            } else {
-                resolve('成绩总览获取失败');
-            }
-        });
+            },
+            '成绩总览获取失败',
+        );
 
-        const scoreListPromise = new Promise(async (resolve, reject) => {
-            const msg = await Resources.getScore(user.token);
-            console.log(msg);
-            if (
-                msg.code === ResourceCode.Successful ||
-                msg.code === ResourceCode.DataExpired
-            ) {
-                dispatch(initScoreList(msg.data));
+        const scoreListPromise = getPromise(
+            () => Resources.getScore(user.token),
+            data => {
+                dispatch(initScoreList(data));
                 realm.write(() => {
-                    user.scoreList = JSON.stringify(msg.data);
+                    user.scoreList = JSON.stringify(data);
                 });
-                resolve({
-                    code: msg.code,
-                    msg: msg.code === 200 ? undefined : '成绩表单数据更新中',
-                });
-            } else if (msg.code === ResourceCode.InvalidToken) {
-                reject(msg.code);
-            } else {
-                resolve({
-                    code: msg.code,
-                    msg: '成绩表单获取失败',
-                });
-            }
-        });
+            },
+            '成绩表单获取失败',
+        );
 
-        const minorScoreListPromise = new Promise(async (resolve, reject) => {
-            const msg = await Resources.getMinorScore(user.token);
-            console.log(msg);
-            if (
-                msg.code === ResourceCode.Successful ||
-                msg.code === ResourceCode.DataExpired
-            ) {
-                dispatch(initMinorScoreList(msg.data.scoreList));
+        const minorScoreListPromise = getPromise(
+            () => Resources.getMinorScore(user.token),
+            data => {
+                dispatch(initMinorScoreList(data.scoreList));
                 dispatch(
                     setMinorScoreOverview({
-                        totalCredit: msg.data.totalCredit,
-                        minorGpa: msg.data.gpa,
-                        minorAverageScore: msg.data.averageScore,
+                        totalCredit: data.totalCredit,
+                        minorGpa: data.gpa,
+                        minorAverageScore: data.averageScore,
                     }),
                 );
                 realm.write(() => {
-                    user.minorScoreList = JSON.stringify(msg.data.scoreList);
+                    user.minorScoreList = JSON.stringify(data.scoreList);
                     user.minorScoreOverview = JSON.stringify({
-                        totalCredit: msg.data.totalCredit,
-                        minorGpa: msg.data.gpa,
-                        minorAverageScore: msg.data.averageScore,
+                        totalCredit: data.totalCredit,
+                        minorGpa: data.gpa,
+                        minorAverageScore: data.averageScore,
                     });
                 });
-                resolve({
-                    code: msg.code,
-                    msg: msg.code === 200 ? undefined : '辅修表单数据更新中',
-                });
-            } else if (msg.code === ResourceCode.InvalidToken) {
-                reject(msg.code);
-            } else {
-                resolve({
-                    code: msg.code,
-                    msg: '辅修表单获取失败',
-                });
-            }
-        });
-
-        const compulsoryOverviewPromise = new Promise(
-            async (resolve, reject) => {
-                const msg = await Resources.getCompulsoryScoreOverview(
-                    user.token,
-                );
-                console.log(msg);
-                if (msg.code === ResourceCode.Successful ||
-                    msg.code === ResourceCode.DataExpired
-                ) {
-                    console.log('compulsoryOverview');
-                    dispatch(setCompulsoryScoreOverview(msg.data));
-                    realm.write(() => {
-                        user.compulsoryScoreOverview = JSON.stringify(msg.data);
-                    });
-                    resolve({
-                        code: msg.code,
-                        msg:
-                            msg.code === 200
-                                ? undefined
-                                : '必修成绩总览数据更新中',
-                    });
-                } else if (msg.code === ResourceCode.InvalidToken) {
-                    reject(msg.code);
-                } else {
-                    resolve({
-                        code: msg.code,
-                        msg: '必修成绩总览获取失败',
-                    });
-                }
             },
+            '辅修表单获取失败',
         );
 
-        Promise.allSettled([
-            scoreOverviewPromise,
-            scoreListPromise,
-            minorScoreListPromise,
-            compulsoryOverviewPromise,
-        ])
-            .then(async (results: any[]) => {
-                console.log(results);
-                for(let result of results) {
-                    if(result.status === 'rejected') {
-                        ToastAndroid.showWithGravity(
-                            '身份失效，请重新登录！',
-                            1500,
-                            ToastAndroid.BOTTOM,
-                        );
-                        setRefreshing(false);
-                        return;
-                    }
-                }
+        const compulsoryOverviewPromise = getPromise(
+            () => Resources.getCompulsoryScoreOverview(user.token),
+            data => {
+                dispatch(setCompulsoryScoreOverview(data));
+                realm.write(() => {
+                    user.compulsoryScoreOverview = JSON.stringify(data);
+                });
+            },
+            '必修成绩总览获取失败',
+        );
 
-                let flag = false;
-                for (let result of results) {
-                    if (result.value.code !== 200) {
-                        ToastAndroid.showWithGravity(
-                            result.msg,
-                            1500,
-                            ToastAndroid.BOTTOM,
-                        );
-                        flag = true;
-                        await sleep(1500);
-                    }
-                }
-
-                if (!flag) {
-                    ToastAndroid.showWithGravity(
-                        '数据刷新完成',
-                        1500,
-                        ToastAndroid.BOTTOM,
-                    );
-                }
-
-                setRefreshing(false);
-            })
+        getPromiseAllSettled(
+            [
+                scoreOverviewPromise,
+                scoreListPromise,
+                minorScoreListPromise,
+                compulsoryOverviewPromise,
+            ],
+            () => setRefreshing(false),
+        );
     };
 
     const handleExchange = () => {

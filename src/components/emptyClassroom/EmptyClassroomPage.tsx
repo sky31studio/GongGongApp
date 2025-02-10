@@ -1,24 +1,40 @@
-import {FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, ToastAndroid, View} from 'react-native';
-import {BackgroundColor, FontColor, FontFamily, FontSize} from '../../config/globalStyleSheetConfig.ts';
+import {
+    FlatList,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    ToastAndroid,
+    View,
+} from 'react-native';
+import {
+    BackgroundColor,
+    FontColor,
+    FontFamily,
+    FontSize,
+} from '../../config/globalStyleSheetConfig.ts';
 import React, {memo, useCallback, useEffect, useMemo, useState} from 'react';
 import {SvgXml} from 'react-native-svg';
 import XMLResources from '../../basic/XMLResources.ts';
 import {NavigationProps} from '../home/homePage.tsx';
 import {produce} from 'immer';
-import Animated, {runOnJS, useAnimatedStyle, useSharedValue, withTiming} from 'react-native-reanimated';
+import Animated, {
+    runOnJS,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
+} from 'react-native-reanimated';
 import {useAppDispatch, useAppSelector} from '../../app/hooks.ts';
 import {
     selectTodayClassroomStatus,
     selectTomorrowClassroomStatus,
     setTodayEmptyClassroomStatus,
-    setTomorrowEmptyClassroomStatus,
 } from '../../app/slice/classroomSlice.ts';
 import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
 import {useQuery, useRealm} from '@realm/react';
 import GongUser from '../../dao/object/User.ts';
-import Resources, {ResourceMessage} from '../../basic/Resources.ts';
-import {ResourceCode} from '../../utils/enum.ts';
-import {sleep} from "../../utils/globalUtils.ts";
+import Resources from '../../basic/Resources.ts';
+import {getPromise, getPromiseAllSettled} from '../../utils/ResourceUtils.ts';
 
 const periods = ['1-2', '3-4', '5-6', '7-8', '9-11'];
 /**
@@ -94,105 +110,32 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
             return;
         }
 
-        const todayPromise = new Promise(async (resolve, reject) => {
-            const msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token);
-            if(msg.code === ResourceCode.Successful ||
-                msg.code === ResourceCode.DataExpired) {
-                dispatch(setTodayEmptyClassroomStatus(msg.data));
+        const todayClassroomPromise = getPromise(
+            () => Resources.getTodayClassroomStatus(user.token),
+            (data) => {
+                dispatch(setTodayEmptyClassroomStatus(data));
                 realm.write(() => {
-                    user.todayClassroom = JSON.stringify(msg.data);
+                    user.todayClassroom = JSON.stringify(data);
                 });
-                resolve({
-                    code: msg.code,
-                    msg: msg.code === 200 ? undefined : '今日空教室数据更新中',
-                })
-            } else if(msg.code === ResourceCode.InvalidToken) {
-                reject('身份失效，请重新登录！');
-            } else {
-                resolve({
-                    code: msg.code,
-                    msg: '今日空教室信息获取失败！',
-                });
-            }
-        })
+            },
+            '今日空教室信息获取失败！'
+        );
 
-        const tomorrowPromise = new Promise(async (resolve, reject) => {
-            const msg: ResourceMessage = await Resources.getTomorrowClassroomStatus(user.token);
-            if(msg.code === ResourceCode.Successful ||
-                msg.code === ResourceCode.DataExpired) {
-                dispatch(setTodayEmptyClassroomStatus(msg.data));
+        const tomorrowClassroomPromise = getPromise(
+            () => Resources.getTomorrowClassroomStatus(user.token),
+            (data) => {
+                dispatch(setTodayEmptyClassroomStatus(data));
                 realm.write(() => {
-                    user.todayClassroom = JSON.stringify(msg.data);
+                    user.todayClassroom = JSON.stringify(data);
                 });
-                resolve({
-                    code: msg.code,
-                    msg: msg.code === 200 ? undefined : '明日空教室数据更新中',
-                })
-            } else if(msg.code === ResourceCode.InvalidToken) {
-                reject('身份失效，请重新登录！');
-            } else {
-                resolve({
-                    code: msg.code,
-                    msg: '明日空教室信息获取失败！',
-                });
-            }
-        })
+            },
+            '明日空教室信息获取失败！'
+        );
 
-        const fetchData = async () => {
-            let msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token);
-            if(msg.code === ResourceCode.Successful ||
-                msg.code === ResourceCode.DataExpired) {
-                dispatch(setTodayEmptyClassroomStatus(msg.data));
-                realm.write(() => {
-                    user.todayClassroom = JSON.stringify(msg.data);
-                });
-            } else if(msg.code === ResourceCode.InvalidToken) {
-                ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
-                return;
-            } else {
-                ToastAndroid.showWithGravity('今日空教室信息获取失败！', 1500, ToastAndroid.BOTTOM);
-            }
-
-            msg = await Resources.getTomorrowClassroomStatus(user.token);
-            if(msg.code === ResourceCode.Successful ||
-                msg.code === ResourceCode.DataExpired) {
-                dispatch(setTomorrowEmptyClassroomStatus(msg.data));
-                realm.write(() => {
-                    user.tomorrowClassroom = JSON.stringify(msg.data);
-                });
-            } else if(msg.code === ResourceCode.InvalidToken) {
-                ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
-                return;
-            } else {
-                ToastAndroid.showWithGravity('明日空教室信息获取失败！', 1500, ToastAndroid.BOTTOM);
-            }
-        };
-
-        Promise.all([todayPromise, tomorrowPromise])
-            .then(async (results: any[]) => {
-                let flag = false;
-                for(let result of results) {
-                    if(result.code !== 200) {
-                        ToastAndroid.showWithGravity(result.msg, 1500, ToastAndroid.BOTTOM);
-                        flag = true;
-                        await sleep(1500);
-                    }
-                }
-
-                if(!flag) {
-                    ToastAndroid.showWithGravity('数据更新完成！', 1500, ToastAndroid.BOTTOM);
-                }
-
-                setRefreshing(false);
-            })
-            .catch((error: any) => {
-                ToastAndroid.showWithGravity(error, 1500, ToastAndroid.BOTTOM);
-                setRefreshing(false);
-            })
-
-        fetchData()
-            .then(() => setRefreshing(false))
-            .then(() => setRefreshing(false));
+        getPromiseAllSettled([
+            todayClassroomPromise,
+            tomorrowClassroomPromise
+        ], () => setRefreshing(false));
     }, [dispatch, realm, user]);
 
     // FlatList渲染需要使用的数据
@@ -276,12 +219,16 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                     </View>
                 </View>
                 <View style={ss.mainContainer}>
-                    <FunctionField
-                        handleLeft={leftHandler}
-                        handleRight={rightHandler}
-                        reset={clearCurrentPeriod}
-                        locationName={todayData[currentIndex].name}
-                    />
+                    {
+                        listData.length !== 0 && (
+                            <FunctionField
+                                handleLeft={leftHandler}
+                                handleRight={rightHandler}
+                                reset={clearCurrentPeriod}
+                                locationName={listData[currentIndex].location}
+                            />
+                        )
+                    }
                     <View style={ss.mainInfoContainer}>
                         <View style={{width: '100%', height: 40, display: 'flex', flexDirection: 'row'}}>
                             <View style={{width: 50, height: '100%'}} />

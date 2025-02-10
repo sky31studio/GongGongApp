@@ -20,7 +20,7 @@ import {useAppDispatch, useAppSelector} from '../../app/hooks.ts';
 import {agendaResetAll} from '../../app/slice/agendaSlice.ts';
 import {resetSchedule} from '../../app/slice/scheduleSlice.ts';
 import {
-    clearInfo,
+    clearInfo, initInfo,
     selectStudentID,
     selectStudentName,
 } from '../../app/slice/infoSlice.ts';
@@ -48,6 +48,7 @@ import {
 import Resources from '../../basic/Resources.ts';
 import {checkUpdate} from '../../utils/infoUtils.tsx';
 import axios, {CancelTokenSource} from 'axios';
+import {getPromise, getPromiseAllSettled} from "../../utils/ResourceUtils.ts";
 
 interface UpdateInfo {
     last_version: string;
@@ -152,6 +153,21 @@ const InfoPage = ({navigation}: NavigationProps) => {
         cardAnimatedValue.value = withTiming(1, {duration: 300});
         listAnimatedValue.value = withDelay(100, withTiming(1, {duration: 300}));
 
+        if(name === '' && user) {
+            const infoPromise = getPromise(
+                () => Resources.getInfo(user.token),
+                (data) => {
+                    dispatch(initInfo(data));
+                    realm.write(() => {
+                        user.info = JSON.stringify(data);
+                    })
+                },
+                '个人信息获取失败！'
+            );
+
+            getPromiseAllSettled([infoPromise]);
+        }
+
         // 如果写在useFocusEffect内，会导致导航到该页面会有闪烁
         return () => {
             cardAnimatedValue.value = 0;
@@ -178,7 +194,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                             borderColor: 'white',
                             backgroundColor: 'rgba(200, 200, 200, .1)'
                     }}
-                        onPress={isLogin ? handleShowAvatarModal : handleReLogin}
+                        onPress={isLogin ? null : handleReLogin}    // TODO 头像选择
                     >
                         <Image source={require('../../assets/png/avatar.png')} style={{height: '100%', width: '100%'}}/>
                     </Pressable>

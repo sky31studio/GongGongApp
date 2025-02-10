@@ -1,35 +1,35 @@
 import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useState,
 } from 'react';
 import {
-  Modal,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  ToastAndroid,
-  useWindowDimensions,
-  View,
+    Modal,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    ToastAndroid,
+    useWindowDimensions,
+    View,
 } from 'react-native';
 import {SvgXml} from 'react-native-svg';
 import {
-  BackgroundColor,
-  FontColor,
+    BackgroundColor,
+    FontColor,
 } from '../../config/globalStyleSheetConfig.ts';
 import {AgendaList} from './agenda/agendaList.tsx';
 import ClassList from './course/classList.tsx';
 import XMLResources from '../../basic/XMLResources.ts';
 import Animated, {
-  Easing,
-  interpolate,
-  interpolateColor,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
+    Easing,
+    interpolate,
+    interpolateColor,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
 } from 'react-native-reanimated';
 import LinearGradient from 'react-native-linear-gradient';
 import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
@@ -37,15 +37,15 @@ import {useQuery, useRealm} from '@realm/react';
 import GongUser from '../../dao/object/User.ts';
 import {useAppDispatch, useAppSelector} from '../../app/hooks.ts';
 import {
-  examChangedCountIncrement,
-  selectShowAddBoard,
-  updateExamAgendaList,
+    examChangedCountIncrement,
+    selectShowAddBoard,
+    updateExamAgendaList,
 } from '../../app/slice/agendaSlice.ts';
 import AddBoard from './agenda/addBoard.tsx';
-import Resources, {ResourceMessage} from '../../basic/Resources.ts';
-import {ResourceCode} from '../../utils/enum.ts';
+import Resources from '../../basic/Resources.ts';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import {logoutSuccessful, setCalendar} from '../../app/slice/globalSlice.ts';
+import {getPromise, getPromiseAllSettled} from '../../utils/ResourceUtils.ts';
 
 export interface NavigationProps {
     navigation: {
@@ -73,42 +73,35 @@ const Home = ({navigation}: NavigationProps) => {
             return;
         }
 
-        const getData = async () => {
-            let msg: ResourceMessage = await Resources.getExam(user.token);
-            if(msg.code === ResourceCode.Successful ||
-                msg.code === ResourceCode.DataExpired) {
+        const examPromise = getPromise(
+            () => Resources.getExam(user.token),
+            (data) => {
                 dispatch(examChangedCountIncrement());
-                dispatch(updateExamAgendaList(msg.data));
+                dispatch(updateExamAgendaList(data));
                 realm.write(() => {
-                    user.scoreList = JSON.stringify(msg.data);
-                })
-            } else if(msg.code === ResourceCode.InvalidToken) {
-                ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
-                return;
-            } else {
-                ToastAndroid.showWithGravity('考试信息获取失败！', 1500, ToastAndroid.BOTTOM);
-            }
+                    user.scoreList = JSON.stringify(data);
+                });
+            },
+            '考试信息获取失败！'
+        );
 
-            msg = await Resources.getCalendar(user.token);
-            if(msg.code === ResourceCode.Successful ||
-                msg.code === ResourceCode.DataExpired) {
-                dispatch(setCalendar(msg.data));
+        const calendarPromise = getPromise(
+            () => Resources.getCalendar(user.token),
+            (data) => {
+                dispatch(setCalendar(data));
                 realm.write(() => {
-                    user.firstDate = new Date(msg.data.start);
-                    user.termID = msg.data.termID;
-                    user.totalWeeks = msg.data.weeks;
-                })
-            } else if(msg.code === ResourceCode.InvalidToken) {
-                ToastAndroid.showWithGravity('身份失效，请重新登录！', 1500, ToastAndroid.BOTTOM);
-                return;
-            } else {
-                ToastAndroid.showWithGravity('日期信息获取失败！', 1500, ToastAndroid.BOTTOM);
-            }
-        }
+                    user.firstDate = new Date(data.start);
+                    user.termID = data.termID;
+                    user.totalWeeks = data.weeks;
+                });
+            },
+            '日期信息获取失败！'
+        );
 
-        getData()
-            .then(() => setRefreshing(false))
-            .catch(() => setRefreshing(false));
+        getPromiseAllSettled([
+            examPromise,
+            calendarPromise
+        ], () => setRefreshing(false));
     }
 
     return (
