@@ -88,6 +88,7 @@ export enum ResourceCode {
     Successful = 200,
     DataExpired = 203,
     InvalidToken = 401,
+    NotFound = 404,
     AccountLocked = 423,
     SYSTimeout = 503,
     Timeout = 504,

@@ -75,7 +75,8 @@ const Home = ({navigation}: NavigationProps) => {
 
         const getData = async () => {
             let msg: ResourceMessage = await Resources.getExam(user.token);
-            if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+            if(msg.code === ResourceCode.Successful ||
+                msg.code === ResourceCode.DataExpired) {
                 dispatch(examChangedCountIncrement());
                 dispatch(updateExamAgendaList(msg.data));
                 realm.write(() => {
@@ -89,7 +90,8 @@ const Home = ({navigation}: NavigationProps) => {
             }
 
             msg = await Resources.getCalendar(user.token);
-            if(msg.code === ResourceCode.Successful || ResourceCode.DataExpired) {
+            if(msg.code === ResourceCode.Successful ||
+                msg.code === ResourceCode.DataExpired) {
                 dispatch(setCalendar(msg.data));
                 realm.write(() => {
                     user.firstDate = new Date(msg.data.start);
@@ -104,7 +106,9 @@ const Home = ({navigation}: NavigationProps) => {
             }
         }
 
-        getData().then(() => setRefreshing(false));
+        getData()
+            .then(() => setRefreshing(false))
+            .catch(() => setRefreshing(false));
     }
 
     return (

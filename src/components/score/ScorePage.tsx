@@ -36,6 +36,7 @@ import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
 import {AnimatedScrollView} from 'react-native-reanimated/lib/typescript/component/ScrollView';
 import {sleep} from '../../utils/globalUtils.ts';
 import ScrollView = Animated.ScrollView;
+import {getPromise} from "../../utils/ResourceUtils.ts";
 
 const ScorePage = ({navigation}: NavigationProps) => {
     const dispatch = useAppDispatch();
@@ -68,6 +69,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
 
         const scoreOverviewPromise = new Promise(async (resolve, reject) => {
             const msg = await Resources.getScoreOverview(user.token);
+            console.log(msg);
             if (
                 msg.code === ResourceCode.Successful ||
                 msg.code === ResourceCode.DataExpired
@@ -81,7 +83,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
                     msg: msg.code === 200 ? undefined : '成绩总览数据更新中',
                 });
             } else if (msg.code === ResourceCode.InvalidToken) {
-                reject('身份失效，请重新登录！');
+                reject(msg.code);
             } else {
                 resolve('成绩总览获取失败');
             }
@@ -89,6 +91,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
 
         const scoreListPromise = new Promise(async (resolve, reject) => {
             const msg = await Resources.getScore(user.token);
+            console.log(msg);
             if (
                 msg.code === ResourceCode.Successful ||
                 msg.code === ResourceCode.DataExpired
@@ -102,7 +105,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
                     msg: msg.code === 200 ? undefined : '成绩表单数据更新中',
                 });
             } else if (msg.code === ResourceCode.InvalidToken) {
-                reject('身份失效，请重新登录！');
+                reject(msg.code);
             } else {
                 resolve({
                     code: msg.code,
@@ -113,6 +116,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
 
         const minorScoreListPromise = new Promise(async (resolve, reject) => {
             const msg = await Resources.getMinorScore(user.token);
+            console.log(msg);
             if (
                 msg.code === ResourceCode.Successful ||
                 msg.code === ResourceCode.DataExpired
@@ -138,7 +142,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
                     msg: msg.code === 200 ? undefined : '辅修表单数据更新中',
                 });
             } else if (msg.code === ResourceCode.InvalidToken) {
-                reject('身份失效，请重新登录！');
+                reject(msg.code);
             } else {
                 resolve({
                     code: msg.code,
@@ -152,8 +156,8 @@ const ScorePage = ({navigation}: NavigationProps) => {
                 const msg = await Resources.getCompulsoryScoreOverview(
                     user.token,
                 );
-                if (
-                    msg.code === ResourceCode.Successful ||
+                console.log(msg);
+                if (msg.code === ResourceCode.Successful ||
                     msg.code === ResourceCode.DataExpired
                 ) {
                     console.log('compulsoryOverview');
@@ -169,7 +173,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
                                 : '必修成绩总览数据更新中',
                     });
                 } else if (msg.code === ResourceCode.InvalidToken) {
-                    reject('身份失效，请重新登录！');
+                    reject(msg.code);
                 } else {
                     resolve({
                         code: msg.code,
@@ -179,16 +183,29 @@ const ScorePage = ({navigation}: NavigationProps) => {
             },
         );
 
-        Promise.all([
+        Promise.allSettled([
             scoreOverviewPromise,
             scoreListPromise,
             minorScoreListPromise,
             compulsoryOverviewPromise,
         ])
             .then(async (results: any[]) => {
+                console.log(results);
+                for(let result of results) {
+                    if(result.status === 'rejected') {
+                        ToastAndroid.showWithGravity(
+                            '身份失效，请重新登录！',
+                            1500,
+                            ToastAndroid.BOTTOM,
+                        );
+                        setRefreshing(false);
+                        return;
+                    }
+                }
+
                 let flag = false;
                 for (let result of results) {
-                    if (result.code !== 200) {
+                    if (result.value.code !== 200) {
                         ToastAndroid.showWithGravity(
                             result.msg,
                             1500,
@@ -209,10 +226,6 @@ const ScorePage = ({navigation}: NavigationProps) => {
 
                 setRefreshing(false);
             })
-            .catch((error: string) => {
-                ToastAndroid.showWithGravity(error, 1500, ToastAndroid.BOTTOM);
-                setRefreshing(false);
-            });
     };
 
     const handleExchange = () => {

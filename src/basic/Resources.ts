@@ -17,6 +17,7 @@ const GET_MSG: { [key: number]: string } = {
     200: '请求成功',
     203: '数据过期或无效',
     401: 'token无效',
+    404: '请求资源不存在',
     423: '账户锁定',
     503: '教务系统超时',
     504: '请求超时',
@@ -46,7 +47,6 @@ class Resources {
                     'Authorization': token,
                 },
             });
-
             const status: number = response.status;
             if(status === 200) {
                 return {
@@ -67,7 +67,21 @@ class Resources {
                 code: status,
                 message: GET_MSG[status] || '未知错误',
             };
-        } catch(error) {
+        } catch(error: any) {
+            if(error.status === 401) {
+                return {
+                    code: ResourceCode.InvalidToken,
+                    message: GET_MSG[401],
+                }
+            }
+
+            if(error.status === 404) {
+                return {
+                    code: ResourceCode.NotFound,
+                    message: GET_MSG[404],
+                }
+            }
+
             return {
                 code: ResourceCode.LocalFailed,
                 data: error,

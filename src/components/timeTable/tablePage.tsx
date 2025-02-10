@@ -117,9 +117,10 @@ export const TablePage = ({navigation}: NavigationProps) => {
 
         const getData = async () => {
             let msg: ResourceMessage = await Resources.getCalendar(user.token);
+
             if (
                 msg.code === ResourceCode.Successful ||
-                ResourceCode.DataExpired
+                msg.code === ResourceCode.DataExpired
             ) {
                 dispatch(setCalendar(msg.data));
                 realm.write(() => {
@@ -133,6 +134,8 @@ export const TablePage = ({navigation}: NavigationProps) => {
                     1500,
                     ToastAndroid.BOTTOM,
                 );
+
+                return;
             } else {
                 ToastAndroid.showWithGravity(
                     '课表获取失败！',
@@ -144,7 +147,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
             msg = await Resources.getClassData(user.token);
             if (
                 msg.code === ResourceCode.Successful ||
-                ResourceCode.DataExpired
+                msg.code === ResourceCode.DataExpired
             ) {
                 dispatch(initTable(msg.data));
                 realm.write(() => {
@@ -156,6 +159,8 @@ export const TablePage = ({navigation}: NavigationProps) => {
                     1500,
                     ToastAndroid.BOTTOM,
                 );
+
+                return;
             } else {
                 ToastAndroid.showWithGravity(
                     '课表获取失败！',
@@ -165,7 +170,9 @@ export const TablePage = ({navigation}: NavigationProps) => {
             }
         };
 
-        getData().then(() => setRefreshing(false));
+        getData()
+            .then(() => setRefreshing(false))
+            .catch(() => setRefreshing(false))
     };
 
     const handleGoBack = () => {

@@ -50,8 +50,6 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
     const locationData = useMemo(() => {
         const classData = isToday ? todayData : tomorrowData;
 
-        console.log(classData[0].classroom);
-
         if(classData.length === 0) {
             return [];
         }
@@ -98,7 +96,8 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
 
         const todayPromise = new Promise(async (resolve, reject) => {
             const msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token);
-            if(msg.code === ResourceCode.Successful || msg.code === ResourceCode.DataExpired) {
+            if(msg.code === ResourceCode.Successful ||
+                msg.code === ResourceCode.DataExpired) {
                 dispatch(setTodayEmptyClassroomStatus(msg.data));
                 realm.write(() => {
                     user.todayClassroom = JSON.stringify(msg.data);
@@ -119,7 +118,8 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
 
         const tomorrowPromise = new Promise(async (resolve, reject) => {
             const msg: ResourceMessage = await Resources.getTomorrowClassroomStatus(user.token);
-            if(msg.code === ResourceCode.Successful || msg.code === ResourceCode.DataExpired) {
+            if(msg.code === ResourceCode.Successful ||
+                msg.code === ResourceCode.DataExpired) {
                 dispatch(setTodayEmptyClassroomStatus(msg.data));
                 realm.write(() => {
                     user.todayClassroom = JSON.stringify(msg.data);
@@ -140,7 +140,8 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
 
         const fetchData = async () => {
             let msg: ResourceMessage = await Resources.getTodayClassroomStatus(user.token);
-            if(msg.code === ResourceCode.Successful) {
+            if(msg.code === ResourceCode.Successful ||
+                msg.code === ResourceCode.DataExpired) {
                 dispatch(setTodayEmptyClassroomStatus(msg.data));
                 realm.write(() => {
                     user.todayClassroom = JSON.stringify(msg.data);
@@ -153,7 +154,8 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
             }
 
             msg = await Resources.getTomorrowClassroomStatus(user.token);
-            if(msg.code === ResourceCode.Successful) {
+            if(msg.code === ResourceCode.Successful ||
+                msg.code === ResourceCode.DataExpired) {
                 dispatch(setTomorrowEmptyClassroomStatus(msg.data));
                 realm.write(() => {
                     user.tomorrowClassroom = JSON.stringify(msg.data);
@@ -188,7 +190,9 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                 setRefreshing(false);
             })
 
-        fetchData().then(() => setRefreshing(false));
+        fetchData()
+            .then(() => setRefreshing(false))
+            .then(() => setRefreshing(false));
     }, [dispatch, realm, user]);
 
     // FlatList渲染需要使用的数据
