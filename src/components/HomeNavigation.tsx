@@ -18,7 +18,7 @@ import {resetCurrentTime, setCalendar} from '../app/slice/globalSlice.ts';
 import {useAppDispatch, useAppSelector} from '../app/hooks.ts';
 import {initInfo} from '../app/slice/infoSlice.ts';
 import SpecificationPage from './info/SpecificationPage.tsx';
-import {useQuery, useRealm} from '@realm/react';
+import {useQuery} from '@realm/react';
 import GongUser from '../dao/object/User.ts';
 import Resources, {ResourceMessage} from '../basic/Resources.ts';
 import {ResourceCode} from '../utils/enum.ts';
@@ -27,9 +27,10 @@ import PrivacyPolicyPage from './info/PrivacyPolicyPage.tsx';
 import FeedbackPage from './info/FeedbackPage.tsx';
 import {View} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {useSafeWrite} from '../utils/ResourceUtils.ts';
 
 const HomeNavigation = () => {
-    const realm = useRealm();
+    const safeWrite = useSafeWrite();
     const user = useQuery<GongUser>('GongUser')[0];
 
     const dispatch = useAppDispatch();
@@ -54,7 +55,7 @@ const HomeNavigation = () => {
                     ) {
                         dispatch(initInfo(msg.data));
                         console.log('writing userInfo in realm...');
-                        realm.write(() => {
+                        safeWrite(() => {
                             user.info = JSON.stringify(msg.data);
                         });
                         console.log('userInfo is written!');
@@ -74,6 +75,9 @@ const HomeNavigation = () => {
                     ) {
                         dispatch(examChangedCountIncrement());
                         dispatch(initExam(msg.data));
+                        safeWrite(() => {
+                            user.examAgendaList = JSON.stringify(msg.data);
+                        });
                     } else {
                         console.log('get examAgendaList failed!');
                     }
@@ -91,7 +95,7 @@ const HomeNavigation = () => {
                         ) {
                             dispatch(setCalendar(msg.data));
                             console.log('writing firstDate in realm...');
-                            realm.write(() => {
+                            safeWrite(() => {
                                 user.firstDate = new Date(msg.data.start);
                                 user.termID = msg.data.termID;
                                 user.totalWeeks = msg.data.weeks;
@@ -127,14 +131,14 @@ const HomeNavigation = () => {
 
     useEffect(() => {
         if (selfChangedCount === 0) return;
-        realm.write(() => {
+        safeWrite(() => {
             user.selfAgendaList = JSON.stringify(selfList);
         });
     }, [selfList]);
 
     useEffect(() => {
         if (examChangedCount === 0) return;
-        realm.write(() => {
+        safeWrite(() => {
             user.examAgendaList = JSON.stringify(examList);
         });
     }, [examList]);

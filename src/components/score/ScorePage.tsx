@@ -28,18 +28,22 @@ import {
     setMinorScoreOverview,
     setScoreOverview,
 } from '../../app/slice/scoreSlice.ts';
-import {useQuery, useRealm} from '@realm/react';
+import {useQuery} from '@realm/react';
 import GongUser from '../../dao/object/User.ts';
 import Resources from '../../basic/Resources.ts';
 import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
 import {AnimatedScrollView} from 'react-native-reanimated/lib/typescript/component/ScrollView';
-import {getPromise, getPromiseAllSettled} from '../../utils/ResourceUtils.ts';
+import {
+    getPromise,
+    getPromiseAllSettled,
+    useSafeWrite,
+} from '../../utils/ResourceUtils.ts';
 import ScrollView = Animated.ScrollView;
 
 const ScorePage = ({navigation}: NavigationProps) => {
     const dispatch = useAppDispatch();
 
-    const realm = useRealm();
+    const safeWrite = useSafeWrite();
     const user = useQuery<GongUser>('GongUser')[0];
 
     const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -69,7 +73,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
             () => Resources.getScoreOverview(user.token),
             data => {
                 dispatch(setScoreOverview(data));
-                realm.write(() => {
+                safeWrite(() => {
                     user.scoreOverview = JSON.stringify(data);
                 });
             },
@@ -80,7 +84,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
             () => Resources.getScore(user.token),
             data => {
                 dispatch(initScoreList(data));
-                realm.write(() => {
+                safeWrite(() => {
                     user.scoreList = JSON.stringify(data);
                 });
             },
@@ -98,7 +102,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
                         minorAverageScore: data.averageScore,
                     }),
                 );
-                realm.write(() => {
+                safeWrite(() => {
                     user.minorScoreList = JSON.stringify(data.scoreList);
                     user.minorScoreOverview = JSON.stringify({
                         totalCredit: data.totalCredit,
@@ -114,7 +118,7 @@ const ScorePage = ({navigation}: NavigationProps) => {
             () => Resources.getCompulsoryScoreOverview(user.token),
             data => {
                 dispatch(setCompulsoryScoreOverview(data));
-                realm.write(() => {
+                safeWrite(() => {
                     user.compulsoryScoreOverview = JSON.stringify(data);
                 });
             },

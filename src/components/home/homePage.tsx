@@ -33,7 +33,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import LinearGradient from 'react-native-linear-gradient';
 import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
-import {useQuery, useRealm} from '@realm/react';
+import {useQuery} from '@realm/react';
 import GongUser from '../../dao/object/User.ts';
 import {useAppDispatch, useAppSelector} from '../../app/hooks.ts';
 import {
@@ -45,7 +45,11 @@ import AddBoard from './agenda/addBoard.tsx';
 import Resources from '../../basic/Resources.ts';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import {logoutSuccessful, setCalendar} from '../../app/slice/globalSlice.ts';
-import {getPromise, getPromiseAllSettled} from '../../utils/ResourceUtils.ts';
+import {
+    getPromise,
+    getPromiseAllSettled,
+    useSafeWrite,
+} from '../../utils/ResourceUtils.ts';
 
 export interface NavigationProps {
     navigation: {
@@ -58,7 +62,7 @@ const Home = ({navigation}: NavigationProps) => {
     const dispatch = useAppDispatch();
     const modalVisible = useAppSelector(selectShowAddBoard);
 
-    const realm = useRealm();
+    const safeWrite = useSafeWrite();
     const user = useQuery<GongUser>('GongUser')[0];
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
@@ -78,9 +82,9 @@ const Home = ({navigation}: NavigationProps) => {
             (data) => {
                 dispatch(examChangedCountIncrement());
                 dispatch(updateExamAgendaList(data));
-                realm.write(() => {
+                safeWrite(() => {
                     user.scoreList = JSON.stringify(data);
-                });
+                })
             },
             '考试信息获取失败！'
         );
@@ -89,11 +93,11 @@ const Home = ({navigation}: NavigationProps) => {
             () => Resources.getCalendar(user.token),
             (data) => {
                 dispatch(setCalendar(data));
-                realm.write(() => {
+                safeWrite(() => {
                     user.firstDate = new Date(data.start);
                     user.termID = data.termID;
                     user.totalWeeks = data.weeks;
-                });
+                })
             },
             '日期信息获取失败！'
         );

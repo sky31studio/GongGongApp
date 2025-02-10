@@ -31,10 +31,10 @@ import {
     setTodayEmptyClassroomStatus,
 } from '../../app/slice/classroomSlice.ts';
 import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
-import {useQuery, useRealm} from '@realm/react';
+import {useQuery} from '@realm/react';
 import GongUser from '../../dao/object/User.ts';
 import Resources from '../../basic/Resources.ts';
-import {getPromise, getPromiseAllSettled} from '../../utils/ResourceUtils.ts';
+import {getPromise, getPromiseAllSettled, useSafeWrite} from '../../utils/ResourceUtils.ts';
 
 const periods = ['1-2', '3-4', '5-6', '7-8', '9-11'];
 /**
@@ -45,7 +45,7 @@ const periods = ['1-2', '3-4', '5-6', '7-8', '9-11'];
 const EmptyClassroomPage = ({navigation}: NavigationProps) => {
     const dispatch = useAppDispatch();
     // realm
-    const realm = useRealm();
+    const safeWrite = useSafeWrite();
     const user = useQuery<GongUser>('GongUser')[0];
 
     // 列表刷新状态
@@ -114,7 +114,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
             () => Resources.getTodayClassroomStatus(user.token),
             (data) => {
                 dispatch(setTodayEmptyClassroomStatus(data));
-                realm.write(() => {
+                safeWrite(() => {
                     user.todayClassroom = JSON.stringify(data);
                 });
             },
@@ -125,7 +125,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
             () => Resources.getTomorrowClassroomStatus(user.token),
             (data) => {
                 dispatch(setTodayEmptyClassroomStatus(data));
-                realm.write(() => {
+                safeWrite(() => {
                     user.todayClassroom = JSON.stringify(data);
                 });
             },
@@ -136,7 +136,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
             todayClassroomPromise,
             tomorrowClassroomPromise
         ], () => setRefreshing(false));
-    }, [dispatch, realm, user]);
+    }, [dispatch, user]);
 
     // FlatList渲染需要使用的数据
     const listData = todayData.length === 0 ? [] :

@@ -2,6 +2,7 @@ import {ResourceMessage} from "../basic/Resources.ts";
 import {ResourceCode} from "./enum.ts";
 import {ToastAndroid} from "react-native";
 import {sleep} from "./globalUtils.ts";
+import {useRealm} from "@realm/react";
 
 export const getPromise = (
     getFunc: () => Promise<ResourceMessage>,
@@ -79,3 +80,15 @@ export const getPromiseAllSettled = (promises: Promise<any>[], final?: () => voi
             }
         })
 }
+
+export const useSafeWrite = () => {
+    const realm = useRealm();
+
+    return (callback: () => void) => {
+        if (realm.isInTransaction) {
+            console.log('is in transaction!!!'); // 已在事务中，直接执行
+        } else {
+            realm.write(callback);
+        }
+    };
+};

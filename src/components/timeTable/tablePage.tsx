@@ -43,12 +43,16 @@ import {
 import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
 import {ENToCNWeekDay} from '../../utils/enum.ts';
 import Resources from '../../basic/Resources.ts';
-import {useQuery, useRealm} from '@realm/react';
+import {useQuery} from '@realm/react';
 import GongUser from '../../dao/object/User.ts';
-import {getPromise, getPromiseAllSettled} from '../../utils/ResourceUtils.ts';
+import {
+    getPromise,
+    getPromiseAllSettled,
+    useSafeWrite,
+} from '../../utils/ResourceUtils.ts';
 
 export const TablePage = ({navigation}: NavigationProps) => {
-    const realm = useRealm();
+    const safeWrite = useSafeWrite();
     const user = useQuery<GongUser>('GongUser')[0];
 
     const dispatch = useAppDispatch();
@@ -119,7 +123,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
             () => Resources.getCalendar(user.token),
             data => {
                 dispatch(setCalendar(data));
-                realm.write(() => {
+                safeWrite(() => {
                     user.firstDate = new Date(data.start);
                     user.termID = data.termID;
                     user.totalWeeks = data.weeks;
@@ -132,7 +136,7 @@ export const TablePage = ({navigation}: NavigationProps) => {
             () => Resources.getClassData(user.token),
             data => {
                 dispatch(initTable(data));
-                realm.write(() => {
+                safeWrite(() => {
                     user.courses = JSON.stringify(data);
                 });
             },
