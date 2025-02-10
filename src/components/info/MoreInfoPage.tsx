@@ -87,13 +87,13 @@ const MoreInfoPage = ({props, handleNavigation}: {props: MoreInfoPageProps, hand
                 {/* 结尾固定样式 */}
                 <View style={{display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 40, marginBottom: 20}}>
                     <Image
-                        source={require('../../assets/png/logo.png')}
+                        source={require('../../assets/png/newIcon.png')}
                         style={{width: 80, height: 80}}
                     />
                     <View style={{width: 100, height: 50, alignItems: 'center', transform: [{translateY: -10}]}}>
                         <SvgXml xml={XMLResources.logo} width='70%' height='100%'/>
                     </View>
-                    <ScalingNotAllowedText>湘大变得如此简单</ScalingNotAllowedText>
+                    <ScalingNotAllowedText style={{color: FontColor.grey, fontSize: FontSize.s, letterSpacing: 1}}>湘大变得如此简单</ScalingNotAllowedText>
                     <Image
                         source={require('../../assets/png/sureStudioGrey.png')}
                         style={{width: 120, height: 80, marginTop: 60}}
