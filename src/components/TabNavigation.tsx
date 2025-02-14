@@ -3,9 +3,10 @@ import Home from "./home/homePage.tsx";
 import InfoPage from "./info/InfoPage.tsx";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../basic/XMLResources.ts";
-import {Pressable, Text, View} from "react-native";
+import {Pressable, View} from "react-native";
 import {BackgroundColor, FontColor, FontSize} from "../config/globalStyleSheetConfig.ts";
 import React from "react";
+import ScalingNotAllowedText from "./global/ScalingNotAllowedText.tsx";
 
 const TabNavigation = () => {
     const Tab = createBottomTabNavigator();
@@ -25,17 +26,18 @@ const TabNavigation = () => {
                 },
                 tabBarLabel: ({color}) => {
                     return (
-                        <Text
+                        <ScalingNotAllowedText
                             style={{
                                 fontSize: FontSize.s,
                                 fontWeight: '500',
                                 color: color,
                                 transform: [{translateY: -3}]
                             }}
-                        >首页</Text>
+                        >首页</ScalingNotAllowedText>
                     )
                 },
             }}/>
+
             <Tab.Screen name={'infoPage'} component={InfoPage} options={{
                 headerShown: false,
                 tabBarIcon: ({focused}) => {
@@ -46,14 +48,14 @@ const TabNavigation = () => {
                 },
                 tabBarLabel: ({color}) => {
                     return (
-                        <Text
+                        <ScalingNotAllowedText
                             style={{
                                 fontSize: FontSize.s,
                                 fontWeight: '500',
                                 color: color,
                                 transform: [{translateY: -3}]
                             }}
-                        >我的</Text>
+                        >我的</ScalingNotAllowedText>
                     )
                 },
             }}/>
