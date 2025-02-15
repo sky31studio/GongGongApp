@@ -380,8 +380,7 @@ const ScoreBox = ({score, text}: { score: number, text: string }) => {
 const ss = StyleSheet.create({
     titleBar: {
         width: '100%',
-        height: 140,
-        paddingTop: 50,
+        paddingBottom: 50,
         justifyContent: 'center',
         flexDirection: 'row',
         backgroundColor: BackgroundColor.primary,
@@ -397,7 +396,6 @@ const ss = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         position: 'absolute',
-        top: 50,
         left: 20,
     },
 
@@ -424,6 +422,7 @@ const ss = StyleSheet.create({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'space-evenly',
     },
 
     overviewContainer: {

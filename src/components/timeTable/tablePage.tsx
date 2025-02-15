@@ -500,11 +500,10 @@ export const TablePage = ({navigation}: NavigationProps) => {
 
 const styleSheet = StyleSheet.create({
     guideBar: {
-        paddingTop: 50,
         justifyContent: 'flex-start',
         flexDirection: 'row',
         width: '100%',
-        height: 90,
+        paddingBottom: 10,
         backgroundColor: BackgroundColor.primary,
         position: 'relative',
     },
@@ -512,12 +511,9 @@ const styleSheet = StyleSheet.create({
     weekBox: {
         width: '30%',
         height: '100%',
-        position: 'absolute',
         left: '35%',
-        bottom: '10%',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
     },
 
     textBox: {
@@ -554,7 +550,6 @@ const styleSheet = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         position: 'absolute',
-        top: 50,
         left: 20,
     },
 

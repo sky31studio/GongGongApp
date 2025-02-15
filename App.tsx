@@ -1,7 +1,6 @@
 import React, {createContext, useEffect} from 'react';
 import {
   Dimensions,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   useColorScheme,
@@ -21,6 +20,8 @@ import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
+import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
+import {BackgroundColor} from "./src/config/globalStyleSheetConfig.ts";
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
@@ -30,28 +31,23 @@ configureReanimatedLogger({
 const {height: screenHeight} = Dimensions.get('window');
 
 function App(): React.JSX.Element {
-
     const isDarkMode = useColorScheme() === 'dark';
 
     const safeArea = () => <SafeArea/>
 
-    const backgroundStyle = {
-        backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-    };
-
     return (
-        <View style={{flex: 1}}>
+        <SafeAreaProvider>
             <NavigationContainer>
                 <Provider store={store}>
                     <RealmProvider schema={[GongUser]} deleteRealmIfMigrationNeeded={true}>
-                        <SafeAreaView style={[backgroundStyle, styles.fullScreen]}>
+                        <View style={[styles.fullScreen]}>
                             <StatusBar translucent backgroundColor="#ff6275"/>
                             {safeArea()}
-                        </SafeAreaView>
+                        </View>
                     </RealmProvider>
                 </Provider>
             </NavigationContainer>
-        </View>
+        </SafeAreaProvider>
 
     );
 }
@@ -72,17 +68,18 @@ const SafeArea = () => {
     }, []);
 
     return (
-        <View style={{flex: 1}}>
+        <SafeAreaView style={{flex: 1}}>
             <CurrentTimeContext.Provider value={{currentTime}}>
                 {isLogin ? <HomeNavigation/> : <LoginNavigation/>}
             </CurrentTimeContext.Provider>
-        </View>
+        </SafeAreaView>
     )
 }
 
 
 const styles = StyleSheet.create({
     fullScreen: {
+        backgroundColor: BackgroundColor.primary,
         height: screenHeight,
         flex: 1,
     }

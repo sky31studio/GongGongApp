@@ -117,9 +117,7 @@ const Home = ({navigation}: NavigationProps) => {
             }
         >
             <View style={styleSheet.homeContainer}>
-                <View style={{width: '100%', height: '18%'}}>
-                    <FunctionBar navigation={navigation} isFocused={isFocused}/>
-                </View>
+                <FunctionBar navigation={navigation} isFocused={isFocused}/>
                 <View style={styleSheet.mainBoardWrapper}>
                     <MainBoard/>
                 </View>
@@ -363,11 +361,11 @@ const styleSheet = StyleSheet.create({
 
     functionBarContainer: {
         width: '100%',
-        height: '100%',
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-around',
-        alignItems: 'flex-end',
+        alignItems: 'center',
+        paddingVertical: 20,
         backgroundColor: BackgroundColor.primary,
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,

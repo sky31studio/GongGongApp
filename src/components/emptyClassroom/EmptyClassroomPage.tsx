@@ -207,7 +207,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
                     <Pressable onPress={() => navigation.navigate('TabNavigation')} style={ss.backButton} hitSlop={{top: 5, bottom: 5, right: 10, left: 10}}>
                         <SvgXml xml={XMLResources.backArrow} width={10} height={18}/>
                     </Pressable>
-                    <View style={{width: '100%', height: 40, position: 'absolute', bottom: 0}}>
+                    <View style={{width: '100%', height: 40, marginTop: 25}}>
                         <FlatList
                             data={listData}
                             renderItem={itemRenderer}
@@ -363,8 +363,6 @@ const FunctionField = memo(({handleLeft, handleRight, reset, locationName}: any)
 const ss = StyleSheet.create({
     titleBar: {
         width: '100%',
-        height: 140,
-        paddingTop: 50,
         alignItems: 'center',
         flexDirection: 'column',
         backgroundColor: BackgroundColor.primary,
@@ -380,7 +378,6 @@ const ss = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         position: 'absolute',
-        top: 50,
         left: 20,
     },
 

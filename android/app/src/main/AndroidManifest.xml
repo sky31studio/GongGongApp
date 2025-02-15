@@ -50,7 +50,6 @@
         <activity android:name=".ui.screens.picSelect.ImageAdjustmentActivity"
             android:launchMode="standard"
             android:exported="true">
-
         </activity>
     </application>
 </manifest>
