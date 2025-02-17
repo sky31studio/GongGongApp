@@ -141,11 +141,25 @@ class Resources {
                 message: LOGIN_MSG[status],
             };
 
-        } catch (error) {
-            console.log(error);
+        } catch (error: any) {
+            if(error.status === 401) {
+                return {
+                    code: ResourceCode.InvalidToken,
+                    message: LOGIN_MSG[401],
+                }
+            }
+
+            if(error.status === 404) {
+                return {
+                    code: ResourceCode.NotFound,
+                    message: LOGIN_MSG[404],
+                }
+            }
+
             return {
-                code: -1,
-                message: 'axios error',
+                code: ResourceCode.LocalFailed,
+                message: LOGIN_MSG[error.status] || '未知错误',
+                data: error,
             };
         }
     }
