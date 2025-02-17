@@ -28,7 +28,7 @@ import {useAppDispatch, useAppSelector} from '../../app/hooks.ts';
 import {
     selectTodayClassroomStatus,
     selectTomorrowClassroomStatus,
-    setTodayEmptyClassroomStatus,
+    setTodayEmptyClassroomStatus, setTomorrowEmptyClassroomStatus,
 } from '../../app/slice/classroomSlice.ts';
 import ScalingNotAllowedText from '../global/ScalingNotAllowedText.tsx';
 import {useQuery} from '@realm/react';
@@ -124,7 +124,7 @@ const EmptyClassroomPage = ({navigation}: NavigationProps) => {
         const tomorrowClassroomPromise = getPromise(
             () => Resources.getTomorrowClassroomStatus(user.token),
             (data) => {
-                dispatch(setTodayEmptyClassroomStatus(data));
+                dispatch(setTomorrowEmptyClassroomStatus(data));
                 safeWrite(() => {
                     user.todayClassroom = JSON.stringify(data);
                 });
