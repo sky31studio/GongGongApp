@@ -94,20 +94,20 @@ const ScorePage = ({navigation}: NavigationProps) => {
         const minorScoreListPromise = getPromise(
             () => Resources.getMinorScore(user.token),
             data => {
-                dispatch(initMinorScoreList(data.scoreList));
+                dispatch(initMinorScoreList(data[0]));
                 dispatch(
                     setMinorScoreOverview({
-                        totalCredit: data.totalCredit,
-                        minorGpa: data.gpa,
-                        minorAverageScore: data.averageScore,
+                        totalCredit: data[1],
+                        minorGpa: data[2],
+                        minorAverageScore: data[3],
                     }),
                 );
                 safeWrite(() => {
-                    user.minorScoreList = JSON.stringify(data.scoreList);
+                    user.minorScoreList = JSON.stringify(data[0]);
                     user.minorScoreOverview = JSON.stringify({
-                        totalCredit: data.totalCredit,
-                        minorGpa: data.gpa,
-                        minorAverageScore: data.averageScore,
+                        totalCredit: data[1],
+                        minorGpa: data[2],
+                        minorAverageScore: data[3],
                     });
                 });
             },

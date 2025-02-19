@@ -5,6 +5,7 @@ import {LoginCode, ResourceCode} from '../utils/enum.ts';
 const rootUrl = hostUrl;
 const MAX_ATTEMPTS = 5;
 
+// 登录状态码对应信息
 const LOGIN_MSG: { [key: number]: string } = {
         200: '登录成功',
         401: '账号或密码错误',
@@ -13,6 +14,7 @@ const LOGIN_MSG: { [key: number]: string } = {
         504: '请求超时',
 };
 
+// GET请求状态码对应信息
 const GET_MSG: { [key: number]: string } = {
     200: '请求成功',
     203: '数据过期或无效',
@@ -23,6 +25,7 @@ const GET_MSG: { [key: number]: string } = {
     504: '请求超时',
 };
 
+// 返回体
 export interface ResourceMessage {
     code: number,
     data?: any,
@@ -30,15 +33,16 @@ export interface ResourceMessage {
 }
 
 class Resources {
-
     /**
      * 获取数据
      * @param url       请求url
      * @param token     内存中的token
+     * @param dataKey   数据字段键名
      * @private
      */
     private static async getData(
         url: string,
+        dataKey: string[],
         token: string,
     ): Promise<ResourceMessage> {
         try {
@@ -49,16 +53,30 @@ class Resources {
             });
             const status: number = response.status;
             if(status === 200) {
+                let data = response.data.data;
+                if(dataKey.length === 1) {
+                    data = response.data.data[dataKey[0]];
+                } else if(dataKey.length > 1) {
+                    data = dataKey.map((key: string) => response.data.data[key]);
+                }
+
                 return {
                     code: ResourceCode.Successful,
-                    data: response.data.data,
+                    data: data,
                 };
             }
 
             if(status === 203) {
+                let data = response.data.data;
+                if(dataKey.length === 1) {
+                    data = response.data.data[dataKey[0]];
+                } else if(dataKey.length > 1) {
+                    data = dataKey.map((key: string) => response.data.data[key]);
+                }
+
                 return {
                     code: ResourceCode.DataExpired,
-                    data: response.data.data,
+                    data: data,
                     message: GET_MSG[status],
                 }
             }
@@ -87,27 +105,6 @@ class Resources {
                 data: error,
             };
         }
-    }
-
-    /**
-     * 获取课表信息
-     * @param token
-     */
-    public static async getClassData(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/courses`, token);
-
-        if(response.data) {
-            return {
-                code: response.code,
-                data: response.data.courses,
-                message: response.message,
-            };
-        }
-
-        return {
-            code: response.code,
-            message: response.message,
-        };
     }
 
     /**
@@ -165,24 +162,19 @@ class Resources {
     }
 
     /**
+     * 获取课表信息
+     * @param token
+     */
+    public static async getClassData(token: string): Promise<ResourceMessage> {
+        return await this.getData(`${rootUrl}/courses`, ['courses'], token);
+    }
+
+    /**
      * 获取考试信息
      * @param token
      */
     public static async getExam(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/exams`, token);
-
-        if(response.data) {
-            return {
-                code: response.code,
-                data: response.data.exams,
-                message: response.message,
-            };
-        }
-
-        return {
-            code: response.code,
-            message: response.message,
-        };
+        return await this.getData(`${rootUrl}/exams`, ['exams'], token);
     }
 
     /**
@@ -190,20 +182,7 @@ class Resources {
      * @param token
      */
     public static async getScore(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/scores`, token);
-
-        if(response.data) {
-            return {
-                code: response.code,
-                data: response.data.scores,
-                message: response.message,
-            };
-        }
-
-        return {
-            code: response.code,
-            message: response.message,
-        };
+        return await this.getData(`${rootUrl}/scores`, ['scores'], token);
     }
 
     /**
@@ -211,25 +190,7 @@ class Resources {
      * @param token
      */
     public static async getMinorScore(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/minor/scores`, token);
-
-        if(response.data) {
-            return {
-                code: response.code,
-                data: {
-                    scoreList: response.data.scores,
-                    totalCredit: response.data.total_credit,
-                    gpa: response.data.gpa,
-                    averageScore: response.data.average_score,
-                },
-                message: response.message,
-            };
-        }
-
-        return {
-            code: response.code,
-            message: response.message,
-        };
+        return this.getData(`${rootUrl}/minor/scores`, ['scores', 'total_credit', 'gpa', 'average_score'], token);
     }
 
     /**
@@ -237,20 +198,7 @@ class Resources {
      * @param token
      */
     public static async getScoreOverview(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/rank`, token);
-
-        if(response.data) {
-            return {
-                code: response.code,
-                data: response.data,
-                message: response.message,
-            };
-        }
-
-        return {
-            code: response.code,
-            message: response.message,
-        };
+        return await this.getData(`${rootUrl}/rank`, [], token);
     }
 
     /**
@@ -258,20 +206,7 @@ class Resources {
      * @param token
      */
     public static async getCompulsoryScoreOverview(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/compulsory/rank`, token);
-
-        if(response.data) {
-            return {
-                code: response.code,
-                data: response.data,
-                message: response.message,
-            }
-        }
-
-        return {
-            code: response.code,
-            message: response.message,
-        }
+        return await this.getData(`${rootUrl}/compulsory/rank`, [], token);
     }
 
     /**
@@ -279,20 +214,7 @@ class Resources {
      * @param token
      */
     public static async getCalendar(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/calendar`, token);
-
-        if(response.data) {
-            return {
-                code: response.code,
-                data: response.data,
-                message: response.message,
-            };
-        }
-
-        return {
-            code: response.code,
-            message: response.message,
-        };
+        return await this.getData(`${rootUrl}/calendar`, [], token);
     }
 
     /**
@@ -300,20 +222,7 @@ class Resources {
      * @param token
      */
     public static async getInfo(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/info`, token);
-
-        if(response.data) {
-            return {
-                code: response.code,
-                data: response.data,
-                message: response.message,
-            };
-        }
-
-        return {
-            code: response.code,
-            message: response.message,
-        };
+        return await this.getData(`${rootUrl}/info`, [], token);
     }
 
     /**
@@ -321,20 +230,7 @@ class Resources {
      * @param token
      */
     public static async getTodayClassroomStatus(token: string): Promise<ResourceMessage> {
-        const response = await this.getData(`${rootUrl}/classroom/today`, token);
-
-        if(response.data) {
-            return {
-                code: response.code,
-                data: response.data.classrooms,
-                message: response.message,
-            };
-        }
-
-        return {
-            code: response.code,
-            message: response.message,
-        };
+        return await this.getData(`${rootUrl}/classroom/today`, ['classrooms'], token);
     }
 
     /**
@@ -342,20 +238,7 @@ class Resources {
      * @param token
      */
     public static async getTomorrowClassroomStatus(token: string) {
-        const response = await this.getData(`${rootUrl}/classroom/tomorrow`, token);
-
-        if(response.data) {
-            return {
-                code: response.code,
-                data: response.data.classrooms,
-                message: response.message,
-            };
-        }
-
-        return {
-            code: response.code,
-            message: response.message,
-        };
+        return await this.getData(`${rootUrl}/classroom/tomorrow`, ['classrooms'], token);
     }
 
     /**

@@ -20,14 +20,13 @@ import {initInfo} from '../app/slice/infoSlice.ts';
 import SpecificationPage from './info/SpecificationPage.tsx';
 import {useQuery} from '@realm/react';
 import GongUser from '../dao/object/User.ts';
-import Resources, {ResourceMessage} from '../basic/Resources.ts';
-import {ResourceCode} from '../utils/enum.ts';
+import Resources from '../basic/Resources.ts';
 import UserAgreePage from './info/UserAgreePage.tsx';
 import PrivacyPolicyPage from './info/PrivacyPolicyPage.tsx';
 import FeedbackPage from './info/FeedbackPage.tsx';
 import {View} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import {useSafeWrite} from '../utils/ResourceUtils.ts';
+import {getPromise, useSafeWrite} from '../utils/ResourceUtils.ts';
 
 const HomeNavigation = () => {
     const safeWrite = useSafeWrite();
@@ -45,73 +44,70 @@ const HomeNavigation = () => {
 
     // 首次挂载获取全局数据
     const fetchAllData = () => {
+        console.log('fetch data begin.......');
         if (user) {
-            console.log('fetch data begin.......');
-            if (!user.info) {
-                Resources.getInfo(user.token).then((msg: ResourceMessage) => {
-                    if (
-                        msg.code === ResourceCode.Successful ||
-                        msg.code === ResourceCode.DataExpired
-                    ) {
-                        dispatch(initInfo(msg.data));
-                        console.log('writing userInfo in realm...');
+            if(!user.info) {
+                const userInfoPromise = getPromise(
+                    () => Resources.getInfo(user.token),
+                    data => {
+                        dispatch(initInfo(data));
                         safeWrite(() => {
-                            user.info = JSON.stringify(msg.data);
+                            user.info = JSON.stringify(data);
                         });
-                        console.log('userInfo is written!');
-                    } else {
-                        console.log('get info failed!');
-                    }
-                });
+                    },
+                    '个人信息获取失败',
+                );
+
+                userInfoPromise.then(() => {
+                    console.log('user info is written!');
+                })
             } else {
                 dispatch(initInfo(JSON.parse(user.info)));
             }
 
             if (!user.examAgendaList) {
-                Resources.getExam(user.token).then((msg: ResourceMessage) => {
-                    if (
-                        msg.code === ResourceCode.Successful ||
-                        msg.code === ResourceCode.DataExpired
-                    ) {
+                const examPromise = getPromise(
+                    () => Resources.getExam(user.token),
+                    data => {
                         dispatch(examChangedCountIncrement());
-                        dispatch(initExam(msg.data));
+                        dispatch(initExam(data));
                         safeWrite(() => {
-                            user.examAgendaList = JSON.stringify(msg.data);
+                            user.examAgendaList = JSON.stringify(data);
                         });
-                    } else {
-                        console.log('get examAgendaList failed!');
-                    }
-                });
+                    },
+                    '考试表单获取失败',
+                );
+
+                examPromise.then(() => {
+                    console.log('exam list is written!');
+                })
             } else {
                 dispatch(writeExamAgendaList(JSON.parse(user.examAgendaList)));
             }
 
             if (!user.firstDate) {
-                Resources.getCalendar(user.token).then(
-                    (msg: ResourceMessage) => {
-                        if (
-                            msg.code === ResourceCode.Successful ||
-                            ResourceCode.DataExpired
-                        ) {
-                            dispatch(setCalendar(msg.data));
-                            console.log('writing firstDate in realm...');
-                            safeWrite(() => {
-                                user.firstDate = new Date(msg.data.start);
-                                user.termID = msg.data.termID;
-                                user.totalWeeks = msg.data.weeks;
-                            });
-                            console.log('firstDate is written!');
-                        } else {
-                            console.log('get firstDate failed!');
-                        }
+                const calendarPromise = getPromise(
+                    () => Resources.getCalendar(user.token),
+                    data => {
+                        dispatch(setCalendar(data));
+                        safeWrite(() => {
+                            user.firstDate = new Date(data.start);
+                            user.termID = data.termID;
+                            user.totalWeeks = data.weeks;
+                        });
                     },
+                    '校历获取失败'
                 );
+
+                calendarPromise.then(() => {
+                   console.log('firstDate is written!');
+                });
             } else {
                 dispatch(
                     setCalendar({
                         start: user.firstDate.toString(),
                         termID: user.termID,
-                        totalWeeks: user.totalWeeks,
+                        weeks: user.totalWeeks,
                     }),
                 );
             }
