@@ -3,7 +3,6 @@ import {checkUrl, hostUrl} from '../config/UrlConfig.ts';
 import {LoginCode, ResourceCode} from '../utils/enum.ts';
 
 const rootUrl = hostUrl;
-const MAX_ATTEMPTS = 5;
 
 // 登录状态码对应信息
 const LOGIN_MSG: { [key: number]: string } = {
@@ -247,17 +246,13 @@ class Resources {
      */
     public static async getUpdateInfo(cancelToken: CancelToken) {
         try {
-            let count = MAX_ATTEMPTS;
-            let status: number = 0;
-            while(count--) {
-                const response = await axios.get(checkUrl, {cancelToken: cancelToken});
-                status = response.status;
+            const response = await axios.get(checkUrl, {cancelToken: cancelToken});
+            const status = response.status;
 
-                if(status === 200) {
-                    return {
-                        code: 200,
-                        data: response.data,
-                    }
+            if(status === 200 || status === 203) {
+                return {
+                    code: status,
+                    data: response.data,
                 }
             }
 
@@ -265,9 +260,18 @@ class Resources {
                 code: status,
                 message: GET_MSG[status] || '未知错误',
             }
-        } catch(error) {
+        } catch(error: any) {
+            const status = error.status;
+            if(status === 401 || status === 403) {
+                return {
+                    code: status,
+                    message: GET_MSG[status] || '未知错误'
+                }
+            }
+
             return {
-                code: ResourceCode.LocalFailed,
+                code: status,
+                message: GET_MSG[status] || '未知错误',
                 data: error
             }
         }
