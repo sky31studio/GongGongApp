@@ -3,7 +3,6 @@ import {
     Image,
     Modal,
     Pressable,
-    StatusBar,
     StyleSheet,
     Text,
     ToastAndroid,
@@ -283,7 +282,6 @@ const InfoPage = ({navigation}: NavigationProps) => {
                         marginVertical: 15,
                         bottom: 0,
                         position: 'absolute',
-                        transform: [{translateY: 35}]
                     }}
                     onPress={isLogin ? () => setModalVisible(true) : toLogin}
                 >
@@ -600,7 +598,6 @@ const ss = StyleSheet.create({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        transform: [{translateY: -35}],
     },
 
     infoContainer: {
@@ -617,12 +614,11 @@ const ss = StyleSheet.create({
     innerInfoContainer: {
         width: '100%',
         alignItems: 'center',
-        justifyContent: 'flex-end',
+        justifyContent: 'center',
         backgroundColor: BackgroundColor.primary,
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
-        paddingTop: StatusBar.currentHeight! * 3,
-        paddingBottom: 20,
+        paddingVertical: 20,
     },
 
     infoBox: {
