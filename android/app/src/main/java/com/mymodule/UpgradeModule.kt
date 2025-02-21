@@ -1,10 +1,6 @@
 package com.mymodule
 
-import android.app.DownloadManager
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -15,116 +11,123 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import okhttp3.Call
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.BufferedInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
-class ApkDownloaderModule(reactContext: ReactApplicationContext): ReactContextBaseJavaModule(reactContext) {
+class ApkDownloaderModule(reactContext: ReactApplicationContext) :
+    ReactContextBaseJavaModule(reactContext) {
+    private val TAG = "ApkDownloaderModule"
+    private val client = OkHttpClient()
 
     override fun getName(): String {
         return "ApkDownloader"
     }
 
+    private fun installApk(apkFile: File, promise: Promise) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                Log.d(TAG, "installApk: ${apkFile.absolutePath}")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    val apkUri = FileProvider.getUriForFile(
+                        reactApplicationContext,
+                        "${reactApplicationContext.packageName}.provider",
+                        apkFile
+                    )
+                    setDataAndType(apkUri, "application/vnd.android.package-archive")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                } else {
+                    setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive")
+                }
+            }
+            reactApplicationContext.startActivity(intent)
+            promise.resolve("APK installation triggered")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error installing apk", e)
+            promise.reject("Error install apk", e)
+        }
+    }
+
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @ReactMethod
-    fun downloadApk(downloadUrl: String, promise: Promise) {
-        // 判断目标文件是否存在
-        val downloadDirectory = File(reactApplicationContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "updateGong.zip")
-        if(downloadDirectory.exists()) {
-            downloadDirectory.delete()
-        }
-
-        val request = DownloadManager.Request(Uri.parse(downloadUrl))
-        request.setTitle("gonggong")
-        request.setDescription("正在下载新版本应用")
-        request.setDestinationInExternalFilesDir(reactApplicationContext, Environment.DIRECTORY_DOWNLOADS, "updateGong.zip")
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-
-        val downloadManager = reactApplicationContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        val downloadId = downloadManager.enqueue(request)
-
-        val downloadCompleteReceiver = object: BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-
-                if(id == downloadId) {
-                    extractAndInstallApk(promise)
-                }
-            }
-        }
-
-        reactApplicationContext.registerReceiver(
-            downloadCompleteReceiver,
-            IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-            Context.RECEIVER_NOT_EXPORTED,
-        )
-    }
-
-    private fun extractAndInstallApk(promise: Promise) {
-        try {
-            val zipFile = File(reactApplicationContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "updateGong.zip")
-            val unzipDir = reactApplicationContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
-
-            unzip(zipFile, unzipDir)
-
-            val apkFile = File(unzipDir, "app-release.apk")
-            if (apkFile.exists()) {
-                installApk(apkFile, promise)
-            } else {
-                promise.reject("APK not found", "解压后未找到 APK 文件")
+    private fun downloadApk(downloadUrl: String, promise: Promise) {
+        Log.d(TAG, "downloadAndUnzip: $downloadUrl")
+        val request = Request.Builder().url(downloadUrl).build()
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                promise.reject("Error downloading apk", e)
             }
 
-        } catch (e: Exception) {
-            promise.reject("Error extracting apk", e)
-        }
-    }
-
-    private fun unzip(zipFile: File, destDir: File?) {
-        ZipInputStream(FileInputStream(zipFile)).use { zis ->
-            var entry: ZipEntry?
-            while (zis.nextEntry.also { entry = it } != null) {
-                val file = File(destDir, entry!!.name)
-                if (entry!!.isDirectory) {
-                    file.mkdirs()
-                } else {
-                    file.parentFile?.mkdirs()
-                    FileOutputStream(file).use { fos ->
-                        val buffer = ByteArray(1024)
-                        var length: Int
-                        while (zis.read(buffer).also { length = it } != -1) {
-                            fos.write(buffer, 0, length)
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                try {
+                    if (response.isSuccessful) {
+                        Log.d(TAG, "downloadAndUnzip: down load successfully")
+                        val zipInputStream = if (response.body != null) {
+                            ZipInputStream(BufferedInputStream(response.body?.byteStream()))
+                        } else {
+                            throw Exception("Download failed: ${response.code}")
                         }
+                        val entries = unzipFile(zipInputStream)
+                        // 将 entries 中的app-release.apk 对象保存到 release.apk 文件中
+                        val apkFile = File(
+                            reactApplicationContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                            "release.apk"
+                        )
+                        val apkBytes = entries["app-release.apk"]
+                        if (apkBytes != null) {
+                            apkFile.writeBytes(apkBytes)
+                        }
+                        zipInputStream.close()
+                        Log.d(TAG, "downloadAndUnzip: save file to ${apkFile.absolutePath}")
+                        Log.d(TAG, "downloadAndUnzip: ${apkFile.exists()}")
+                        if (apkFile.exists()) {
+                            Log.d(TAG, "downloadAndUnzip: file exists")
+                            installApk(apkFile, promise)
+                        }
+                    } else {
+                        throw Exception("Download failed: ${response.code}")
                     }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error downloading apk", e)
+                    promise.reject("Error download apk", e)
                 }
-                zis.closeEntry()
             }
-        }
+        })
+
     }
 
-    private fun installApk(apkFile: File, promise: Promise) {
-            try {
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        val apkUri = FileProvider.getUriForFile(
-                            reactApplicationContext,
-                            "${reactApplicationContext.packageName}.fileprovider",
-                            apkFile
-                        )
-                        setDataAndType(apkUri, "application/vnd.android.package-archive")
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    } else {
-                        setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive")
-                    }
+    private fun unzipFile(zipInputStream: ZipInputStream): MutableMap<String, ByteArray> {
+        val entries = mutableMapOf<String, ByteArray>()
+
+        var entry: ZipEntry?
+        while (zipInputStream.nextEntry.also { entry = it } != null) {
+            val entryName = entry!!.name
+            if (!entry!!.isDirectory) {
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                val buffer = ByteArray(1024)
+                var bytesRead: Int
+
+                while (zipInputStream.read(buffer).also { bytesRead = it } != -1) {
+                    byteArrayOutputStream.write(buffer, 0, bytesRead)
                 }
-                reactApplicationContext.startActivity(intent)
-                promise.resolve("APK installation triggered")
-            } catch (e: Exception) {
-                Log.i("upgrade", e.toString())
-                promise.reject("Error install apk", e)
+
+                entries[entryName] = byteArrayOutputStream.toByteArray()
+                byteArrayOutputStream.close()
             }
+            zipInputStream.closeEntry()
+        }
+        zipInputStream.close()
+
+        return entries
     }
+
 
 }
