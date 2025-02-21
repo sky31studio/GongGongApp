@@ -3,6 +3,7 @@ package com.mymodule
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -33,8 +34,24 @@ class MediaModule(reactContext: ReactApplicationContext): ReactContextBaseJavaMo
         this.successCallback = successCallback
         this.errorCallback = errorCallback
 
-        if(ContextCompat.checkSelfPermission(reactApplicationContext, android.Manifest.permission.READ_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(currentActivity as Activity, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            if(ContextCompat.checkSelfPermission(reactApplicationContext, android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(currentActivity as Activity, arrayOf(android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED), 1)
+            } else {
+                navigateToPicSelectActivity()
+                successCallback.invoke("Permission already granted")
+            }
+        } else {
+            if(ContextCompat.checkSelfPermission(reactApplicationContext, android.Manifest.permission.READ_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(currentActivity as Activity, arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+            } else {
+                navigateToPicSelectActivity()
+                successCallback.invoke("Permission already granted")
+            }
+        }
+
+        if(ContextCompat.checkSelfPermission(reactApplicationContext, android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(currentActivity as Activity, arrayOf(android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED), 1)
         } else {
             navigateToPicSelectActivity()
             successCallback.invoke("Permission already granted")

@@ -127,9 +127,10 @@ const InfoPage = ({navigation}: NavigationProps) => {
     }
 
     const handleConfirmUpdate = () => {
-        ToastAndroid.showWithGravity('正在下载更新...', 2000, ToastAndroid.BOTTOM);
-        downloadAndInstallApk(updateInfo?.update_url!);
+        ToastAndroid.showWithGravity('正在更新，请勿操作...', 2000, ToastAndroid.BOTTOM);
         setUpdateModalVisible(false);
+        downloadAndInstallApk(updateInfo?.update_url!);
+
     }
 
     const handleCancelUpdate = () => {
@@ -193,7 +194,7 @@ const InfoPage = ({navigation}: NavigationProps) => {
                             borderColor: 'white',
                             backgroundColor: 'rgba(200, 200, 200, .1)'
                     }}
-                        onPress={isLogin ? null : handleReLogin}    // TODO 头像选择
+                        onPress={isLogin ? handleShowAvatarModal : handleReLogin}
                     >
                         <Image source={require('../../assets/png/avatar.png')} style={{height: '100%', width: '100%'}}/>
                     </Pressable>
