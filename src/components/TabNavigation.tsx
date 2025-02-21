@@ -3,10 +3,12 @@ import Home from "./home/homePage.tsx";
 import InfoPage from "./info/InfoPage.tsx";
 import {SvgXml} from "react-native-svg";
 import XMLResources from "../basic/XMLResources.ts";
-import {Pressable, View} from "react-native";
+import {Pressable, StyleSheet, View} from "react-native";
 import {BackgroundColor, FontColor, FontSize} from "../config/globalStyleSheetConfig.ts";
 import React from "react";
 import ScalingNotAllowedText from "./global/ScalingNotAllowedText.tsx";
+import EaTestNavigation from "./eaTest/EaTestNavigation.tsx";
+
 
 const TabNavigation = () => {
     const Tab = createBottomTabNavigator();
@@ -36,6 +38,23 @@ const TabNavigation = () => {
                         >首页</ScalingNotAllowedText>
                     )
                 },
+            }}/>
+
+            <Tab.Screen name={'EaTestScreen'} component={EaTestNavigation} options={{
+                headerShown: false,
+                tabBarIcon: ({focused}) => {
+                    const xml = focused ? XMLResources.activateEatest : XMLResources.inactivateEatest;
+                    return (
+                        <SvgXml xml={xml} width={32} height={32}/>
+                    )
+                },
+                tabBarLabel: ({color}) => {
+                    return (
+                        <ScalingNotAllowedText style={[{color: color}, ss.tabText]}>
+                            Eatest
+                        </ScalingNotAllowedText>
+                    )
+                }
             }}/>
 
             <Tab.Screen name={'infoPage'} component={InfoPage} options={{
@@ -86,3 +105,11 @@ const MyTabBar = ({state, descriptors, navigation}: any) => {
 }
 
 export default TabNavigation;
+
+const ss = StyleSheet.create({
+    tabText: {
+        fontSize: FontSize.s,
+        fontWeight: '500',
+        transform: [{translateY: -3}]
+    }
+})
